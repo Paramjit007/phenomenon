@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+RUN pip install uv
+
+# Root pyproject.toml must be present so uv can resolve workspace sources
+COPY pyproject.toml /workspace/pyproject.toml
+COPY packages/engine /workspace/packages/engine
+COPY apps/contracts/backend /workspace/backend
+
+WORKDIR /workspace/backend
+
+RUN uv pip install --system -e /workspace/packages/engine
+RUN uv pip install --system -e .
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

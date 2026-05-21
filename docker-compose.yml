@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: phenomenon
+      POSTGRES_USER: phenomenon
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-phenomenon}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phenomenon"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/contracts/backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://phenomenon:${DB_PASSWORD:-phenomenon}@db/phenomenon
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:5174","http://localhost:3000","http://127.0.0.1:5173","http://127.0.0.1:5174"]'
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /workspace/backend --reload-dir /workspace/packages/engine
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./packages/engine:/workspace/packages/engine
+      - ./apps/contracts/backend:/workspace/backend
+
+  frontend:
+    build:
+      context: apps/contracts/frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./apps/contracts/frontend/src:/app/src
+
+  arbitration-frontend:
+    build:
+      context: apps/arbitration/frontend
+    ports:
+      - "5174:5174"
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

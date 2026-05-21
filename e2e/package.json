@@ -1,0 +1,27 @@
+{
+  "name": "phenomenon-e2e",
+  "version": "1.0.0",
+  "description": "Professional E2E test suite — PHENOMENON Contract Intelligence System",
+  "scripts": {
+    "test":           "playwright test",
+    "test:ui":        "playwright test --ui",
+    "test:headed":    "playwright test --headed --workers=1",
+    "test:debug":     "playwright test --debug",
+    "test:smoke":     "playwright test 01-smoke",
+    "test:selection": "playwright test 02-selection",
+    "test:seguros":   "playwright test 03-seguros",
+    "test:kpmg":      "playwright test 04-kpmg",
+    "test:contracts": "playwright test 05-contract",
+    "test:verify":    "playwright test 06-verification",
+    "test:tabs":      "playwright test 07-tabs",
+    "test:cascade":   "playwright test 08-cascade",
+    "report":         "playwright show-report reports/html",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
