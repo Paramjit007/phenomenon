@@ -20,6 +20,8 @@ import SegurosComparativeView   from "./components/SegurosComparativeView.jsx";
 import ImpactNotification       from "./components/ImpactNotification.jsx";
 import ErrorBoundary            from "./components/ErrorBoundary.jsx";
 import ErrorTriggerForTests     from "./components/ErrorTriggerForTests.jsx";
+import CenterStage              from "./components/CenterStage.jsx";
+import { DemoModeProvider, useDemoMode } from "./contexts/DemoModeContext.jsx";
 import { INSURANCE_TEMPLATE_KEYS } from "./constants.js";
 
 const RIGHT_TABS = [
@@ -35,20 +37,155 @@ const RIGHT_TABS = [
   { key: "documento",  label: "Documento",  icon: "◉" },
 ];
 
-export default function App() {
+// ── Permanent EngineLog strip (left rail, bottom 120px) ───────────────────────
+function EngineLog({ log, loading }) {
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [log.length]);
+
+  const lastSix = log.slice(-6);
+
+  return (
+    <div
+      aria-label="Engine activity log"
+      style={{
+        height: 120,
+        flexShrink: 0,
+        background: C.navy,
+        borderTop: `1px solid ${C.borderDark}`,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* Log header */}
+      <div
+        style={{
+          height: 22,
+          display: "flex",
+          alignItems: "center",
+          padding: "0 10px",
+          gap: 6,
+          borderBottom: `1px solid ${C.borderDark}`,
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: loading ? C.orange : C.green,
+            flexShrink: 0,
+          }}
+        />
+        <span
+          style={{
+            fontSize: 9,
+            color: C.textNavy,
+            fontFamily: font.mono,
+            letterSpacing: "0.1em",
+            flex: 1,
+          }}
+        >
+          MOTOR · ACTIVIDAD
+        </span>
+        <span style={{ fontSize: 9, color: C.textNavy, fontFamily: font.mono }}>
+          {log.length}
+        </span>
+      </div>
+
+      {/* Log entries — last 6 */}
+      <div
+        ref={scrollRef}
+        style={{ flex: 1, overflowY: "auto", padding: "2px 0" }}
+      >
+        {lastSix.length === 0 ? (
+          <div
+            style={{
+              padding: "8px 10px",
+              fontSize: 10,
+              color: C.textNavy,
+              fontFamily: font.mono,
+              opacity: 0.5,
+            }}
+          >
+            Sin actividad registrada
+          </div>
+        ) : (
+          lastSix.map((e) => {
+            const col =
+              e.type === "error"   ? C.red    :
+              e.type === "ai"      ? C.purple :
+              e.type === "opus"    ? C.green  :
+              e.type === "cascade" ? C.orange : C.textWhite;
+            return (
+              <div
+                key={e.id}
+                style={{
+                  display: "flex",
+                  gap: 6,
+                  padding: "2px 10px",
+                  alignItems: "flex-start",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: C.textNavy,
+                    fontFamily: font.mono,
+                    flexShrink: 0,
+                    paddingTop: 2,
+                    minWidth: 42,
+                  }}
+                >
+                  {e.t}
+                </span>
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: col,
+                    fontFamily: font.ui,
+                    lineHeight: 1.4,
+                    flex: 1,
+                    wordBreak: "break-word",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {e.msg}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Inner app (has access to DemoModeContext) ─────────────────────────────────
+function AppInner() {
+  const { demoMode, toggleDemo } = useDemoMode();
+
   // ── Layout state ───────────────────────────────────────────────────────────
   const [selectedId,   setSelectedId]   = useState(null);
   const [rightTab,     setRightTab]     = useState("campos");
   const [templateKey,  setTemplateKey]  = useState(null);
   const [newProject,   setNewProject]   = useState(false);
+  // 3-pane widths: left rail (fixed), right stage (fixed), centre is flex:1
+  const [leftW,        setLeftW]        = useState(220);
+  const [stageW,       setStageW]       = useState(420);
+  // Legacy rightW kept for S/M/L/XL snap buttons (hidden in demoMode but still functional)
   const [rightW,       setRightW]       = useState(580);
   const [iaH,          setIaH]          = useState(280);  // L2 panel height
-  const [logH,         setLogH]         = useState(200);  // log panel height
-  const [logVisible,   setLogVisible]   = useState(false);
-  const [logPinned,    setLogPinned]    = useState(false);
-  const [rightHover,   setRightHover]   = useState(false);
   const [iaHover,      setIaHover]      = useState(false);
-  const [logHover,     setLogHover]     = useState(false);
+  const [leftGripHover,  setLeftGripHover]  = useState(false);
+  const [rightGripHover, setRightGripHover] = useState(false);
   const [iaCollapsed,  setIaCollapsed]  = useState(false);
   const [homologating,   setHomologating]   = useState(false);
   const [graphFlashIds,  setGraphFlashIds]  = useState([]);
@@ -59,9 +196,6 @@ export default function App() {
   const [verifyResults,  setVerifyResults]  = useState([]);
   const [verifyTotal,    setVerifyTotal]    = useState(0);
   const [jumpToField,    setJumpToField]    = useState(null);
-
-  const prevLogLen = useRef(0);
-  const autoHideTimer = useRef(null);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const {
@@ -116,35 +250,34 @@ export default function App() {
     prevNeedsReview.current = currentNR;
   }, [contracts]);
 
-  // ── Auto-show log on new events ───────────────────────────────────────────
-  useEffect(() => {
-    if (log.length > prevLogLen.current) {
-      prevLogLen.current = log.length;
-      if (!logPinned) {
-        setLogVisible(true);
-        clearTimeout(autoHideTimer.current);
-        autoHideTimer.current = setTimeout(() => {
-          if (!logPinned) setLogVisible(false);
-        }, 8000);
-      }
-    }
-  }, [log.length, logPinned]);
-
   // ── Resize helpers ─────────────────────────────────────────────────────────
-  function makeHResize(setW, min, max) {
-    return (e) => {
-      e.preventDefault();
-      const sx = e.clientX, sw = setW === setRightW ? rightW : 0;
-      const move = (e2) => setW(Math.min(max, Math.max(min, sw + sx - e2.clientX)));
-      const up   = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
-      window.addEventListener("mousemove", move);
-      window.addEventListener("mouseup", up);
-    };
+  // Left rail splitter: dragging moves the left pane width
+  function startLeftResize(e) {
+    e.preventDefault();
+    const sx = e.clientX;
+    const sw = leftW;
+    const move = (e2) => setLeftW(Math.min(400, Math.max(160, sw + (e2.clientX - sx))));
+    const up   = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
   }
-  function makeVResize(setH, min, max) {
+
+  // Right stage splitter: dragging moves the right pane width (from right edge)
+  function startRightResize(e) {
+    e.preventDefault();
+    const sx = e.clientX;
+    const sw = stageW;
+    const move = (e2) => setStageW(Math.min(700, Math.max(160, sw - (e2.clientX - sx))));
+    const up   = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  }
+
+  function makeVResize(setH, min, max, currentH) {
     return (e) => {
       e.preventDefault();
-      const sy = e.clientY, sh = setH === setIaH ? iaH : logH;
+      const sy = e.clientY;
+      const sh = currentH;
       const move = (e2) => setH(Math.min(max, Math.max(min, sh - (e2.clientY - sy))));
       const up   = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
       window.addEventListener("mousemove", move);
@@ -152,9 +285,7 @@ export default function App() {
     };
   }
 
-  const startRightResize  = useCallback(makeHResize(setRightW, 300, 1300), [rightW]);
-  const startIaVResize    = useCallback(makeVResize(setIaH, 80, 400), [iaH]);
-  const startLogVResize   = useCallback(makeVResize(setLogH, 60, 500), [logH]);
+  const startIaVResize = useCallback(makeVResize(setIaH, 80, 400, iaH), [iaH]);
 
   // ── Template resolution ────────────────────────────────────────────────────
   const template = CONTRACT_TEMPLATES[templateKey] ?? null;
@@ -195,8 +326,7 @@ export default function App() {
     return found?.[1] ?? CONTRACT_TEMPLATES.CSM;
   })();
 
-  const lastLog = log[log.length - 1];
-  const tabBtn  = (key) => ({
+  const tabBtn = (key) => ({
     padding: "0 12px", height: "100%", display: "flex", alignItems: "center", gap: 5,
     cursor: "pointer", fontSize: 12, fontFamily: font.ui, fontWeight: 500,
     color: rightTab === key ? C.textDark : C.textMuted,
@@ -214,7 +344,7 @@ export default function App() {
   });
 
   const gripV = (hover) => ({
-    width: 12, cursor: "col-resize", flexShrink: 0,
+    width: 8, cursor: "col-resize", flexShrink: 0,
     background: hover ? `${C.blue}20` : C.bgAlt,
     borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`,
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
@@ -268,7 +398,6 @@ export default function App() {
           onNavigate={(contractId, fieldKey, isEcosystem) => {
             setVerifyOpen(false);
             if (isEcosystem) {
-              // For ecosystem errors, show the failing sub-contract
               const failingSub = verifyResults.find(r => !r.valid && r.id !== contractId);
               const navId = failingSub?.id ?? contractId;
               setSelectedId(navId);
@@ -276,16 +405,27 @@ export default function App() {
               setSelectedId(contractId);
             }
             setRightTab("campos");
-            // After panel renders, navigate to the specific field
             setTimeout(() => setJumpToField(fieldKey + "_" + Date.now()), 200);
           }}
         />
         </div>
       )}
 
-      {/* ── HEADER (warm light) ── */}
-      <div data-testid="phenomenon-header" style={{ height: 54, background: "linear-gradient(to right, #FDF8EF, #F5F7FF)", display: "flex", alignItems: "center", padding: "0 16px", gap: 10, flexShrink: 0, borderBottom: `1px solid ${C.border}`, boxShadow: "0 1px 5px rgba(0,0,0,0.07)" }}>
-
+      {/* ── HEADER ── */}
+      <div
+        data-testid="phenomenon-header"
+        style={{
+          height: 54,
+          background: "linear-gradient(to right, #FDF8EF, #F5F7FF)",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 16px",
+          gap: 10,
+          flexShrink: 0,
+          borderBottom: `1px solid ${C.border}`,
+          boxShadow: "0 1px 5px rgba(0,0,0,0.07)",
+        }}
+      >
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 9, paddingRight: 14, borderRight: `1px solid ${C.border}`, flexShrink: 0 }}>
           <div style={{ width: 30, height: 30, background: C.navyDeep, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: C.gold, borderRadius: 6 }}>Φ</div>
@@ -321,7 +461,6 @@ export default function App() {
           const pct         = requiredFields.length ? Math.round(filled / requiredFields.length * 100) : 100;
           return (
             <div style={{ display: "flex", alignItems: "stretch", borderLeft: `1px solid ${C.border}`, marginLeft: 4 }}>
-              {/* Numeric stats */}
               {[
                 [1 + subContracts.length, "CONTRATOS", C.textDark],
                 [activeCount, "ACTIVOS", C.green],
@@ -333,12 +472,10 @@ export default function App() {
                   <div style={{ fontSize: 7.5, color: C.textMuted, letterSpacing: "0.07em", fontFamily: font.mono }}>{lbl}</div>
                 </div>
               ))}
-              {/* Project metadata */}
               <div style={{ padding: "4px 12px", borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
                 {templateK && <span style={{ fontSize: 9, color: C.gold, fontFamily: font.mono, fontWeight: 700, background: C.goldBg, borderRadius: 3, padding: "1px 5px" }}>{templateK}</span>}
                 {jur && <span style={{ fontSize: 9, color: C.textMuted, fontFamily: font.ui }}>📍 {jur}</span>}
               </div>
-              {/* Completion ring */}
               <div style={{ padding: "4px 12px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1 }}>
                 <svg width={28} height={28}>
                   <circle cx={14} cy={14} r={11} fill="none" stroke={C.border} strokeWidth={3} />
@@ -358,34 +495,50 @@ export default function App() {
           );
         })()}
 
-        {/* Live feed summary — subtle */}
-        {log.length > 0 && (
-          <button
-            onClick={() => { setLogVisible(p => !p); if (logVisible) { setLogPinned(false); clearTimeout(autoHideTimer.current); } else setLogPinned(true); }}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: logPinned ? C.blueBg : "none", border: `1px solid ${logPinned ? C.blue : "transparent"}`, cursor: "pointer", padding: "4px 10px", borderRadius: 5 }}
-          >
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: loading ? C.orange : C.green, flexShrink: 0 }} />
-            <span style={{ fontSize: 10, color: C.textMuted, fontFamily: font.mono }}>{log.length}</span>
-            {lastLog && (
-              <span style={{ fontSize: 11, color: C.textMuted, fontFamily: font.ui, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {lastLog.msg?.slice(0, 35)}{(lastLog.msg?.length ?? 0) > 35 ? "…" : ""}
-              </span>
-            )}
-            <span style={{ fontSize: 9, color: C.textLight, fontFamily: font.mono }}>{logVisible ? "▼" : "▲"}</span>
-          </button>
-        )}
-
         <div style={{ flex: 1 }} />
+
+        {/* Demo mode toggle + badge */}
+        <button
+          onClick={toggleDemo}
+          aria-pressed={demoMode}
+          title={demoMode ? "Desactivar modo demo" : "Activar modo demo"}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "5px 11px",
+            borderRadius: 6,
+            border: `1px solid ${demoMode ? C.gold : C.border}`,
+            background: demoMode ? C.goldBg : "transparent",
+            cursor: "pointer",
+            fontFamily: font.mono,
+            fontSize: 10,
+            fontWeight: 700,
+            color: demoMode ? C.goldDim : C.textMuted,
+            letterSpacing: "0.07em",
+            transition: "all 0.15s",
+          }}
+        >
+          {demoMode && (
+            <span style={{
+              background: C.gold,
+              color: C.navyDeep,
+              borderRadius: 4,
+              padding: "1px 6px",
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+            }}>
+              DEMO
+            </span>
+          )}
+          {demoMode ? "DEMO ON" : "DEMO"}
+        </button>
 
         {/* Verify button */}
         <button
           disabled={!master}
           onClick={async () => {
-            // Verify EVERY contract in the project, not just masters[0] + its subs.
-            // Multi-master cases (Seguros: 4 masters × 4 contracts) previously left
-            // 12 of 16 contracts unchecked — the label "Verificar todos" was a lie.
-            // Order matters: subs first so the master's children_homologated check
-            // sees up-to-date child homologation states.
             const all = Object.values(contracts).filter(Boolean);
             const allSubs    = all.filter(c =>  c.parentId);
             const allMasters = all.filter(c => !c.parentId);
@@ -404,7 +557,6 @@ export default function App() {
                 setVerifyResults([...accumulated]);
               } catch (_) {}
             }
-            // Refresh contract state so graph badges update
             await loadContracts();
             setHomologating(false);
           }}
@@ -413,12 +565,20 @@ export default function App() {
         </button>
       </div>
 
-      {/* ── BODY ── */}
+      {/* ── BODY: 3-pane workspace ── */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {/* ── LEFT PANE: graph + compact IA ── */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 220 }}>
-
+        {/* ── LEFT RAIL (~220px): graph + compact IA + permanent EngineLog ── */}
+        <div
+          style={{
+            width: leftW,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            flexShrink: 0,
+            minWidth: 160,
+          }}
+        >
           {/* Contract graph */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <ErrorBoundary scope="graph">
@@ -464,25 +624,53 @@ export default function App() {
               </ErrorBoundary>
             </div>
           )}
+
+          {/* Permanent EngineLog strip */}
+          <ErrorBoundary scope="engine-log">
+            <EngineLog log={log} loading={loading} />
+          </ErrorBoundary>
         </div>
 
-        {/* ── Horizontal resize grip ── */}
+        {/* ── Drag splitter: left | centre ── */}
         <div
-          onMouseDown={startRightResize}
-          onMouseEnter={() => setRightHover(true)}
-          onMouseLeave={() => setRightHover(false)}
-          onDoubleClick={() => setRightW(w => w >= 900 ? 580 : 1050)}
-          title="Arrastra · Doble clic para maximizar"
-          style={{ ...gripV(rightHover), cursor: "col-resize" }}
+          role="separator"
+          aria-label="Resize left rail"
+          onMouseDown={startLeftResize}
+          onMouseEnter={() => setLeftGripHover(true)}
+          onMouseLeave={() => setLeftGripHover(false)}
+          onDoubleClick={() => setLeftW(w => w > 240 ? 220 : 280)}
+          title="Arrastra · Doble clic para ajustar"
+          style={{ ...gripV(leftGripHover) }}
         >
-          {[0,1,2,3,4].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", background: rightHover ? C.blue : C.borderStrong }} />)}
+          {[0,1,2,3,4].map(i => (
+            <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", background: leftGripHover ? C.blue : C.borderStrong }} />
+          ))}
         </div>
 
-        {/* ── RIGHT PANEL ── */}
-        <div style={{ width: rightW, display: "flex", flexDirection: "column", background: C.white, flexShrink: 0, overflow: "hidden" }}>
-
-          {/* Tab bar + size snaps */}
-          <div data-testid="right-panel-tabs" style={{ height: 38, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "stretch", flexShrink: 0, background: C.white, position:"relative" }}>
+        {/* ── CENTRE PANE: ContractDetailPanel (all existing tabs) ── */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            background: C.white,
+            overflow: "hidden",
+            minWidth: 160,
+          }}
+        >
+          {/* Tab bar */}
+          <div
+            data-testid="right-panel-tabs"
+            style={{
+              height: 38,
+              borderBottom: `1px solid ${C.border}`,
+              display: "flex",
+              alignItems: "stretch",
+              flexShrink: 0,
+              background: C.white,
+              position: "relative",
+            }}
+          >
             <div style={{ position:"absolute", top:2, left:4, fontSize:8, fontFamily:"'JetBrains Mono','Courier New',monospace", letterSpacing:"0.08em", color:"#94A3B8", background:"rgba(14,20,38,0.06)", padding:"1px 5px", borderRadius:3, pointerEvents:"none", zIndex:1 }}>R-tabs</div>
             {visibleRightTabs.map(t => {
               let badge = null;
@@ -504,15 +692,18 @@ export default function App() {
                 </button>
               );
             })}
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3, paddingRight: 10 }}>
-              {[["S", 380], ["M", 580], ["L", 800], ["XL", 1100]].map(([lbl, w]) => (
-                <button key={lbl} onClick={() => setRightW(w)}
-                  style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, border: `1px solid ${Math.abs(rightW - w) < 80 ? C.gold : C.border}`, background: Math.abs(rightW - w) < 80 ? C.goldBg : "none", color: Math.abs(rightW - w) < 80 ? C.goldDim : C.textMuted, cursor: "pointer", fontFamily: font.mono }}>
-                  {lbl}
-                </button>
-              ))}
-              <span style={{ fontSize: 9, color: C.textLight, fontFamily: font.mono, marginLeft: 3 }}>{rightW}px</span>
-            </div>
+            {/* S/M/L/XL snap buttons — hidden in demoMode */}
+            {!demoMode && (
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3, paddingRight: 10 }}>
+                {[["S", 380], ["M", 580], ["L", 800], ["XL", 1100]].map(([lbl, w]) => (
+                  <button key={lbl} onClick={() => setRightW(w)}
+                    style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, border: `1px solid ${Math.abs(rightW - w) < 80 ? C.gold : C.border}`, background: Math.abs(rightW - w) < 80 ? C.goldBg : "none", color: Math.abs(rightW - w) < 80 ? C.goldDim : C.textMuted, cursor: "pointer", fontFamily: font.mono }}>
+                    {lbl}
+                  </button>
+                ))}
+                <span style={{ fontSize: 9, color: C.textLight, fontFamily: font.mono, marginLeft: 3 }}>{rightW}px</span>
+              </div>
+            )}
           </div>
 
           {/* Tab content */}
@@ -593,14 +784,12 @@ export default function App() {
                   <div style={{ fontSize:13, fontWeight:700, color:C.textDark, marginBottom:4 }}>Verificación PHENOMENON — {contracts[selectedId]?.name||"Contrato"}</div>
                   <div style={{ fontSize:10, color:C.textMuted, fontFamily:font.mono }}>Homologación · Bloque VI Estabilización · Opus</div>
                 </div>
-                {/* Run verification inline */}
                 {(() => {
                   const c = contracts[selectedId];
                   if (!c) return null;
                   const subs = Object.values(contracts).filter(x=>x.parentId===selectedId);
                   return (
                     <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-                      {/* Quick verify button */}
                       <button onClick={async () => {
                         const ordered = [...subs, c].filter(Boolean);
                         setVerifyTotal(ordered.length);
@@ -621,7 +810,6 @@ export default function App() {
                       }} style={{ width:"100%", padding:13, background:C.purple, color:C.white, border:"none", borderRadius:10, cursor:"pointer", fontSize:14, fontFamily:font.ui, fontWeight:700 }}>
                         ⊙ Ejecutar Verificación PHENOMENON
                       </button>
-                      {/* Current homologation status */}
                       {[c, ...subs].filter(Boolean).map(ph=>{
                         const h = ph.opus?.homologation;
                         const col = h==="VALID"?C.green:h==="INVALID"?C.red:C.orange;
@@ -650,7 +838,6 @@ export default function App() {
                           </div>
                         );
                       })}
-                      {/* Opus level summary */}
                       <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:10, padding:"14px 16px" }}>
                         <div style={{ fontSize:11, fontWeight:700, color:C.textDark, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:12 }}>Bloque IV — Opus del Ecosistema</div>
                         {[c,...subs].filter(Boolean).map(ph=>{
@@ -708,7 +895,7 @@ export default function App() {
 
             {rightTab === "seguros" && (
               <ErrorBoundary scope="seguros">
-                <ErrorTriggerForTests scope="seguros" />
+                {!demoMode && <ErrorTriggerForTests scope="seguros" />}
                 <SegurosComparativeView
                   contracts={contracts}
                   onSelectContract={(id) => { setSelectedId(id); setRightTab("campos"); }}
@@ -747,63 +934,57 @@ export default function App() {
               </ErrorBoundary>
             )}
           </div>
-
         </div>
-      </div>
 
-      {/* Log panel — floating overlay at bottom-right (no longer covers form fields) */}
-      {logVisible && (
+        {/* ── Drag splitter: centre | right stage ── */}
         <div
-          data-testid="live-log-panel"
+          role="separator"
+          aria-label="Resize right stage"
+          onMouseDown={startRightResize}
+          onMouseEnter={() => setRightGripHover(true)}
+          onMouseLeave={() => setRightGripHover(false)}
+          onDoubleClick={() => setStageW(w => w > 500 ? 420 : 560)}
+          title="Arrastra · Doble clic para ajustar"
+          style={{ ...gripV(rightGripHover) }}
+        >
+          {[0,1,2,3,4].map(i => (
+            <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", background: rightGripHover ? C.blue : C.borderStrong }} />
+          ))}
+        </div>
+
+        {/* ── RIGHT STAGE (~420px): CenterStage ── */}
+        <div
           style={{
-            position: "fixed",
-            right: 16,
-            bottom: 16,
-            width: 380,
-            maxWidth: "calc(100vw - 32px)",
-            height: 240,
-            background: C.navy,
-            border: `1px solid ${C.borderDark}`,
-            borderRadius: 10,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
-            zIndex: 900,
+            width: stageW,
             display: "flex",
             flexDirection: "column",
+            flexShrink: 0,
             overflow: "hidden",
-          }}>
-          {/* Log header */}
-          <div style={{ display: "flex", alignItems: "center", padding: "8px 12px", borderBottom: `1px solid ${C.borderDark}`, gap: 8, flexShrink: 0 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: loading ? C.orange : C.green }} />
-            <span style={{ fontSize: 10, color: C.textNavy, fontFamily: font.mono, letterSpacing: "0.1em", flex: 1 }}>ACTIVIDAD EN VIVO</span>
-            <span style={{ fontSize: 10, color: C.textNavy, fontFamily: font.mono }}>{log.length}</span>
-            <button onClick={() => setLogPinned(p => !p)}
-              title={logPinned ? "Desfijar (auto-ocultar)" : "Fijar"}
-              style={{ fontSize: 11, color: logPinned ? C.gold : C.textNavy, background: "none", border: "none", cursor: "pointer", fontFamily: font.mono, padding: "0 4px" }}>
-              {logPinned ? "📌" : "📍"}
-            </button>
-            <button onClick={() => { setLogVisible(false); setLogPinned(false); clearTimeout(autoHideTimer.current); }}
-              title="Cerrar"
-              style={{ fontSize: 12, color: C.textNavy, background: "none", border: "none", cursor: "pointer", fontFamily: font.mono, padding: "0 4px" }}>
-              ✕
-            </button>
-          </div>
-
-          {/* Log entries */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}
-            ref={el => { if (el) el.scrollTop = el.scrollHeight; }}>
-            {log.map(e => {
-              const col = e.type === "error" ? C.red : e.type === "ai" ? C.purple : e.type === "opus" ? C.green : e.type === "cascade" ? C.orange : C.textWhite;
-              return (
-                <div key={e.id} style={{ display: "flex", gap: 8, padding: "3px 12px", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 9, color: C.textNavy, fontFamily: font.mono, flexShrink: 0, paddingTop: 2, minWidth: 46 }}>{e.t}</span>
-                  <span style={{ fontSize: 9, color: C.textNavy, fontFamily: font.mono, flexShrink: 0, minWidth: 46 }}>{e.phase}</span>
-                  <span style={{ fontSize: 10.5, color: col, fontFamily: font.ui, lineHeight: 1.45, flex: 1, wordBreak: "break-word" }}>{e.msg}</span>
-                </div>
-              );
-            })}
-          </div>
+            minWidth: 160,
+          }}
+        >
+          <ErrorBoundary scope="center-stage">
+            <CenterStage
+              master={master}
+              subContracts={subContracts}
+              contracts={contracts}
+              onLoadContracts={loadContracts}
+              onHomologate={homologateContract}
+              addLog={addLog}
+            />
+          </ErrorBoundary>
         </div>
-      )}
+
+      </div>
     </div>
+  );
+}
+
+// ── Root export — wraps AppInner in DemoModeProvider ─────────────────────────
+export default function App() {
+  return (
+    <DemoModeProvider>
+      <AppInner />
+    </DemoModeProvider>
   );
 }
