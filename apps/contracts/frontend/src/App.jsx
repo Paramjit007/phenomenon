@@ -968,12 +968,22 @@ function AppInner() {
               master={master}
               subContracts={subContracts}
               contracts={contracts}
+              selectedContract={selectedId ? contracts[selectedId] ?? null : null}
               onLoadContracts={loadContracts}
               onHomologate={homologateContract}
               addLog={addLog}
               onCascadeComplete={(ids) => {
                 setGraphFlashIds(ids);
                 setTimeout(() => setGraphFlashIds([]), 2500);
+              }}
+              onClauseInserted={(contractId, clauseText) => {
+                // Log to engine log; additional side-effects can be added here.
+                addLog({
+                  id: Date.now(),
+                  t: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+                  msg: `Cláusula insertada en contrato ${contractId}`,
+                  type: "opus",
+                });
               }}
             />
           </ErrorBoundary>

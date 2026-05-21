@@ -8,21 +8,27 @@
  * control with field selector, EURIBOR slider, impact preview, live feed
  * and ecosystem homologation.
  *
- * The other 3 tabs show a "Coming soon" placeholder.
+ * The "Forja IA" tab renders ClauseForge — AI-assisted clause generation
+ * with ESS context, editable prompt, and progressive text reveal.
+ *
+ * The other 2 tabs show a "Coming soon" placeholder.
  *
  * Props:
  *   master            — master contract object
  *   subContracts      — array of sub-contract objects
  *   contracts         — contracts map { [id]: contract }
+ *   selectedContract  — the contract currently selected by the user (may be null)
  *   onLoadContracts   — () => Promise<void>  callback to refresh contracts
  *   onHomologate      — (id) => Promise<void>
  *   addLog            — (phase, msg, type?) => void
  *   onCascadeComplete — (affectedIds: string[]) => void  (flash graph nodes)
+ *   onClauseInserted  — (contractId, clauseText) => void  (optional)
  */
 import { useState } from "react";
 import { C, font } from "../constants.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import CascadePlayground from "./CascadePlayground.jsx";
+import ClauseForge from "./ClauseForge.jsx";
 
 const STAGE_TABS = [
   { key: "inicio",   label: "Inicio",    icon: "◎" },
@@ -62,10 +68,12 @@ export default function CenterStage({
   master,
   subContracts,
   contracts,
+  selectedContract,
   onLoadContracts,
   onHomologate,
   addLog,
   onCascadeComplete,
+  onClauseInserted,
 }) {
   const [activeTab, setActiveTab] = useState("cascada");
 
@@ -148,7 +156,18 @@ export default function CenterStage({
           </ErrorBoundary>
         )}
         {activeTab === "inicio" && <ComingSoon label="Inicio — Vista general del proyecto" />}
-        {activeTab === "forja" && <ComingSoon label="Forja IA — Generacion asistida de clausulas" />}
+        {activeTab === "forja" && (
+          <ErrorBoundary scope="center-stage-forja">
+            <ClauseForge
+              selectedContract={selectedContract}
+              master={master}
+              contracts={contracts}
+              addLog={addLog}
+              loadContracts={onLoadContracts}
+              onClauseInserted={onClauseInserted}
+            />
+          </ErrorBoundary>
+        )}
         {activeTab === "opus" && <ComingSoon label="Opus — Registro y homologacion" />}
       </div>
     </div>
