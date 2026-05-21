@@ -4,23 +4,25 @@
  * Renders a nav bar with 4 pill buttons:
  *   "Inicio"  ·  "Cascada" (active by default)  ·  "Forja IA"  ·  "Opus"
  *
- * The "Cascada" tab renders the existing CascadeControlPanel.
+ * The "Cascada" tab renders CascadePlayground — a full interactive cascade
+ * control with field selector, EURIBOR slider, impact preview, live feed
+ * and ecosystem homologation.
+ *
  * The other 3 tabs show a "Coming soon" placeholder.
  *
- * This component will be filled out in later priorities.
- *
  * Props:
- *   master         — master contract object
- *   subContracts   — array of sub-contract objects
- *   contracts      — contracts map { [id]: contract }
- *   onLoadContracts — () => Promise<void>  callback to refresh contracts
- *   onHomologate   — (id) => Promise<void>
- *   addLog         — (phase, msg, type?) => void
+ *   master            — master contract object
+ *   subContracts      — array of sub-contract objects
+ *   contracts         — contracts map { [id]: contract }
+ *   onLoadContracts   — () => Promise<void>  callback to refresh contracts
+ *   onHomologate      — (id) => Promise<void>
+ *   addLog            — (phase, msg, type?) => void
+ *   onCascadeComplete — (affectedIds: string[]) => void  (flash graph nodes)
  */
 import { useState } from "react";
 import { C, font } from "../constants.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
-import CascadeControlPanel from "./CascadeControlPanel.jsx";
+import CascadePlayground from "./CascadePlayground.jsx";
 
 const STAGE_TABS = [
   { key: "inicio",   label: "Inicio",    icon: "◎" },
@@ -50,7 +52,7 @@ function ComingSoon({ label }) {
         {label}
       </div>
       <div style={{ fontSize: 11, color: C.textLight, fontFamily: font.mono }}>
-        Próximamente — Priority 2+
+        Proximamente — Priority 3+
       </div>
     </div>
   );
@@ -63,6 +65,7 @@ export default function CenterStage({
   onLoadContracts,
   onHomologate,
   addLog,
+  onCascadeComplete,
 }) {
   const [activeTab, setActiveTab] = useState("cascada");
 
@@ -114,6 +117,8 @@ export default function CenterStage({
             key={t.key}
             role="tab"
             aria-selected={activeTab === t.key}
+            aria-controls={`stage-panel-${t.key}`}
+            id={`stage-tab-${t.key}`}
             onClick={() => setActiveTab(t.key)}
             style={navPill(t.key)}
           >
@@ -126,23 +131,25 @@ export default function CenterStage({
       {/* Tab content */}
       <div
         role="tabpanel"
+        id={`stage-panel-${activeTab}`}
+        aria-labelledby={`stage-tab-${activeTab}`}
         style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
       >
         {activeTab === "cascada" && (
           <ErrorBoundary scope="center-stage-cascada">
-            <CascadeControlPanel
+            <CascadePlayground
               master={master}
               subContracts={subContracts}
               contracts={contracts}
-              onLoadContracts={onLoadContracts}
-              onHomologate={onHomologate}
+              onCascadeComplete={onCascadeComplete}
               addLog={addLog}
+              loadContracts={onLoadContracts}
             />
           </ErrorBoundary>
         )}
         {activeTab === "inicio" && <ComingSoon label="Inicio — Vista general del proyecto" />}
-        {activeTab === "forja" && <ComingSoon label="Forja IA — Generación asistida de cláusulas" />}
-        {activeTab === "opus" && <ComingSoon label="Opus — Registro y homologación" />}
+        {activeTab === "forja" && <ComingSoon label="Forja IA — Generacion asistida de clausulas" />}
+        {activeTab === "opus" && <ComingSoon label="Opus — Registro y homologacion" />}
       </div>
     </div>
   );

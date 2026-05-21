@@ -971,6 +971,10 @@ function AppInner() {
               onLoadContracts={loadContracts}
               onHomologate={homologateContract}
               addLog={addLog}
+              onCascadeComplete={(ids) => {
+                setGraphFlashIds(ids);
+                setTimeout(() => setGraphFlashIds([]), 2500);
+              }}
             />
           </ErrorBoundary>
         </div>
