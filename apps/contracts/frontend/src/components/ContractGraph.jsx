@@ -3,6 +3,21 @@ import { C, font, SUB_META, statusColor, statusLabel, OPUS_LEVELS, getOpusLevel,
 import { detectRisks, getRiskLevel } from "./RiskEngine.jsx";
 import * as api from "../api/phenomenon.js";
 
+// ─── useReducedMotion — honours prefers-reduced-motion media query ─────────────
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e) => setReduced(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
+
 const MASTER_W = 190; const MASTER_H = 110;
 const NODE_W   = 160; const NODE_H   = 95;
 const CX = 520; const CY = 300; const RADIUS = 230;
@@ -428,7 +443,12 @@ function EdgePanel({ edge, subContracts, conditions, onAddCondition, onRemoveCon
 }
 
 // ─── Main graph component ─────────────────────────────────────────────────────
+// Props: master, subContracts, selectedId, onSelect, cascadeRunning,
+//        contractsMap (contracts keyed by id), onContractChange, onTerminate,
+//        onGenerateSub, externalFlashIds (keep prop name), pendingEditId
 export default function ContractGraph({ master, subContracts, selectedId, onSelect, cascadeRunning, contractsMap, onContractChange, onTerminate, onGenerateSub, externalFlashIds, pendingEditId }) {
+  const reducedMotion = useReducedMotion();
+
   const [positions,    setPositions]    = useState({});
   const [legendVisible,setLegendVisible]= useState(false);
   const [selectedEdge, setSelectedEdge] = useState(null);
@@ -438,13 +458,22 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
   const [zoom,         setZoom]         = useState(1.0);
   const [pan,          setPan]          = useState({ x: 0, y: 0 });
   const [isPanning,    setIsPanning]    = useState(false);
+  // Replay button: stores last non-empty externalFlashIds for re-trigger
+  const lastFlashRef    = useRef([]);
+  const [hasLastFlash,  setHasLastFlash]  = useState(false);
+  const [replayActive,  setReplayActive]  = useState(false);
   const panStart = useRef(null);
   const dragging   = useRef(null);
   const containerRef = useRef(null);
 
   // Accept external flash IDs (from EURIBOR cascade in demo panel)
+  // Also keep lastFlashRef up-to-date for the Replay button
   useEffect(() => {
-    if (externalFlashIds?.length > 0) flashNodes(externalFlashIds);
+    if (externalFlashIds?.length > 0) {
+      lastFlashRef.current = externalFlashIds;
+      setHasLastFlash(true);
+      flashNodes(externalFlashIds);
+    }
   }, [externalFlashIds]);
 
   // Zoom via scroll wheel
@@ -579,6 +608,7 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
         @keyframes edgeFlash { 0%,100% { opacity:0.45; } 50% { opacity:1; } }
         @keyframes edgeFlashSib { 0%,100% { opacity:0.3; } 50% { opacity:0.8; } }
         @keyframes particleFlow { 0% { offset-distance:0%; opacity:0; } 10% { opacity:0.9; } 90% { opacity:0.9; } 100% { offset-distance:100%; opacity:0; } }
+        @keyframes opusNeedsReviewPulse { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
       `}</style>
 
       {/* Zoom controls */}
@@ -603,6 +633,34 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
       <div style={{ position:"absolute", top:10, left:10, zIndex:10, background:"rgba(14,20,38,0.75)", color:"#94A3B8", fontSize:9, fontFamily:font.mono, letterSpacing:"0.1em", padding:"3px 8px", borderRadius:4, pointerEvents:"none" }}>
         L1 · Red Contractual
       </div>
+
+      {/* Replay button — visible only after at least one cascade has flashed */}
+      {hasLastFlash && (
+        <button
+          aria-label="Reproducir última cascada"
+          onClick={e => {
+            e.stopPropagation();
+            if (replayActive) return;
+            setReplayActive(true);
+            flashNodes(lastFlashRef.current);
+            setTimeout(() => setReplayActive(false), 3000);
+          }}
+          style={{
+            position: "absolute", top: 50, right: 10, zIndex: 25,
+            padding: "4px 10px",
+            background: replayActive ? C.orange : C.white,
+            color: replayActive ? C.white : C.orange,
+            border: `1px solid ${C.orange}60`,
+            borderRadius: 6, cursor: replayActive ? "default" : "pointer",
+            fontSize: 11, fontFamily: font.ui, fontWeight: 600,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            transition: "background 0.2s, color 0.2s",
+            opacity: replayActive ? 0.8 : 1,
+          }}
+        >
+          {replayActive ? "⟳ Reproduciendo…" : "↺ Replay"}
+        </button>
+      )}
 
       {/* Toolbar: lifecycle actions */}
       {selectedId && selectedId !== master?.id && contractsMap?.[selectedId]?.status !== "TERMINATED" && (
@@ -661,14 +719,28 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
           const d    = edgePath(master.id, c.id, MASTER_W, MASTER_H, NODE_W, NODE_H);
           if (!d) return null;
           const col      = meta?.color ?? C.textMuted;
+          // activeFlashIds: edge is active when this sub-contract is in the current flash set
           const isFlash  = flashIds.has(c.id) || flashIds.has(master.id);
           const isSel    = selectedEdge?.kind === "master-sub" && selectedEdge?.toId === c.id;
           const mid      = midPoint(d);
+
+          // Opus ring data for this sub-contract node
+          const subContract  = contractsMap?.[c.id] ?? c;
+          const opusLevel    = getOpusLevel(subContract);
+          const subPos       = positions[c.id];
+          const nodeR        = 8; // visual ring reference radius (rings are around the node card, rendered in SVG space)
+
           return (
             <g key={c.id} style={{ cursor:"pointer", pointerEvents:"all" }}
                onClick={e => { e.stopPropagation(); setSelectedEdge({ kind:"master-sub", fromId:master.id, toId:c.id, fromType:"MASTER", toType:c.type }); setQuickEditId(null); }}>
               <path d={d} stroke="transparent" strokeWidth={20} fill="none" />
               {isSel && <path d={d} stroke={col} strokeWidth={8} fill="none" opacity={0.15} />}
+
+              {/* Active cascade: thicker highlight line (fallback for reduced-motion) */}
+              {isFlash && reducedMotion && (
+                <path d={d} stroke={C.orange} strokeWidth={3} fill="none" opacity={0.7} />
+              )}
+
               <path d={d} stroke={col} strokeWidth={isSel ? 2.5 : 1.5}
                 strokeDasharray="8 5" fill="none"
                 opacity={isFlash ? 1 : isSel ? 0.8 : 0.45}
@@ -677,8 +749,19 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
               <text x={mid.x} y={mid.y} textAnchor="middle" fontSize={8} fill={col} opacity={isSel ? 0.9 : 0.65}
                 fontFamily="'JetBrains Mono','Courier New',monospace" fontWeight="600">IF</text>
 
+              {/* ── Cascade edge pulse dot (travels master → sub while edge is active) ── */}
+              {isFlash && !reducedMotion && (
+                <circle r={5} fill={C.orange} opacity={0.9} pointerEvents="none">
+                  <animateMotion
+                    dur="1.2s"
+                    repeatCount="indefinite"
+                    path={d}
+                  />
+                </circle>
+              )}
+
               {/* KPMG money-out particles (gold → FINANCIACION) */}
-              {isKPMG && c.type === "FINANCIACION" && [0, 1.1, 2.2].map((delay, i) => (
+              {isKPMG && c.type === "FINANCIACION" && !reducedMotion && [0, 1.1, 2.2].map((delay, i) => (
                 <circle key={i} r={4} fill="#C9A84C" opacity={0.9}>
                   <animateMotion dur="2.8s" begin={`${delay}s`} repeatCount="indefinite" rotate="auto">
                     <mpath href={`#ep-${c.id}`} />
@@ -686,13 +769,57 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
                 </circle>
               ))}
               {/* KPMG rent-back particles (cyan ← CESION_CREDITO, reversed) */}
-              {isKPMG && c.type === "CESION_CREDITO" && [0, 1.4, 2.8].map((delay, i) => (
+              {isKPMG && c.type === "CESION_CREDITO" && !reducedMotion && [0, 1.4, 2.8].map((delay, i) => (
                 <circle key={i} r={3.5} fill={C.cyan} opacity={0.85}>
                   <animateMotion dur="3.5s" begin={`${delay}s`} repeatCount="indefinite" rotate="auto" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
                     <mpath href={`#ep-${c.id}`} />
                   </animateMotion>
                 </circle>
               ))}
+
+              {/* ── Opus-level ring around the sub-contract node ── */}
+              {subPos && opusLevel === "OPONIBLE" && (
+                <rect
+                  x={subPos.x - 4} y={subPos.y - 4}
+                  width={NODE_W + 8} height={NODE_H + 8}
+                  rx={14} ry={14}
+                  fill="none"
+                  stroke={C.gold} strokeWidth={2}
+                  pointerEvents="none"
+                  opacity={0.85}
+                />
+              )}
+              {subPos && opusLevel === "COMPLETE" && (
+                <rect
+                  x={subPos.x - 4} y={subPos.y - 4}
+                  width={NODE_W + 8} height={NODE_H + 8}
+                  rx={14} ry={14}
+                  fill="none"
+                  stroke={C.white} strokeWidth={1}
+                  strokeDasharray="4 4"
+                  pointerEvents="none"
+                  opacity={0.6}
+                />
+              )}
+              {subPos && opusLevel === "PARTIAL" && subContract.status === "NEEDS_REVIEW" && (
+                <rect
+                  x={subPos.x - 4} y={subPos.y - 4}
+                  width={NODE_W + 8} height={NODE_H + 8}
+                  rx={14} ry={14}
+                  fill="none"
+                  stroke={C.orange} strokeWidth={2}
+                  pointerEvents="none"
+                >
+                  {!reducedMotion && (
+                    <animate
+                      attributeName="opacity"
+                      values="1;0.2;1"
+                      dur="1s"
+                      repeatCount="indefinite"
+                    />
+                  )}
+                </rect>
+              )}
             </g>
           );
         })}
@@ -733,6 +860,57 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
             })
           );
         })}
+
+        {/* ── Opus-level ring for the MASTER node ── */}
+        {(() => {
+          const masterPos   = positions[master.id];
+          const masterOpus  = getOpusLevel(contractsMap?.[master.id] ?? master);
+          if (!masterPos) return null;
+          if (masterOpus === "OPONIBLE") {
+            return (
+              <rect
+                x={masterPos.x - 4} y={masterPos.y - 4}
+                width={MASTER_W + 8} height={MASTER_H + 8}
+                rx={14} ry={14}
+                fill="none"
+                stroke={C.gold} strokeWidth={2}
+                pointerEvents="none"
+                opacity={0.85}
+              />
+            );
+          }
+          if (masterOpus === "COMPLETE") {
+            return (
+              <rect
+                x={masterPos.x - 4} y={masterPos.y - 4}
+                width={MASTER_W + 8} height={MASTER_H + 8}
+                rx={14} ry={14}
+                fill="none"
+                stroke={C.white} strokeWidth={1}
+                strokeDasharray="4 4"
+                pointerEvents="none"
+                opacity={0.6}
+              />
+            );
+          }
+          if (master.status === "NEEDS_REVIEW") {
+            return (
+              <rect
+                x={masterPos.x - 4} y={masterPos.y - 4}
+                width={MASTER_W + 8} height={MASTER_H + 8}
+                rx={14} ry={14}
+                fill="none"
+                stroke={C.orange} strokeWidth={2}
+                pointerEvents="none"
+              >
+                {!reducedMotion && (
+                  <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite" />
+                )}
+              </rect>
+            );
+          }
+          return null;
+        })()}
       </svg>
 
       {/* Contract nodes */}
