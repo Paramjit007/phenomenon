@@ -87,8 +87,8 @@ function SectionBlock({ title, subtitle, color, children, forceOpen = false }) {
       >
         <span style={{ fontSize: 13, color, marginTop: 1 }}>{isOpen ? "▾" : "▸"}</span>
         <div style={{ textAlign: "left" }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.textDark, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
-          {subtitle && <div style={{ fontSize: 9, color: C.textLight, fontFamily: font.mono, marginTop: 2, letterSpacing: "0.04em" }}>{subtitle}</div>}
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.textDark, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
+          {subtitle && <div style={{ fontSize: 10, color: C.textLight, fontFamily: font.mono, marginTop: 2, letterSpacing: "0.04em" }}>{subtitle}</div>}
         </div>
       </button>
       {isOpen && children}
@@ -179,6 +179,7 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
 
   const [panelWidth, setPanelWidth] = useState(560);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [showExpandDrawer, setShowExpandDrawer] = useState(false);
   const [resizeHover, setResizeHover] = useState(false);
   const resizeRef = useRef({ active: false, startX: 0, startW: 0 });
 
@@ -356,8 +357,8 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
 
         {/* Panel label */}
         <div style={{ padding:"3px 12px", background:color, borderBottom:`1px solid ${color}`, flexShrink:0, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <span style={{ fontSize:8, fontFamily:"'JetBrains Mono','Courier New',monospace", letterSpacing:"0.1em", color:"rgba(255,255,255,0.5)" }}>R1 · CAMPOS</span>
-          <span style={{ fontSize:8, fontFamily:"'JetBrains Mono','Courier New',monospace", color:"rgba(255,255,255,0.4)" }}>
+          <span style={{ fontSize:9, fontFamily:"'JetBrains Mono','Courier New',monospace", letterSpacing:"0.1em", color:"rgba(255,255,255,0.5)" }}>R1 · CAMPOS</span>
+          <span style={{ fontSize:9, fontFamily:"'JetBrains Mono','Courier New',monospace", color:"rgba(255,255,255,0.4)" }}>
             {statusLabel(contract.status)}
           </span>
         </div>
@@ -372,6 +373,26 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => setShowExpandDrawer(true)}
+              style={{
+                marginLeft: 'auto',
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: 6,
+                padding: '4px 10px',
+                fontSize: 11,
+                color: C.white,
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontFamily: font.ui,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              ⤢ Expandir campos
+            </button>
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: C.white, borderRadius: 5, padding: "4px 10px", cursor: "pointer", fontSize: 16 }}>×</button>
           </div>
         </div>
@@ -954,6 +975,74 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
             contractType={contractType}
             onAddClause={text => setLocalClauses(prev => [...prev, text])}
           />
+        </div>
+      )}
+
+      {/* Expand drawer overlay */}
+      {showExpandDrawer && (
+        <div
+          onClick={() => setShowExpandDrawer(false)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.45)', zIndex: 300,
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: 700, height: '100%',
+              background: C.white,
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
+            }}
+          >
+            {/* Drawer header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '14px 20px',
+              borderBottom: `1px solid ${C.border}`,
+              background: C.bgAlt,
+              flexShrink: 0,
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.textDark, fontFamily: font.ui }}>
+                {master?.ess?.partyA || 'Contrato'} — Todos los campos
+              </div>
+              <button
+                onClick={() => setShowExpandDrawer(false)}
+                style={{
+                  marginLeft: 'auto',
+                  background: C.bgAlt, border: `1px solid ${C.border}`,
+                  borderRadius: 6, padding: '5px 12px',
+                  fontSize: 12, color: C.textMuted, cursor: 'pointer', fontWeight: 600,
+                  fontFamily: font.ui,
+                }}
+              >
+                ✕ Cerrar
+              </button>
+            </div>
+            {/* Drawer body */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 16, fontFamily: font.ui }}>
+                Vista expandida — todos los campos del contrato en una sola pantalla.
+                Los cambios realizados aquí se reflejan en el panel principal al cerrar.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div style={{ gridColumn: '1/-1', padding: '20px', background: C.bgAlt, borderRadius: 8, border: `1px solid ${C.border}`, textAlign: 'center', color: C.textMuted, fontSize: 12, fontFamily: font.ui }}>
+                  Use el panel principal para editar campos. Esta vista expandida muestra el contrato completo sin las limitaciones de espacio del panel lateral.
+                </div>
+              </div>
+            </div>
+            {/* Drawer footer */}
+            <div style={{ flexShrink: 0, padding: '12px 20px', borderTop: `1px solid ${C.border}`, background: C.bgAlt, display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setShowExpandDrawer(false)}
+                style={{ background: C.navy, color: C.gold, border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: font.ui }}
+              >
+                ✓ Cerrar vista expandida
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

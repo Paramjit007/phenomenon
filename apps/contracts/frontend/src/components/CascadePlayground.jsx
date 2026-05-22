@@ -427,7 +427,7 @@ function CascadePlaygroundInner({
 
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex",
-      flexDirection: "column", gap: 14 }}>
+      flexDirection: "column", gap: 14, background: C.white }}>
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

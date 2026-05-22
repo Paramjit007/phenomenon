@@ -25,6 +25,11 @@
 | 17 | v6-network-view | CenterStage "Red" tab panel used `role="status"` which is semantically incorrect (status role is for live regions with brief updates, not navigation legends). Corrected to `role="region"` with an `aria-label`. WCAG 2.1 SC 4.1.2 Name, Role, Value. | major | fixed — v6-network-view |
 | 18 | v6-network-view | CenterStage "Red" tab panel was missing the colour-coding legend required by the Priority 6 spec. Added a full legend with master-group colours, Opus ring types, and connection type indicators — all colours from `C.*` tokens only. | major | fixed — v6-network-view |
 
+| 19 | v8-visual-fix | `CenterStage` outermost wrapper used `background: C.bgAlt` causing the entire right stage area to appear beige/grey instead of white, creating contrast mismatch against the light centre pane. Fixed: changed to `C.white`. | minor | fixed — v8-visual-fix |
+| 20 | v8-visual-fix | `CascadePlayground` scrollable body had no explicit background, inheriting from `CenterStage` wrapper. Fixed: explicit `background: C.white` set on the scrollable container so it remains white even if the parent changes. The inner live-feed dark box (`C.navyDeep`) is intentionally preserved. | minor | fixed — v8-visual-fix |
+| 21 | v8-visual-fix | Left rail default width `220px` caused the `ContractGraph` SVG to be squeezed between `CompactIAPanel` and `EngineLog` — barely visible on load. Fixed: initial width 220→280, `minWidth` 160→200, ContractGraph wrapper div gains `minHeight: 0` (required for flex children to shrink correctly when using `flex: 1` inside a flex column). | major | fixed — v8-visual-fix |
+| 22 | v8-visual-fix | `SectionBlock` header font was `12px` (too small given the density of the centre pane). Bumped to `13px`. Subtitle was `9px` (too small for secondary text readability). Bumped to `10px`. Panel label bar was `8px` — bumped to `9px`. All sizes increased by 1px only; no layout breakage observed. | minor | fixed — v8-visual-fix |
+
 ---
 
 ## How to use

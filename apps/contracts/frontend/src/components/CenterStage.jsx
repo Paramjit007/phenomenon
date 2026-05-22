@@ -120,7 +120,7 @@ export default function CenterStage({
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: C.bgAlt,
+        background: C.white,
         overflow: "hidden",
       }}
     >
@@ -134,7 +134,7 @@ export default function CenterStage({
           alignItems: "center",
           gap: 4,
           padding: "0 12px",
-          background: C.navyDeep,
+          background: C.navy,
           flexShrink: 0,
           borderBottom: `1px solid ${C.borderDark}`,
         }}

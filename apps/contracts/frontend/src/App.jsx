@@ -178,7 +178,7 @@ function AppInner() {
   const [templateKey,  setTemplateKey]  = useState(null);
   const [newProject,   setNewProject]   = useState(false);
   // 3-pane widths: left rail (fixed), right stage (fixed), centre is flex:1
-  const [leftW,        setLeftW]        = useState(220);
+  const [leftW,        setLeftW]        = useState(280);
   const [stageW,       setStageW]       = useState(420);
   // Legacy rightW kept for S/M/L/XL snap buttons (hidden in demoMode but still functional)
   const [rightW,       setRightW]       = useState(580);
@@ -577,11 +577,11 @@ function AppInner() {
             flexDirection: "column",
             overflow: "hidden",
             flexShrink: 0,
-            minWidth: 160,
+            minWidth: 200,
           }}
         >
           {/* Contract graph */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
             <ErrorBoundary scope="graph">
               <ContractGraph
                 master={master}
