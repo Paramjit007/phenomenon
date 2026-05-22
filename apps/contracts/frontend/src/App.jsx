@@ -178,7 +178,7 @@ function AppInner() {
   const [templateKey,  setTemplateKey]  = useState(null);
   const [newProject,   setNewProject]   = useState(false);
   // 3-pane widths: left rail (fixed), right stage (fixed), centre is flex:1
-  const [leftW,        setLeftW]        = useState(280);
+  const [leftW,        setLeftW]        = useState(300);
   const [stageW,       setStageW]       = useState(420);
   // Legacy rightW kept for S/M/L/XL snap buttons (hidden in demoMode but still functional)
   const [rightW,       setRightW]       = useState(580);
@@ -329,10 +329,10 @@ function AppInner() {
 
   const tabBtn = (key) => ({
     padding: "0 12px", height: "100%", display: "flex", alignItems: "center", gap: 5,
-    cursor: "pointer", fontSize: 12, fontFamily: font.ui, fontWeight: 500,
+    cursor: "pointer", fontSize: 12, fontFamily: font.ui, fontWeight: 600,
     color: rightTab === key ? C.textDark : C.textMuted,
-    background: rightTab === key ? C.bg : "none",
-    border: "none", borderBottom: rightTab === key ? `2px solid ${C.gold}` : "2px solid transparent",
+    background: "none",
+    border: "none", borderBottom: rightTab === key ? `2.5px solid ${C.gold}` : "2.5px solid transparent",
     transition: "all 0.15s",
   });
 
@@ -345,8 +345,8 @@ function AppInner() {
   });
 
   const gripV = (hover) => ({
-    width: 8, cursor: "col-resize", flexShrink: 0,
-    background: hover ? `${C.blue}20` : C.bgAlt,
+    width: 6, cursor: "col-resize", flexShrink: 0,
+    background: hover ? C.gold : C.border,
     borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`,
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
     transition: "background 0.15s", userSelect: "none",
@@ -567,7 +567,7 @@ function AppInner() {
       </div>
 
       {/* ── BODY: 3-pane workspace ── */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", background: C.bg }}>
 
         {/* ── LEFT RAIL (~220px): graph + compact IA + permanent EngineLog ── */}
         <div
@@ -664,7 +664,7 @@ function AppInner() {
           <div
             data-testid="right-panel-tabs"
             style={{
-              height: 38,
+              height: 40,
               borderBottom: `1px solid ${C.border}`,
               display: "flex",
               alignItems: "stretch",

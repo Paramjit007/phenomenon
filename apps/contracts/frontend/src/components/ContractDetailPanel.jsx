@@ -13,19 +13,27 @@ const ONTOLOGY_BADGES = {
 };
 
 function FieldInput({ field, value, onChange }) {
+  const [focused, setFocused] = useState(false);
   const empty = !value?.toString()?.trim();
-  const borderColor = empty ? C.orange : C.border;
+  const borderColor = focused ? C.gold : empty ? C.orange : C.border;
   const base = {
-    width: "100%", padding: "10px 14px", fontSize: 14, fontFamily: font.ui,
-    border: `1.5px solid ${borderColor}`, borderRadius: 7,
-    background: empty ? "#FFFBEB" : C.bgInput, color: C.textDark,
+    width: "100%", padding: "7px 10px", fontSize: 13, fontFamily: font.ui,
+    border: `1px solid ${borderColor}`, borderRadius: 6,
+    background: empty ? C.orangeBg : C.white, color: C.textDark,
     outline: "none", transition: "border-color 0.2s, box-shadow 0.2s",
-    boxShadow: empty ? `0 0 0 3px ${C.orange}18` : "none",
+    boxShadow: focused ? "0 0 0 3px rgba(201,168,76,0.2)" : empty ? `0 0 0 3px ${C.orange}18` : "none",
     lineHeight: 1.5,
+    minHeight: 36,
+    boxSizing: "border-box",
+  };
+
+  const focusHandlers = {
+    onFocus: () => setFocused(true),
+    onBlur:  () => setFocused(false),
   };
 
   if (field.type === "select") return (
-    <select value={value ?? ""} onChange={e => onChange(e.target.value)} style={{ ...base, cursor: "pointer" }}>
+    <select value={value ?? ""} onChange={e => onChange(e.target.value)} style={{ ...base, cursor: "pointer" }} {...focusHandlers}>
       <option value="">— seleccionar —</option>
       {field.options?.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -38,6 +46,7 @@ function FieldInput({ field, value, onChange }) {
       placeholder={field.placeholder ?? ""}
       rows={4}
       style={{ ...base, resize: "vertical", lineHeight: 1.65, minHeight: 80 }}
+      {...focusHandlers}
     />
   );
 
@@ -48,6 +57,7 @@ function FieldInput({ field, value, onChange }) {
       onChange={e => onChange(e.target.value)}
       placeholder={field.placeholder ?? ""}
       style={base}
+      {...focusHandlers}
     />
   );
 }
@@ -76,22 +86,43 @@ function FieldNote({ field }) {
   );
 }
 
-function SectionBlock({ title, subtitle, color, children, forceOpen = false }) {
+function SectionBlock({ title, subtitle, color, children, forceOpen = false, fieldCount }) {
   const [open, setOpen] = useState(true);
   const isOpen = open || forceOpen;
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div style={{
+      background: C.white,
+      border: `1px solid ${C.border}`,
+      borderRadius: 8,
+      marginBottom: 8,
+      overflow: "hidden",
+    }}>
       <button
         onClick={() => setOpen(p => !p)}
-        style={{ display: "flex", alignItems: "flex-start", gap: 8, width: "100%", background: "none", border: "none", cursor: "pointer", padding: "0 0 8px 0", borderBottom: `2px solid ${color}30`, marginBottom: isOpen ? 14 : 0 }}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          width: "100%", background: C.bgAlt, border: "none",
+          cursor: "pointer", padding: "8px 14px",
+          borderRadius: isOpen ? "8px 8px 0 0" : 8,
+        }}
       >
-        <span style={{ fontSize: 13, color, marginTop: 1 }}>{isOpen ? "▾" : "▸"}</span>
-        <div style={{ textAlign: "left" }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.textDark, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
-          {subtitle && <div style={{ fontSize: 10, color: C.textLight, fontFamily: font.mono, marginTop: 2, letterSpacing: "0.04em" }}>{subtitle}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 9, color, flexShrink: 0 }}>{color === C.gold ? "⬡" : color === C.purple ? "⊙" : color === C.blue ? "⚙" : "◈"}</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.8px" }}>{title}</span>
+          {subtitle && <span style={{ fontSize: 10, color: C.textLight, fontFamily: font.ui }}>{subtitle}</span>}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {fieldCount != null && (
+            <span style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px", fontSize: 9, color: C.textMuted, fontFamily: font.mono }}>
+              {fieldCount}
+            </span>
+          )}
+          <span style={{ fontSize: 11, color: C.textMuted }}>{isOpen ? "▲" : "▼"}</span>
         </div>
       </button>
-      {isOpen && children}
+      <div style={{ display: isOpen ? "block" : "none" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -355,34 +386,42 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
       {/* Main panel — fills the parent (App controls total width via rightW) */}
       <div style={{ flex: 1, background: C.white, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
 
-        {/* Panel label */}
-        <div style={{ padding:"3px 12px", background:color, borderBottom:`1px solid ${color}`, flexShrink:0, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <span style={{ fontSize:9, fontFamily:"'JetBrains Mono','Courier New',monospace", letterSpacing:"0.1em", color:"rgba(255,255,255,0.5)" }}>R1 · CAMPOS</span>
-          <span style={{ fontSize:9, fontFamily:"'JetBrains Mono','Courier New',monospace", color:"rgba(255,255,255,0.4)" }}>
-            {statusLabel(contract.status)}
-          </span>
-        </div>
-
         {/* Header */}
-        <div style={{ background: color, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <span style={{ fontSize: 22, color: C.white }}>{isMaster ? "⬡" : (meta?.icon ?? "○")}</span>
+        <div style={{ background: C.white, padding: "10px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0, borderBottom: `1px solid ${C.border}`, minHeight: 56 }}>
+          <span style={{ fontSize: 20, color }}>{isMaster ? "⬡" : (meta?.icon ?? "○")}</span>
           <div style={{ flex: 1, overflow: "hidden" }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.white, fontFamily: font.ui, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{contract.name}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", fontFamily: font.mono }}>
-              {isMaster ? "Contrato Marco" : (meta?.law ?? contractType)}
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.textDark, fontFamily: font.ui, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{contract.name}</div>
+            <div style={{ fontSize: 11, color: C.textMuted, fontFamily: font.ui, marginTop: 2 }}>
+              {isMaster
+                ? `Master · ${(Object.values(contracts).filter(c => c.parentId === contractId).length)} sub-contratos vinculados`
+                : (meta?.law ?? contractType)}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {/* Opus status badge */}
+            {(() => {
+              const level = contract.opus?.status ?? "PARTIAL";
+              const isOponible = level === "OPONIBLE";
+              const isComplete = level === "COMPLETE";
+              const badgeBg    = isOponible ? C.greenBg  : isComplete ? C.goldBg  : C.orangeBg;
+              const badgeBdr   = isOponible ? `${C.green}44` : isComplete ? `${C.gold}44` : `${C.orange}44`;
+              const badgeColor = isOponible ? C.green    : isComplete ? C.goldDim : C.orange;
+              const badgeLabel = isOponible ? "● OPONIBLE" : isComplete ? "● COMPLETO" : "● PARCIAL";
+              return (
+                <span style={{ background: badgeBg, border: `1px solid ${badgeBdr}`, color: badgeColor, fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, fontFamily: font.ui, whiteSpace: "nowrap" }}>
+                  {badgeLabel}
+                </span>
+              );
+            })()}
             <button
               onClick={() => setShowExpandDrawer(true)}
               style={{
-                marginLeft: 'auto',
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.3)',
+                background: C.bgAlt,
+                border: `1px solid ${C.border}`,
                 borderRadius: 6,
                 padding: '4px 10px',
                 fontSize: 11,
-                color: C.white,
+                color: C.textMuted,
                 cursor: 'pointer',
                 fontWeight: 600,
                 fontFamily: font.ui,
@@ -391,9 +430,9 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
                 gap: 4,
               }}
             >
-              ⤢ Expandir campos
+              ⤢ Expandir
             </button>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: C.white, borderRadius: 5, padding: "4px 10px", cursor: "pointer", fontSize: 16 }}>×</button>
+            <button onClick={onClose} style={{ background: C.bgAlt, border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: 5, padding: "4px 10px", cursor: "pointer", fontSize: 16 }}>×</button>
           </div>
         </div>
 
@@ -456,7 +495,7 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
         </div>
 
         {/* Scrollable content */}
-        <div ref={scrollBody} style={{ flex: 1, overflowY: "auto", padding: "18px 22px" }}>
+        <div ref={scrollBody} style={{ flex: 1, overflowY: "auto", padding: "18px 22px", background: C.bg }}>
         <style>{`
           @keyframes fieldPulse {
             0%   { box-shadow: 0 0 0 0 ${C.orange}80; }
@@ -467,20 +506,21 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
 
           {/* Elementos Esenciales del Contrato */}
           <SectionBlock
-            title="Elementos Esenciales del Contrato (Art. 1261 CC)"
-            subtitle="Identidad jurídica del contrato: partes, jurisdicción y fechas. Modificarlos implica novación."
+            title="ESS — Identidad Estable"
+            subtitle="Art. 1261 CC · novación si se modifican"
             color={color}
-            forceOpen={!!highlightKey}>
-            <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 12 }}>
+            forceOpen={!!highlightKey}
+            fieldCount={`${filled}/${requiredFields.length} · ${allFilled ? "todos ✓" : "pendientes"}`}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, padding: "10px 14px" }}>
               {requiredFields.map(f => {
                 const isHl = highlightKey === f.key;
                 return (
                   <div key={f.key}
                     ref={el => { if (el) fieldRefs.current[f.key] = el; }}
                     style={{ gridColumn: f.type === "textarea" ? "1/-1" : undefined, borderRadius: 8, outline: isHl ? `3px solid ${C.orange}` : "none", outlineOffset: 3, animation: isHl ? "fieldPulse 0.7s ease 3" : "none", transition: "outline 0.2s", background: isHl ? `${C.orange}10` : "transparent", padding: isHl ? "8px" : "0" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.05em" }}>{f.label}</label>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.3px" }}>{f.label}</label>
                         <FieldBadges field={f} />
                       </div>
                       {!localEss[f.key]?.toString()?.trim() && <span style={{ fontSize: 10, color: C.orange, fontFamily: font.mono }}>Requerido</span>}
@@ -495,15 +535,15 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
 
           {/* Party details */}
           {partyFields.length > 0 && (
-            <SectionBlock title="Datos Registrales de las Partes" color={C.textMuted} forceOpen={!!highlightKey}>
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 12 }}>
+            <SectionBlock title="AG — Datos Registrales de las Partes" color={C.textMuted} forceOpen={!!highlightKey} fieldCount={partyFields.length}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "10px 14px" }}>
                 {partyFields.map(f => {
                   const isHl = highlightKey === f.key;
                   return (
                     <div key={f.key} ref={el => { if (el) fieldRefs.current[f.key] = el; }}
-                      style={{ borderRadius: 8, outline: isHl ? `3px solid ${C.orange}` : "none", outlineOffset: 3, animation: isHl ? "fieldPulse 0.7s ease 3" : "none", background: isHl ? `${C.orange}10` : "transparent", padding: isHl ? "8px" : "0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.04em", display: "block" }}>{f.label}</label>
+                      style={{ gridColumn: f.type === "textarea" ? "1/-1" : undefined, borderRadius: 8, outline: isHl ? `3px solid ${C.orange}` : "none", outlineOffset: 3, animation: isHl ? "fieldPulse 0.7s ease 3" : "none", background: isHl ? `${C.orange}10` : "transparent", padding: isHl ? "8px" : "0" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.3px", display: "block" }}>{f.label}</label>
                         <FieldBadges field={f} />
                       </div>
                       <FieldInput field={f} value={localTerms[f.key] ?? ""} onChange={v => handleTermChange(f.key, v)} />
@@ -521,7 +561,9 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
               title={`Partes Adicionales — Novación Subjetiva (${(localTerms.additionalParties ?? []).length})`}
               subtitle="Art. 1203 CC · Partes añadidas al ecosistema contractual"
               color={C.purple}
-              forceOpen={!!highlightKey}>
+              forceOpen={!!highlightKey}
+              fieldCount={(localTerms.additionalParties ?? []).length}>
+              <div style={{ padding: "10px 14px" }}>
               {(localTerms.additionalParties ?? []).map((party, idx) => (
                 <div key={idx} style={{ marginBottom:14, padding:"12px 14px", background:`${C.purple}06`,
                   border:`1px solid ${C.purple}25`, borderRadius:8 }}>
@@ -573,20 +615,23 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
               <div style={{ fontSize:10, color:C.textMuted, fontFamily:font.ui, marginTop:4, lineHeight:1.6 }}>
                 Para añadir o eliminar partes, usa la pestaña <strong>🌐 Ecosistema → Partes</strong>.
               </div>
+              </div>
             </SectionBlock>
           )}
 
           {/* Master-specific contract terms */}
           {contractFields.length > 0 && (
-            <SectionBlock title="Condiciones Económicas y Comerciales" color={C.blue} forceOpen={!!highlightKey}>
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 12 }}>
+            <SectionBlock title="AG — Campos Operativos" color={C.blue} forceOpen={!!highlightKey} fieldCount={contractFields.length}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "10px 14px" }}>
                 {contractFields.map(f => {
                   const isHl = highlightKey === f.key;
+                  const isCascadeUpdated = f.key === "euriborRate" || f.key === "spread";
                   return (
                     <div key={f.key} ref={el => { if (el) fieldRefs.current[f.key] = el; }}
                       style={{ gridColumn: f.type === "textarea" ? "1/-1" : undefined, borderRadius: 8, outline: isHl ? `3px solid ${C.orange}` : "none", outlineOffset: 3, animation: isHl ? "fieldPulse 0.7s ease 3" : "none", background: isHl ? `${C.orange}10` : "transparent", padding: isHl ? "8px" : "0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, flexWrap: "wrap" }}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.04em", display: "block" }}>{f.label}</label>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, flexWrap: "wrap" }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: isHl ? C.orange : isCascadeUpdated ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.3px", display: "block" }}>{f.label}</label>
+                        {isCascadeUpdated && <span style={{ fontSize: 8, color: C.orange, background: C.orangeBg, border: `1px solid ${C.orange}40`, borderRadius: 4, padding: "1px 5px", fontFamily: font.mono, fontWeight: 700 }}>⚡ ACTUALIZADO</span>}
                         <FieldBadges field={f} />
                       </div>
                       <FieldInput field={f} value={localTerms[f.key] ?? ""} onChange={v => handleTermChange(f.key, v)} />
@@ -600,15 +645,15 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
 
           {/* Sub-contract specific fields */}
           {subFields.map(section => (
-            <SectionBlock key={section.section} title={section.section} color={meta?.color ?? C.textMuted} forceOpen={!!highlightKey}>
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 12 }}>
+            <SectionBlock key={section.section} title={section.section} color={meta?.color ?? C.textMuted} forceOpen={!!highlightKey} fieldCount={section.fields.length}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "10px 14px" }}>
                 {section.fields.map(f => {
                   const isHl = highlightKey === f.key;
                   return (
                     <div key={f.key} ref={el => { if (el) fieldRefs.current[f.key] = el; }}
                       style={{ gridColumn: f.type === "textarea" ? "1/-1" : undefined, borderRadius: 8, outline: isHl ? `3px solid ${C.orange}` : "none", outlineOffset: 3, animation: isHl ? "fieldPulse 0.7s ease 3" : "none", background: isHl ? `${C.orange}10` : "transparent", padding: isHl ? "8px" : "0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, flexWrap: "wrap" }}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.04em", display: "block" }}>{f.label}</label>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, flexWrap: "wrap" }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: isHl ? C.orange : C.textMuted, fontFamily: font.ui, textTransform: "uppercase", letterSpacing: "0.3px", display: "block" }}>{f.label}</label>
                         <FieldBadges field={f} />
                       </div>
                       <FieldInput field={f} value={localTerms[f.key] ?? ""} onChange={v => handleTermChange(f.key, v)} />
@@ -622,7 +667,8 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
 
           {/* Sub-contract generation (master only) */}
           {isMaster && pendingTypes.length > 0 && (
-            <SectionBlock title="Subcontratos a Generar" color={C.gold}>
+            <SectionBlock title="Sub-contratos IF a Generar" color={C.gold} fieldCount={pendingTypes.length}>
+              <div style={{ padding: "10px 14px" }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
                 {pendingTypes.map(t => {
                   const m = SUB_META[t]; const st = generating[t];
@@ -644,14 +690,16 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
               >
                 {allFilled ? `⬡ Generar ${pendingTypes.length} subcontrato${pendingTypes.length > 1 ? "s" : ""} vía PHENOMENON` : "Complete los campos obligatorios primero"}
               </button>
+              </div>
             </SectionBlock>
           )}
 
           {/* ── Opus level + Oponibility (Bloques IV + V) ─────────────── */}
           <SectionBlock
             title="Eficacia del Contrato · Oponibilidad"
-            subtitle="Entre partes (título) → Plena inter partes (título + modo verificado) → Oponible erga omnes (Art. 32 LH · inscrito en Registro)"
+            subtitle="Art. 32 LH · Opus PARCIAL → COMPLETO → OPONIBLE"
             color={C.gold}>
+            <div style={{ padding: "10px 14px" }}>
             {(() => {
               const level = getOpusLevel(contract);
               const cfg   = OPUS_LEVELS[level];
@@ -756,10 +804,12 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
                 </>
               );
             })()}
+            </div>
           </SectionBlock>
 
           {/* ── Homologation summary (full panel in ⊙ Verificar tab) ──────── */}
-          <SectionBlock title="Verificación Jurídica del Contrato" color={C.purple} subtitle="Comprobación de requisitos legales. Para análisis completo, use la pestaña ⊙ Verificar — errores clicables para navegar al campo.">
+          <SectionBlock title="Verificación Jurídica del Contrato" color={C.purple} subtitle="Para análisis completo: pestaña ⊙ Verificar">
+            <div style={{ padding: "10px 14px" }}>
             {/* Current opus status */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: contract.opus?.homologation === "VALID" ? C.greenBg : contract.opus?.homologation === "INVALID" ? C.redBg : C.orangeBg, borderRadius: 8, marginBottom: 14, border: `1px solid ${contract.opus?.homologation === "VALID" ? C.green : contract.opus?.homologation === "INVALID" ? C.red : C.orange}30` }}>
               <span style={{ fontSize: 22 }}>
@@ -862,14 +912,17 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
             >
               {homoRunning ? "⟳ Verificando con motor PHENOMENON…" : "⊙ Ejecutar Verificación (Homologar)"}
             </button>
+            </div>
           </SectionBlock>
 
           {/* Cláusulas y Condiciones del Contrato */}
           <SectionBlock
-            title={`Cláusulas y Condiciones del Contrato (${localClauses.length})`}
-            subtitle="Contenido obligacional: puede modificarse mediante novación parcial sin alterar la identidad esencial de las partes"
+            title={`Cláusulas — Contenido Obligacional`}
+            subtitle={`${localClauses.length} cláusula${localClauses.length !== 1 ? "s" : ""}`}
             color={color}
+            fieldCount={localClauses.length}
             forceOpen={highlightKey === "clauses" || !!highlightKey}>
+            <div style={{ padding: "10px 14px" }}>
             <div ref={el => { if (el) fieldRefs.current["clauses"] = el; fieldRefs.current["ia"] = el; }}
               style={{ outline: (highlightKey === "clauses" || highlightKey === "ia") ? `3px solid ${C.orange}` : "none", outlineOffset: 4, borderRadius: 8, animation: (highlightKey === "clauses" || highlightKey === "ia") ? "fieldPulse 0.7s ease 3" : "none" }} />
             <ClauseEditor
@@ -879,13 +932,16 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
               showLibrary={showLibrary}
               onToggleLibrary={() => setShowLibrary(p => !p)}
             />
+            </div>
           </SectionBlock>
 
           {/* Operadores Jurídicos del Contrato */}
           <SectionBlock
-            title="Operadores Jurídicos del Contrato"
-            subtitle="Definen el tipo de obligación contractual: activa, pasiva, de exclusión o recíproca. Requeridos para la verificación jurídica."
-            color={C.purple}>
+            title="Operadores IA del Contrato"
+            subtitle="ad-actio · de-actio · non · co-implication"
+            color={C.purple}
+            fieldCount={localIA.length}>
+            <div style={{ padding: "10px 14px" }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
               {localIA.map(ia => {
                 const def = IA_TYPES[ia];
@@ -917,6 +973,7 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
                 </button>
               ))}
             </div>
+            </div>
           </SectionBlock>
 
           {/* Risk & Verification moved to dedicated tabs (⚠ Riesgo / ⊙ Verificar) */}
@@ -937,10 +994,21 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
         </div>
 
         {/* Footer actions */}
-        <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}`, display: "flex", gap: 8, flexShrink: 0, background: C.bgAlt, flexWrap: "wrap" }}>
+        <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}`, display: "flex", gap: 8, flexShrink: 0, background: C.white, flexWrap: "wrap", alignItems: "center" }}>
           <button onClick={handleSave} disabled={saving}
-            style={{ flex: 1, padding: "10px", background: color, color: isMaster ? "#000" : C.white, border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontFamily: font.ui, fontWeight: 600, minWidth: 100 }}>
-            {saving ? "⟳ Guardando…" : saved ? "✓ Guardado" : "Guardar"}
+            style={{ flex: 1, padding: "9px 20px", background: saving ? C.bgAlt : C.navy, color: saving ? C.textMuted : C.gold, border: "none", borderRadius: 8, cursor: saving ? "not-allowed" : "pointer", fontSize: 12, fontFamily: font.ui, fontWeight: 800, minWidth: 100 }}>
+            {saving ? "⟳ Guardando…" : saved ? "✓ Guardado" : "💾 Guardar cambios"}
+          </button>
+          <button
+            onClick={async () => {
+              setHomoRunning(true);
+              const r = await onHomologate(contractId);
+              setHomoResult(r);
+              setHomoRunning(false);
+            }}
+            disabled={homoRunning}
+            style={{ padding: "8px 16px", background: homoRunning ? C.bgAlt : C.greenBg, color: homoRunning ? C.textMuted : C.green, border: `1.5px solid ${homoRunning ? C.border : C.green + "66"}`, borderRadius: 8, cursor: homoRunning ? "not-allowed" : "pointer", fontSize: 11, fontFamily: font.ui, fontWeight: 700, whiteSpace: "nowrap" }}>
+            {homoRunning ? "⟳ Verificando…" : "✓ Homologar ecosistema"}
           </button>
           {!isMaster && (
             <button
@@ -950,7 +1018,7 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
                 onClose();
               }}
               title="Elimina este subcontrato y genera uno nuevo con los datos actuales del maestro"
-              style={{ padding: "10px 12px", background: C.white, color: C.textBody, border: `1px solid ${C.border}`, borderRadius: 6, cursor: "pointer", fontSize: 12, fontFamily: font.ui }}>
+              style={{ padding: "9px 12px", background: C.white, color: C.textBody, border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font.ui }}>
               ⟳ Regenerar
             </button>
           )}
@@ -961,7 +1029,7 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
                 await onDelete(contractId);
                 onClose();
               }}
-              style={{ padding: "10px 12px", background: C.redBg, color: C.red, border: `1px solid ${C.red}30`, borderRadius: 6, cursor: "pointer", fontSize: 12, fontFamily: font.ui, fontWeight: 600 }}>
+              style={{ padding: "9px 12px", background: C.redBg, color: C.red, border: `1px solid ${C.red}30`, borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font.ui, fontWeight: 600 }}>
               🗑 Eliminar
             </button>
           )}
