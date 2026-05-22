@@ -178,15 +178,15 @@ function AppInner() {
   const [templateKey,  setTemplateKey]  = useState(null);
   const [newProject,   setNewProject]   = useState(false);
   // 3-pane widths: left rail (fixed), right stage (fixed), centre is flex:1
-  const [leftW,        setLeftW]        = useState(300);
+  const [leftW,        setLeftW]        = useState(380);
   const [stageW,       setStageW]       = useState(420);
   // Legacy rightW kept for S/M/L/XL snap buttons (hidden in demoMode but still functional)
   const [rightW,       setRightW]       = useState(580);
-  const [iaH,          setIaH]          = useState(280);  // L2 panel height
+  const [iaH,          setIaH]          = useState(160);  // L2 panel height — start small so graph is visible
   const [iaHover,      setIaHover]      = useState(false);
   const [leftGripHover,  setLeftGripHover]  = useState(false);
   const [rightGripHover, setRightGripHover] = useState(false);
-  const [iaCollapsed,  setIaCollapsed]  = useState(false);
+  const [iaCollapsed,  setIaCollapsed]  = useState(true);  // collapsed by default — graph visible immediately
   const [homologating,   setHomologating]   = useState(false);
   const [graphFlashIds,  setGraphFlashIds]  = useState([]);
   const [pendingEditId,  setPendingEditId]  = useState(null);
@@ -257,7 +257,7 @@ function AppInner() {
     e.preventDefault();
     const sx = e.clientX;
     const sw = leftW;
-    const move = (e2) => setLeftW(Math.min(400, Math.max(160, sw + (e2.clientX - sx))));
+    const move = (e2) => setLeftW(Math.min(700, Math.max(160, sw + (e2.clientX - sx))));
     const up   = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
@@ -345,11 +345,14 @@ function AppInner() {
   });
 
   const gripV = (hover) => ({
-    width: 6, cursor: "col-resize", flexShrink: 0,
-    background: hover ? C.gold : C.border,
-    borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`,
-    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
+    width: 14, cursor: "col-resize", flexShrink: 0,
+    background: hover ? C.gold : C.bgAlt,
+    borderLeft: `1px solid ${C.border}`,
+    borderRight: `1px solid ${C.border}`,
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
     transition: "background 0.15s", userSelect: "none",
+    zIndex: 10,
+    position: "relative",
   });
 
   return (
@@ -411,6 +414,11 @@ function AppInner() {
         />
         </div>
       )}
+
+      {/* ── UPGRADE BANNER ── */}
+      <div style={{ background: "#C9A84C", color: "#141E30", textAlign: "center", padding: "4px", fontSize: 11, fontWeight: 800, letterSpacing: 1 }}>
+        ✦ PHENOMENON v9 — NOVA INTERFACE ACTIVA ✦
+      </div>
 
       {/* ── HEADER ── */}
       <div
@@ -640,12 +648,13 @@ function AppInner() {
           onMouseDown={startLeftResize}
           onMouseEnter={() => setLeftGripHover(true)}
           onMouseLeave={() => setLeftGripHover(false)}
-          onDoubleClick={() => setLeftW(w => w > 240 ? 220 : 280)}
-          title="Arrastra · Doble clic para ajustar"
+          onDoubleClick={() => setLeftW(w => w > 300 ? 160 : 520)}
+          title="⟺ Arrastra para redimensionar · Doble clic: expandir/colapsar"
           style={{ ...gripV(leftGripHover) }}
         >
-          {[0,1,2,3,4].map(i => (
-            <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", background: leftGripHover ? C.blue : C.borderStrong }} />
+          <div style={{ fontSize: 11, color: leftGripHover ? C.navyDeep : C.textMuted, letterSpacing: 0, lineHeight: 1, transform: "rotate(90deg)", fontWeight: 700 }}>⟺</div>
+          {[0,1,2,3,4,5,6].map(i => (
+            <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: leftGripHover ? C.navyDeep : C.borderStrong }} />
           ))}
         </div>
 
