@@ -442,11 +442,323 @@ function EdgePanel({ edge, subContracts, conditions, onAddCondition, onRemoveCon
   );
 }
 
+// ─── Full-network layout helpers ─────────────────────────────────────────────
+// Colour palette for master groups in full-network view
+const MASTER_PALETTE = [C.gold, C.cyan, "#059669", "#7C3AED", "#D97706", "#DB2777"];
+
+/**
+ * Build groups: each master and its subs form a group.
+ * Returns array of { master, subs, color }
+ */
+function buildGroups(contractsMap) {
+  const all = Object.values(contractsMap ?? {});
+  const masters = all.filter(c => !c.parentId);
+  return masters.map((m, i) => ({
+    master: m,
+    subs: all.filter(c => c.parentId === m.id),
+    color: MASTER_PALETTE[i % MASTER_PALETTE.length],
+  }));
+}
+
+/**
+ * Full-network view — renders all contract groups side by side.
+ * Each group: a coloured header box, master circle, sub circles in a row.
+ * Clicking a node still calls onSelectNode(id).
+ */
+function FullNetworkView({
+  contractsMap,
+  selectedId,
+  onSelectNode,
+  flashIds,
+  reducedMotion,
+  pendingEditId,
+}) {
+  const [hoverTooltip, setHoverTooltip] = useState(null); // { id, x, y }
+
+  const groups = buildGroups(contractsMap);
+  if (groups.length === 0) return null;
+
+  // Layout: groups side by side, each group 200px wide
+  const GROUP_W = 200;
+  const GROUP_PAD = 20;
+  const MASTER_R = 24;
+  const SUB_R = 14;
+  const HEADER_H = 40;
+  const MASTER_Y = HEADER_H + 50;
+  const SUB_Y = MASTER_Y + 90;
+  const TOTAL_H = SUB_Y + SUB_R * 2 + GROUP_PAD * 2;
+
+  const svgW = Math.max(groups.length * (GROUP_W + GROUP_PAD) + GROUP_PAD, 400);
+  const svgH = TOTAL_H;
+
+  // Pre-compute node positions for IF edge drawing
+  const nodePos = {}; // id → { cx, cy, r }
+  groups.forEach((g, gi) => {
+    const groupX = GROUP_PAD + gi * (GROUP_W + GROUP_PAD);
+    const masterCX = groupX + GROUP_W / 2;
+    nodePos[g.master.id] = { cx: masterCX, cy: MASTER_Y + MASTER_R, r: MASTER_R };
+    g.subs.forEach((sub, si) => {
+      const subCount = g.subs.length;
+      const spacing = Math.min(GROUP_W / Math.max(subCount, 1), 36);
+      const totalW = (subCount - 1) * spacing;
+      const subCX = groupX + GROUP_W / 2 - totalW / 2 + si * spacing;
+      nodePos[sub.id] = { cx: subCX, cy: SUB_Y + SUB_R, r: SUB_R };
+    });
+  });
+
+  // Render a circle node
+  function renderNode(id, contract, pos, color, isMaster) {
+    if (!pos) return null;
+    const { cx, cy, r } = pos;
+    const isSelected = selectedId === id;
+    const isFlash    = flashIds.has(id);
+    const isPending  = pendingEditId === id;
+    const opusLevel  = getOpusLevel(contract);
+    const opusCfg    = OPUS_LEVELS[opusLevel];
+    const meta       = isMaster ? null : SUB_META[contract.type];
+    const nodeColor  = isMaster ? color : (meta?.color ?? color);
+
+    // Opus ring radii
+    const ringR = r + 5;
+
+    return (
+      <g
+        key={id}
+        style={{ cursor: "pointer" }}
+        onClick={(e) => { e.stopPropagation(); onSelectNode(id); }}
+        onMouseEnter={(e) => {
+          const svgRect = e.currentTarget.closest("svg")?.getBoundingClientRect();
+          if (!svgRect) return;
+          setHoverTooltip({ id, x: cx, y: cy - r - 10, contract });
+        }}
+        onMouseLeave={() => setHoverTooltip(null)}
+        aria-label={contract.name}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelectNode(id); } }}
+      >
+        {/* Opus ring */}
+        {opusLevel === "OPONIBLE" && (
+          <circle cx={cx} cy={cy} r={ringR} fill="none" stroke={C.gold} strokeWidth={2} opacity={0.85} />
+        )}
+        {opusLevel === "COMPLETE" && (
+          <circle cx={cx} cy={cy} r={ringR} fill="none" stroke={C.green} strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7} />
+        )}
+        {opusLevel === "PARTIAL" && contract.status === "NEEDS_REVIEW" && (
+          <circle cx={cx} cy={cy} r={ringR} fill="none" stroke={C.orange} strokeWidth={2} opacity={0.8}>
+            {!reducedMotion && (
+              <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1s" repeatCount="indefinite" />
+            )}
+          </circle>
+        )}
+
+        {/* Main circle */}
+        <circle
+          cx={cx} cy={cy} r={r}
+          fill={isFlash || isPending ? C.orange + "30" : isSelected ? nodeColor + "25" : C.bgAlt}
+          stroke={isSelected ? nodeColor : isFlash ? C.orange : nodeColor + "90"}
+          strokeWidth={isSelected ? 2.5 : 1.5}
+          style={{
+            transition: reducedMotion ? "none" : "stroke 0.2s, fill 0.2s",
+          }}
+        />
+
+        {/* Contract type label (short) */}
+        <text
+          x={cx} y={cy + 1}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={isMaster ? 9 : 7}
+          fontWeight={700}
+          fill={nodeColor}
+          fontFamily="'JetBrains Mono','Courier New',monospace"
+          style={{ pointerEvents: "none", userSelect: "none" }}
+        >
+          {isMaster ? "M" : (SUB_META[contract.type]?.short?.slice(0, 4) ?? contract.type?.slice(0, 4))}
+        </text>
+
+        {/* Flash highlight */}
+        {isFlash && (
+          <circle cx={cx} cy={cy} r={r + 8} fill="none" stroke={C.orange} strokeWidth={2} opacity={0.5}>
+            {!reducedMotion && (
+              <animate attributeName="opacity" values="0.5;0;0.5" dur="0.8s" repeatCount="3" />
+            )}
+          </circle>
+        )}
+      </g>
+    );
+  }
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "auto" }}>
+      <svg
+        width={svgW}
+        height={svgH}
+        style={{ display: "block", minWidth: "100%" }}
+        onClick={() => onSelectNode(null)}
+        aria-label="Vista completa de la red contractual"
+        role="img"
+      >
+        {/* Background dots */}
+        <defs>
+          <pattern id="fn-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.8" fill={C.borderStrong} opacity="0.35" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#fn-dots)" />
+
+        {/* Groups */}
+        {groups.map((g, gi) => {
+          const groupX = GROUP_PAD + gi * (GROUP_W + GROUP_PAD);
+          return (
+            <g key={g.master.id}>
+              {/* Group background */}
+              <rect
+                x={groupX}
+                y={GROUP_PAD}
+                width={GROUP_W}
+                height={svgH - GROUP_PAD * 2}
+                rx={10}
+                ry={10}
+                fill={g.color + "08"}
+                stroke={g.color + "30"}
+                strokeWidth={1.5}
+              />
+
+              {/* Group header */}
+              <rect
+                x={groupX}
+                y={GROUP_PAD}
+                width={GROUP_W}
+                height={HEADER_H}
+                rx={10}
+                ry={10}
+                fill={g.color + "20"}
+              />
+              {/* Bottom of header (square corners) */}
+              <rect
+                x={groupX}
+                y={GROUP_PAD + HEADER_H - 10}
+                width={GROUP_W}
+                height={10}
+                fill={g.color + "20"}
+              />
+              <text
+                x={groupX + GROUP_W / 2}
+                y={GROUP_PAD + HEADER_H / 2 + 1}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={9}
+                fontWeight={700}
+                fill={g.color}
+                fontFamily="'JetBrains Mono','Courier New',monospace"
+                style={{ pointerEvents: "none", userSelect: "none" }}
+              >
+                {g.master.name?.slice(0, 20)}
+              </text>
+
+              {/* Master → sub IF lines */}
+              {g.subs.map(sub => {
+                const mp = nodePos[g.master.id];
+                const sp = nodePos[sub.id];
+                if (!mp || !sp) return null;
+                const isFlash = flashIds.has(sub.id) || flashIds.has(g.master.id);
+                return (
+                  <line
+                    key={`ms-${sub.id}`}
+                    x1={mp.cx} y1={mp.cy + mp.r}
+                    x2={sp.cx} y2={sp.cy - sp.r}
+                    stroke={g.color}
+                    strokeWidth={isFlash ? 2 : 1}
+                    strokeDasharray="5 4"
+                    opacity={isFlash ? 0.9 : 0.4}
+                    style={{ animation: isFlash ? undefined : "dashFlow 2.5s linear infinite" }}
+                  />
+                );
+              })}
+
+              {/* Sub → sub IF dashed edges (cross-sibling) */}
+              {SUB_IF_EDGES.flatMap(edge => {
+                const srcSubs = g.subs.filter(c => c.type === edge.a);
+                const dstSubs = g.subs.filter(c => c.type === edge.b);
+                return srcSubs.flatMap(src =>
+                  dstSubs.map(dst => {
+                    const sp = nodePos[src.id];
+                    const dp = nodePos[dst.id];
+                    if (!sp || !dp) return null;
+                    const col = edge.type === "logic" ? C.red : C.cyan;
+                    const isFlash = flashIds.has(src.id) || flashIds.has(dst.id);
+                    return (
+                      <line
+                        key={`sib-fn-${src.id}-${dst.id}`}
+                        x1={sp.cx} y1={sp.cy}
+                        x2={dp.cx} y2={dp.cy}
+                        stroke={col}
+                        strokeWidth={1}
+                        strokeDasharray="3 3"
+                        opacity={isFlash ? 0.8 : 0.3}
+                      />
+                    );
+                  })
+                );
+              })}
+
+              {/* Master node */}
+              {renderNode(g.master.id, g.master, nodePos[g.master.id], g.color, true)}
+
+              {/* Sub nodes */}
+              {g.subs.map(sub =>
+                renderNode(sub.id, sub, nodePos[sub.id], g.color, false)
+              )}
+            </g>
+          );
+        })}
+
+        {/* Hover tooltip (rendered last so it sits on top) */}
+        {hoverTooltip && (() => {
+          const { contract, x, y } = hoverTooltip;
+          const opusLevel = getOpusLevel(contract);
+          const opusCfg   = OPUS_LEVELS[opusLevel];
+          const W = 150, H = 54;
+          const tx = Math.min(x - W / 2, svgW - W - 4);
+          const ty = Math.max(y - H - 4, 4);
+          return (
+            <g style={{ pointerEvents: "none" }}>
+              <rect x={tx} y={ty} width={W} height={H} rx={7} ry={7}
+                fill={C.navyDeep} stroke={C.borderDark} strokeWidth={1}
+                opacity={0.95} />
+              <text x={tx + 10} y={ty + 16}
+                fontSize={9} fontWeight={700} fill={C.textWhite}
+                fontFamily="'Inter',system-ui,sans-serif"
+                style={{ userSelect: "none" }}>
+                {contract.name?.slice(0, 22)}
+              </text>
+              <text x={tx + 10} y={ty + 30}
+                fontSize={8} fill={opusCfg.color}
+                fontFamily="'JetBrains Mono','Courier New',monospace"
+                style={{ userSelect: "none" }}>
+                {opusLevel}
+              </text>
+              <text x={tx + 10} y={ty + 44}
+                fontSize={8} fill={C.textNavy}
+                fontFamily="'JetBrains Mono','Courier New',monospace"
+                style={{ userSelect: "none" }}>
+                {contract.status ?? "—"}
+              </text>
+            </g>
+          );
+        })()}
+      </svg>
+    </div>
+  );
+}
+
 // ─── Main graph component ─────────────────────────────────────────────────────
 // Props: master, subContracts, selectedId, onSelect, cascadeRunning,
 //        contractsMap (contracts keyed by id), onContractChange, onTerminate,
-//        onGenerateSub, externalFlashIds (keep prop name), pendingEditId
-export default function ContractGraph({ master, subContracts, selectedId, onSelect, cascadeRunning, contractsMap, onContractChange, onTerminate, onGenerateSub, externalFlashIds, pendingEditId }) {
+//        onGenerateSub, externalFlashIds (keep prop name), pendingEditId,
+//        viewMode ("radial" | "full") — controlled externally by CenterStage/App
+export default function ContractGraph({ master, subContracts, selectedId, onSelect, cascadeRunning, contractsMap, onContractChange, onTerminate, onGenerateSub, externalFlashIds, pendingEditId, viewMode: externalViewMode }) {
   const reducedMotion = useReducedMotion();
 
   const [positions,    setPositions]    = useState({});
@@ -465,6 +777,18 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
   const panStart = useRef(null);
   const dragging   = useRef(null);
   const containerRef = useRef(null);
+
+  // Internal view mode — external prop takes precedence when provided
+  const [internalViewMode, setInternalViewMode] = useState("radial");
+  const viewMode = externalViewMode ?? internalViewMode;
+  const toggleViewMode = useCallback(() => {
+    setInternalViewMode(prev => prev === "radial" ? "full" : "radial");
+  }, []);
+
+  // Sync internal state when external prop changes
+  useEffect(() => {
+    if (externalViewMode) setInternalViewMode(externalViewMode);
+  }, [externalViewMode]);
 
   // Accept external flash IDs (from EURIBOR cascade in demo panel)
   // Also keep lastFlashRef up-to-date for the Replay button
@@ -592,6 +916,43 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
   const finContract = subContracts.find(c => c.type === "FINANCIACION");
   const cesContract = subContracts.find(c => c.type === "CESION_CREDITO");
 
+  // ── Full-network view (viewMode === "full") ─────────────────────────────────
+  if (viewMode === "full") {
+    return (
+      <div style={{ flex:1, position:"relative", overflow:"hidden", background:C.bg, display:"flex", flexDirection:"column" }}>
+        <style>{`@keyframes dashFlow { to { stroke-dashoffset:-24; } }`}</style>
+
+        {/* Top bar */}
+        <div style={{ position:"absolute", top:0, left:0, right:0, zIndex:20, display:"flex", alignItems:"center",
+          gap:6, padding:"6px 10px", background:"rgba(14,20,38,0.85)", borderBottom:`1px solid ${C.borderDark}` }}>
+          <div style={{ fontSize:9, color:"#94A3B8", fontFamily:font.mono, letterSpacing:"0.1em", flex:1 }}>
+            ◈ Vista completa · Red Contractual
+          </div>
+          <button
+            aria-label="Volver a vista radial"
+            onClick={() => setInternalViewMode("radial")}
+            style={{ padding:"3px 10px", background:C.cyan + "25", color:C.cyan, border:`1px solid ${C.cyan}40`,
+              borderRadius:5, cursor:"pointer", fontSize:10, fontFamily:font.ui, fontWeight:600 }}>
+            ◉ Vista simple
+          </button>
+        </div>
+
+        {/* Full network canvas */}
+        <div style={{ flex:1, marginTop:32, overflow:"hidden" }}>
+          <FullNetworkView
+            contractsMap={contractsMap ?? {}}
+            selectedId={selectedId}
+            onSelectNode={(id) => { onSelect(id); }}
+            flashIds={flashIds}
+            reducedMotion={reducedMotion}
+            pendingEditId={pendingEditId}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Radial view (default) ───────────────────────────────────────────────────
   return (
     <div
       ref={containerRef}
@@ -633,6 +994,25 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
       <div style={{ position:"absolute", top:10, left:10, zIndex:10, background:"rgba(14,20,38,0.75)", color:"#94A3B8", fontSize:9, fontFamily:font.mono, letterSpacing:"0.1em", padding:"3px 8px", borderRadius:4, pointerEvents:"none" }}>
         L1 · Red Contractual
       </div>
+
+      {/* ◈ Vista completa toggle button */}
+      <button
+        aria-label="Cambiar a vista completa de la red"
+        onClick={e => { e.stopPropagation(); toggleViewMode(); }}
+        style={{
+          position: "absolute", top: 50, left: 10, zIndex: 25,
+          padding: "4px 10px",
+          background: C.white,
+          color: C.cyan,
+          border: `1px solid ${C.cyan}50`,
+          borderRadius: 6, cursor: "pointer",
+          fontSize: 10, fontFamily: font.ui, fontWeight: 600,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+          transition: "background 0.15s",
+        }}
+      >
+        ◈ Vista completa
+      </button>
 
       {/* Replay button — visible only after at least one cascade has flashed */}
       {hasLastFlash && (
