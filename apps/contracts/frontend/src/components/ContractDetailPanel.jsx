@@ -1046,23 +1046,24 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
         </div>
       )}
 
-      {/* Expand drawer overlay */}
+      {/* Expand drawer overlay — right 55vw, transparent so left pane stays fully visible */}
       {showExpandDrawer && (
         <div
           onClick={() => setShowExpandDrawer(false)}
           style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.45)', zIndex: 300,
-            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+            position: 'fixed', top: 0, right: 0, bottom: 0,
+            width: '55vw',
+            background: 'transparent', zIndex: 300,
+            display: 'flex', alignItems: 'stretch',
           }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: 700, height: '100%',
+              width: '100%', height: '100%',
               background: C.white,
               display: 'flex', flexDirection: 'column',
-              boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
+              boxShadow: '-8px 0 40px rgba(0,0,0,0.22)',
             }}
           >
             {/* Drawer header */}
@@ -1089,26 +1090,92 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
                 ✕ Cerrar
               </button>
             </div>
-            {/* Drawer body */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-              <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 16, fontFamily: font.ui }}>
-                Vista expandida — todos los campos del contrato en una sola pantalla.
-                Los cambios realizados aquí se reflejan en el panel principal al cerrar.
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                <div style={{ gridColumn: '1/-1', padding: '20px', background: C.bgAlt, borderRadius: 8, border: `1px solid ${C.border}`, textAlign: 'center', color: C.textMuted, fontSize: 12, fontFamily: font.ui }}>
-                  Use el panel principal para editar campos. Esta vista expandida muestra el contrato completo sin las limitaciones de espacio del panel lateral.
+
+            {/* Drawer body — real ESS + AG fields, editable */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: 20, overflowY: 'auto', flex: 1 }}>
+
+              {/* ESS section — full width */}
+              <div style={{ gridColumn: '1/-1' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: font.ui }}>
+                  ESS — Identidad Estable
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                  {[
+                    { key: 'partyA',        label: 'Parte A' },
+                    { key: 'partyB',        label: 'Parte B' },
+                    { key: 'jurisdiction',  label: 'Jurisdiccion' },
+                    { key: 'effectiveDate', label: 'Fecha inicio' },
+                    { key: 'expiryDate',    label: 'Fecha vencimiento' },
+                    { key: 'registryOffice',label: 'Oficina registral' },
+                  ].map(({ key, label }) => (
+                    <div key={key}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, marginBottom: 3, textTransform: 'uppercase', fontFamily: font.ui }}>{label}</div>
+                      <input
+                        value={localEss[key] ?? ''}
+                        onChange={e => setLocalEss(prev => ({ ...prev, [key]: e.target.value }))}
+                        style={{ width: '100%', boxSizing: 'border-box', background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 13, color: C.textDark, fontFamily: font.ui, outline: 'none' }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
+
+              {/* AG Terms — each key in localTerms */}
+              <div style={{ gridColumn: '1/-1' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: font.ui }}>
+                  AG — Campos Operativos
+                </div>
+                {Object.keys(localTerms ?? {}).length === 0 && (
+                  <div style={{ fontSize: 12, color: C.textLight, fontFamily: font.ui, fontStyle: 'italic' }}>
+                    Sin campos operativos definidos.
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {Object.entries(localTerms ?? {}).slice(0, 24).map(([key, val]) => (
+                    <div key={key}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: font.ui }}>{key}</div>
+                      <input
+                        value={val ?? ''}
+                        onChange={e => setLocalTerms(prev => ({ ...prev, [key]: e.target.value }))}
+                        style={{ width: '100%', boxSizing: 'border-box', background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 6, padding: '7px 10px', fontSize: 12, color: C.textDark, fontFamily: font.ui, outline: 'none' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clauses — list if present */}
+              {localClauses.length > 0 && (
+                <div style={{ gridColumn: '1/-1' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontFamily: font.ui }}>
+                    Clausulas
+                  </div>
+                  {localClauses.map((cl, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: 11, color: C.textMuted, fontFamily: font.mono, paddingTop: 8, minWidth: 20, flexShrink: 0 }}>{i + 1}.</span>
+                      <textarea
+                        value={cl}
+                        onChange={e => { const n = [...localClauses]; n[i] = e.target.value; setLocalClauses(n); }}
+                        rows={Math.max(2, Math.ceil(cl.length / 100))}
+                        style={{ flex: 1, padding: '8px 10px', fontSize: 13, fontFamily: font.serif, border: `1px solid ${C.border}`, borderRadius: 6, background: C.bgInput, color: C.textDark, resize: 'vertical', outline: 'none', lineHeight: 1.65 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
             {/* Drawer footer */}
             <div style={{ flexShrink: 0, padding: '12px 20px', borderTop: `1px solid ${C.border}`, background: C.bgAlt, display: 'flex', gap: 8 }}>
               <button
                 onClick={() => setShowExpandDrawer(false)}
                 style={{ background: C.navy, color: C.gold, border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: font.ui }}
               >
-                ✓ Cerrar vista expandida
+                Cerrar vista expandida
               </button>
+              <div style={{ fontSize: 11, color: C.textMuted, fontFamily: font.ui, alignSelf: 'center', marginLeft: 8 }}>
+                Los cambios se guardan con "Guardar cambios" en el panel principal.
+              </div>
             </div>
           </div>
         </div>

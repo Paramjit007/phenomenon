@@ -767,7 +767,7 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
   const [quickEditId,  setQuickEditId]  = useState(null);
   const [flashIds,     setFlashIds]     = useState(new Set());
   const [conditions,   setConditions]   = useState([]);
-  const [zoom,         setZoom]         = useState(1.0);
+  const [zoom,         setZoom]         = useState(0.65);
   const [pan,          setPan]          = useState({ x: 0, y: 0 });
   const [isPanning,    setIsPanning]    = useState(false);
   // Replay button: stores last non-empty externalFlashIds for re-trigger
@@ -838,6 +838,73 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
       return next;
     });
   }, [master?.id, subContracts.map(c => c.id).join(",")]);
+
+  // ── Auto-fit: zoom+pan so all nodes are visible in the container ────────────
+  // The transform is: scale(zoom) translate(pan.x/zoom, pan.y/zoom)
+  // with transformOrigin "center center".
+  // CSS applies right-to-left: first translate (in pre-scale space), then scale around center.
+  // Visible position of a content point px:
+  //   visX = containerCX + (px - containerCX) * zoom + pan.x
+  // To center the bounding box: pan.x = (containerCX - contentCX) * zoom
+  const fitAll = useCallback(() => {
+    if (!master || !containerRef.current) return;
+    const allIds = [master.id, ...subContracts.map(c => c.id)];
+    // Use a local snapshot of positions from the ref-captured closure.
+    // We read via setPositions's functional form to get the latest value.
+    setPositions(current => {
+      if (!allIds.every(id => current[id])) return current; // positions not ready
+      const containerW = containerRef.current?.offsetWidth ?? 0;
+      const containerH = containerRef.current?.offsetHeight ?? 0;
+      if (!containerW || !containerH) return current;
+
+      let x1 = Infinity, x2 = -Infinity, y1 = Infinity, y2 = -Infinity;
+      allIds.forEach(id => {
+        const p = current[id];
+        if (!p) return;
+        const w = id === master.id ? MASTER_W : NODE_W;
+        const h = id === master.id ? MASTER_H : NODE_H;
+        x1 = Math.min(x1, p.x);
+        x2 = Math.max(x2, p.x + w);
+        y1 = Math.min(y1, p.y);
+        y2 = Math.max(y2, p.y + h);
+      });
+
+      const PAD = 32;
+      const contentW = (x2 - x1) + PAD * 2;
+      const contentH = (y2 - y1) + PAD * 2;
+      const fitZoom = Math.min(
+        containerW / contentW,
+        containerH / contentH,
+        0.92
+      );
+      const contentCX = (x1 + x2) / 2;
+      const contentCY = (y1 + y2) / 2;
+      // pan needed to center bounding box in container
+      const panX = (containerW / 2 - contentCX) * fitZoom;
+      const panY = (containerH / 2 - contentCY) * fitZoom;
+
+      setZoom(fitZoom);
+      setPan({ x: panX, y: panY });
+      return current; // positions unchanged
+    });
+  }, [master, subContracts]);
+
+  // Run auto-fit once after positions are populated
+  useEffect(() => {
+    if (!master || !containerRef.current) return;
+    const allIds = [master.id, ...subContracts.map(c => c.id)];
+    if (!allIds.every(id => positions[id])) return;
+    fitAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [master?.id, subContracts.length, Object.keys(positions).join(',')]);
+
+  // ResizeObserver: re-fit when container size changes (e.g. left rail dragged)
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(() => { fitAll(); });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [fitAll]);
 
   // Flash animation helper
   const flashNodes = useCallback((ids) => {
@@ -985,6 +1052,11 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
           style={{ ...zBtn }}>−</button>
         <button onClick={() => { setZoom(1); setPan({x:0,y:0}); }}
           style={{ ...zBtn, fontSize:9 }}>⊞</button>
+        <button
+          onClick={fitAll}
+          title="Ajustar todo — ver todos los contratos"
+          style={{ ...zBtn, minWidth: 48, fontSize: 9 }}
+        >⊡ Todo</button>
         <span style={{ fontSize:8, color:C.textLight, fontFamily:font.mono, alignSelf:"center", paddingLeft:4 }}>
           scroll · drag med
         </span>
