@@ -190,6 +190,7 @@ function AppInner() {
   const [homologating,   setHomologating]   = useState(false);
   const [graphFlashIds,  setGraphFlashIds]  = useState([]);
   const [pendingEditId,  setPendingEditId]  = useState(null);
+  const [graphViewMode,  setGraphViewMode]  = useState("radial"); // "radial" | "full"
   const [impactData,     setImpactData]     = useState(null);
   const pendingEditTimer = useRef(null);
   const [verifyOpen,     setVerifyOpen]     = useState(false);
@@ -594,6 +595,7 @@ function AppInner() {
                 onGenerateSub={(type, ess, ia) => generateSubContract(type, ess, ia)}
                 externalFlashIds={graphFlashIds}
                 pendingEditId={pendingEditId}
+                viewMode={graphViewMode}
               />
             </ErrorBoundary>
           </div>
@@ -985,6 +987,7 @@ function AppInner() {
                   type: "opus",
                 });
               }}
+              onViewModeChange={(mode) => setGraphViewMode(mode)}
             />
           </ErrorBoundary>
         </div>

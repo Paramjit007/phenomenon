@@ -19,6 +19,12 @@
 | 12 | v4-clause-forge | `CenterStage.jsx` did not receive `selectedContract` from `App.jsx` — the selected contract existed only as `contracts[selectedId]` in `App.jsx` scope and was not threaded through. Fixed in v4-clause-forge by adding `selectedContract` prop to `CenterStage` and passing `contracts[selectedId] ?? null` from App.jsx. | major | fixed — v4-clause-forge |
 | 13 | v4-clause-forge | `ClauseForge` prompt rebuild fires on `contract?.id` and `master?.id` changes. If `selectedId` is null (no contract selected), both are undefined — useEffect correctly stays idle and prompt is rebuilt from null context. Empty-state guard (`if (!contract)`) renders a helpful "Selecciona un contrato" message rather than a broken layout. | info | closed — by design; verified |
 
+| 14 | v5-opus-journey | `OpusJourney` correctly derives OPONIBLE from sub-contract `registryOffice` field (KPMG hipoteca). The `deriveOpusLevel` function checks both `master.ag.terms.registryOffice` and any sub-contract's `registryOffice`/`registry` field. Verified correct. | info | closed — by design; verified |
+| 15 | v5-opus-journey | `handleSaveRegistry` uses a dynamic `import("../api/phenomenon.js")` inside a `useCallback`. This is fine at runtime (dynamic import is cached after first call) but triggers an ESLint `import/no-cycle` warning if the linter is configured. Low risk. Defer fix to TypeScript migration when static imports will be verified at build time. | minor | open — deferred to TS migration |
+| 16 | v6-network-view | Spec referenced `GROUP_COLOURS = [C.success, C.accent, C.warning, C.gold]` — these tokens do not exist in `constants.js` (same pattern as bug #8). Implementation uses correct tokens: `[C.gold, C.cyan, "#059669", "#7C3AED", "#D97706", "#DB2777"]`. Fixed in implementation. | major | fixed — v6-network-view |
+| 17 | v6-network-view | CenterStage "Red" tab panel used `role="status"` which is semantically incorrect (status role is for live regions with brief updates, not navigation legends). Corrected to `role="region"` with an `aria-label`. WCAG 2.1 SC 4.1.2 Name, Role, Value. | major | fixed — v6-network-view |
+| 18 | v6-network-view | CenterStage "Red" tab panel was missing the colour-coding legend required by the Priority 6 spec. Added a full legend with master-group colours, Opus ring types, and connection type indicators — all colours from `C.*` tokens only. | major | fixed — v6-network-view |
+
 ---
 
 ## How to use
