@@ -1,12 +1,15 @@
 import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from ..ai.claude_client import ClaudeClient
 from ..ai.prompts import (
     CONTRACT_GENERATION_SYSTEM, contract_generation_user, cascade_analysis_user,
     FALLBACK_CLAUSES, _DEFAULT_CLAUSES,
 )
 from ..config import settings
+from ..database import get_db
+from ..repositories.phenomena_repo import PhenomenaRepository
 
 router = APIRouter()
 
@@ -78,3 +81,65 @@ async def analyze_cascade(req: AnalyzeCascadeRequest):
         return {"analysis": result, "fallback": False}
     except Exception as e:
         return {"analysis": f"Análisis no disponible: {str(e)[:120]}", "fallback": True, "error": str(e)}
+
+
+class GenerateClauseRequest(BaseModel):
+    contract_id: str
+    prompt: str
+
+
+@router.post("/generate-clause")
+async def generate_clause(req: GenerateClauseRequest, db: Session = Depends(get_db)):
+    """Generate a single legal clause for a contract using Claude.
+
+    Fetches the contract's ESS fields to provide context, then forwards the
+    user's prompt as the human turn with a concise system prompt built from
+    ESS.  Returns ``{"text": str}`` on success or ``{"text": "", "error": str}``
+    on failure (HTTP 200 in both cases so the frontend error display path fires).
+    """
+    # ── Fetch contract ────────────────────────────────────────────────────────
+    try:
+        repo = PhenomenaRepository(db)
+        contract = repo.get(req.contract_id)
+    except KeyError:
+        return {"text": "", "error": f"Contrato '{req.contract_id}' no encontrado"}
+
+    # ── Build concise ESS system prompt (<400 tokens) ─────────────────────────
+    ess = contract.ess
+    law_hint = ""
+    ag_terms = (contract.ag or {}).get("terms", {})
+    for field in ("law", "ley", "applicableLaw", "ley_aplicable"):
+        if ag_terms.get(field):
+            law_hint = f" Ley aplicable: {ag_terms[field]}."
+            break
+
+    system_prompt = (
+        f"Eres un redactor jurídico experto en Derecho español e internacional. "
+        f"El contrato tiene las siguientes partes e identidad estable (ESS):\n"
+        f"- Parte A: {ess.partyA or 'No especificada'}\n"
+        f"- Parte B: {ess.partyB or 'No especificada'}\n"
+        f"- Jurisdicción: {ess.jurisdiction or 'No especificada'}\n"
+        f"- Fecha de inicio: {ess.effectiveDate or 'No especificada'}\n"
+        f"- Fecha de vencimiento: {ess.expiryDate or 'No especificada'}\n"
+        f"{law_hint}\n"
+        f"Genera únicamente la cláusula solicitada, en español, con redacción jurídica precisa y concisa. "
+        f"No añadas explicaciones fuera del texto de la cláusula."
+    ).strip()
+
+    # ── No API key: return graceful fallback ─────────────────────────────────
+    if not settings.anthropic_api_key:
+        return {
+            "text": (
+                f"[Demo] Cláusula para {ess.partyA or 'Parte A'} y {ess.partyB or 'Parte B'} "
+                f"bajo jurisdicción {ess.jurisdiction or 'no especificada'}. "
+                f"Configure ANTHROPIC_API_KEY para generación real mediante IA."
+            ),
+            "fallback": True,
+        }
+
+    # ── Call Claude ───────────────────────────────────────────────────────────
+    try:
+        text = await _claude().complete(system_prompt, req.prompt, max_tokens=800)
+        return {"text": text}
+    except Exception as e:
+        return {"text": "", "error": str(e)}

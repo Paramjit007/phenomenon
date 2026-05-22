@@ -71,3 +71,9 @@ export async function analyzeCascade(field, old_value, new_value, affected_types
   });
   return { text: data.analysis || "", fallback: data.fallback };
 }
+
+export async function generateClause({ contractId, prompt }) {
+  return req("/ai/generate-clause", {
+    method: "POST", body: { contract_id: contractId, prompt },
+  });
+}

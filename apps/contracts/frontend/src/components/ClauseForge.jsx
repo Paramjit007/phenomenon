@@ -21,7 +21,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { C, font, SUB_META, CONTRACT_TEMPLATES } from "../constants.js";
-import { updatePhenomenon } from "../api/phenomenon.js";
+import { updatePhenomenon, generateClause } from "../api/phenomenon.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
 // ─── Strings (i18n-ready) ─────────────────────────────────────────────────────
@@ -319,40 +319,21 @@ export default function ClauseForge({
     setSuccessMsg(false);
 
     try {
-      // No clause-generation endpoint exists in api/phenomenon.js.
-      // The nearest function is generateContract(contract_type, master_summary, ess)
-      // which targets /ai/generate-contract and returns structured JSON with clauses[].
-      // That endpoint is designed for full sub-contract generation, not single clause prompts.
-      // Per the brief: use the fallback pattern and log a warning.
-      console.warn("ClauseForge: no single-clause generation API found; using demo text");
-
       addLog && addLog({
         id: Date.now(),
         t: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-        msg: "Forja IA: generando cláusula (modo demo — endpoint /ai/generate-clause no disponible)",
+        msg: "Forja IA: generando cláusula…",
         type: "ai",
       });
 
-      // Simulate a short network delay so the shimmer is visible and meaningful
-      await new Promise((r) => setTimeout(r, 900));
+      const result = await generateClause({ contractId: contract.id, prompt });
+      const text = result?.text || "";
 
-      const contractLabel = clauseTypeLabel(contract);
-      const ess           = contract?.ess || master?.ess || {};
-      const demoText = [
-        `CLÁUSULA DE ${(contractLabel).toUpperCase()}`,
-        ``,
-        `Las partes, ${ess.partyA || "Parte A"} y ${ess.partyB || "Parte B"}, acuerdan lo siguiente:`,
-        ``,
-        `1. Objeto. Conforme al presente acuerdo celebrado bajo la jurisdicción de ${ess.jurisdiction || "los juzgados competentes"}, ambas partes se obligan recíprocamente a cumplir las condiciones estipuladas, con plena sujeción al Derecho español aplicable.`,
-        ``,
-        `2. Vigencia. El presente compromiso tendrá vigencia durante todo el período de eficacia del contrato principal, comenzando el ${ess.effectiveDate || "[fecha de inicio]"} y finalizando el ${ess.expiryDate || "[fecha de vencimiento]"}.`,
-        ``,
-        `3. Incumplimiento. El incumplimiento de esta cláusula por cualquiera de las partes facultará a la parte perjudicada para reclamar los daños y perjuicios correspondientes conforme al artículo 1101 del Código Civil.`,
-        ``,
-        `[Nota: Cláusula generada en modo demo. En producción, el motor IA PHENOMENON genera texto jurídico preciso y conforme al Derecho español aplicable a partir del prompt proporcionado.]`,
-      ].join("\n");
+      if (result?.error && !text) {
+        throw new Error(result.error);
+      }
 
-      setGeneratedText(demoText);
+      setGeneratedText(text);
       setOutputState("generated");
 
       addLog && addLog({

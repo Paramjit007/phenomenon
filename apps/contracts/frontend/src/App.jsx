@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { C, font, CONTRACT_TEMPLATES, FINAL_RULE, OPUS_LEVELS, getOpusLevel } from "./constants.js";
+import { C, font, CONTRACT_TEMPLATES, FINAL_RULE, OPUS_LEVELS } from "./constants.js";
 import { usePhenomenon }        from "./hooks/usePhenomenon.js";
 import * as api                 from "./api/phenomenon.js";
 import SelectionScreen          from "./components/SelectionScreen.jsx";
@@ -11,7 +11,7 @@ import IAEngineView             from "./components/IAEngineView.jsx";
 import ContractPreviewTab       from "./components/ContractPreviewTab.jsx";
 import ProjectManager           from "./components/ProjectManager.jsx";
 import VerificationPanel        from "./components/VerificationPanel.jsx";
-import RiskPanel, { detectRisks, getRiskLevel, RISK_ICONS } from "./components/RiskEngine.jsx";
+import RiskPanel, { detectRisks } from "./components/RiskEngine.jsx";
 import CascadeControlPanel from "./components/CascadeControlPanel.jsx";
 import EcosystemPanel      from "./components/EcosystemPanel.jsx";
 import KPMGDemoPanel       from "./components/KPMGDemoPanel.jsx";
