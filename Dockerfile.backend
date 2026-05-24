@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 RUN pip install uv
 
-# Root pyproject.toml must be present so uv can resolve workspace sources
 COPY pyproject.toml /workspace/pyproject.toml
 COPY packages/engine /workspace/packages/engine
 COPY apps/contracts/backend /workspace/backend
