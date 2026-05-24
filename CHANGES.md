@@ -2,6 +2,64 @@
 
 ---
 
+## [2026-05-24] — Cross-policy IF connections + staged insurance reveal
+
+**User request:** Progressive seguros demo (Vida→RC→Daños→Crédito→All) with cross-policy IF arcs visible in graph.
+
+### New: Cross-policy IF connections (engine + backend + frontend)
+
+**`cascade_engine.py`** — `CrossPolicyCascadeEngine` class:
+- `run_partyA_change()` — when partyA changes on one SEGURO_* master, all sibling insurance masters with same tomador are marked `NEEDS_REVIEW` (3 affected on trigger)
+- `run_sub_change()` — sub-field changes propagate across policy trees via `CROSS_POLICY_CASCADE_MAP`
+- `_template_key()` helper reads `ag["terms"]["templateKey"]` (masters all have `type=="MASTER"`; insurance type is in templateKey)
+- `CrossPolicyCascadeResult` dataclass
+- `CROSS_POLICY_CASCADE_MAP`: `RIESGO_EMPRESARIAL.riskCategory→[PERITACION]`, `EXCLUSIONES_VIDA.blockingStatus→[COBERTURA_RC]`
+
+**`routes_demo.py`** — `POST /demo/seguros/cross-policy-cascade`:
+- Accepts `{source_contract_id, field, new_value}`
+- Dispatches to `run_partyA_change` when `field=="partyA"` and templateKey in `_INSURANCE_MASTER_TYPES`
+- Otherwise dispatches to `run_sub_change`
+- Verified: partyA change on SEGURO_VIDA → 3 sibling masters NEEDS_REVIEW
+
+**`routes_demo.py`** — Seguros seed unified tomador:
+- All 4 insurance masters now share `partyA="Comerciales del Levante S.L."` (was 4 different entities)
+- Story: one Valencia company with all 4 policy types (Vida on CEO, RC profesional, Daños nave industrial, Crédito sobre deudor)
+- CIF unified: `B-46123456`, address: `Polígono Industrial Norte, Nave 12, 46015 Valencia`
+- Jurisdictions unified to Valencia
+
+**`constants.js`** — `CROSS_POLICY_IF_EDGES` export (5 edges):
+- 3 gold identity arcs (tomador compartido): Vida↔RC, RC↔Daños, Daños↔Crédito
+- 1 orange risk arc: `RIESGO_EMPRESARIAL→PERITACION` (rating crediticio afecta valoración bien asegurado)
+- 1 red exclusion arc: `EXCLUSIONES_VIDA→COBERTURA_RC` (exclusión médica activa modifica perfil RC)
+
+**`ContractGraph.jsx`** — cross-policy arc rendering in `FullNetworkView`:
+- SVG arrowhead markers for gold/orange/red
+- `cpFlow` + `cpPulse` keyframe animations (animated dashed bezier paths)
+- Glow track behind each arc for visual depth
+- `arcDir: "above"` arcs curve over masters row; `arcDir: "below"` arcs curve under subs row
+- Labels at midpoint of each arc
+- `buildGroups()` fixed: insurance masters now use `INSURANCE_POLICY_CONFIG` colors (not generic palette)
+
+**`api/phenomenon.js`** — `crossPolicyCascade(body)` export added
+
+### New: Staged insurance reveal (SegurosComparativeView.jsx — full rewrite)
+
+- 5 stages (0–4): reveal Vida → RC → Daños → Crédito → all+Comparativa
+- `stage` persisted to `localStorage.phenomenon_seguros_stage`
+- `StageStepper` component with 5 dots + gradient connecting lines + Anterior/Siguiente buttons
+- `PolicyColumn` enhanced: gradient header, IA badge strip, cross-policy link badges, `colSlideIn` animation on reveal
+- `ComparisonTable` rendered at stage 4 (5-row comparative across all policies)
+- `SharedStructure` banner and `EngineBridge` bar visible when ≥2 policies revealed
+- `TEACHING_CARDS` array: context card per reveal stage (moment/title/body/action)
+- CSS animations: `statusPing`, `colSlideIn`, `bannerShimmer`, `stepPulse`, `bridgeExpand`, `cpFlow`, `cpPulse`
+- "Cascade Cross-Póliza" button in each column calls `crossPolicyCascade` API
+
+### Bug fix
+- `CrossPolicyCascadeEngine`: masters have `type=="MASTER"` not `"SEGURO_VIDA"` etc. Fixed sibling detection to use `ag["terms"]["templateKey"]` via `_template_key()` static method.
+- Backend route: same fix — `source_template_key = source.ag.get("terms",{}).get("templateKey","")` check instead of `source.type`.
+
+---
+
 ## [2026-05-21] — Seguros seed: 16/16 VALID by default (demo flow: edit → detect → guide → fix → re-validate)
 
 **User request:** "add all the dummy data to the contracts so that I can demostrate that with the correct data everything can be homologated; if I change some fields it will detect and guide me; then re-homologate the whole contract."

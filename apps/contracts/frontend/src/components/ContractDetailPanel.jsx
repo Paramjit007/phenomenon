@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { C, font, SUB_META, SUB_FIELDS, IA_TYPES, statusColor, statusLabel, theoreticalState, CAMPO_LABELS, OPUS_LEVELS, getOpusLevel, SUB_CASCADE_FIELDS } from "../constants.js";
+import { C, font, SUB_META, SUB_FIELDS, IA_TYPES, statusColor, statusLabel, theoreticalState, CAMPO_LABELS, OPUS_LEVELS, getOpusLevel, SUB_CASCADE_FIELDS, INSURANCE_TEMPLATE_KEYS } from "../constants.js";
 import * as api from "../api/phenomenon.js";
 import RiskPanel, { detectRisks, getRiskLevel, RISK_ICONS } from "./RiskEngine.jsx";
 import ClauseLibrary from "./ClauseLibrary.jsx";
@@ -201,7 +201,7 @@ function ClauseEditor({ clauses, onChange, contractType, showLibrary, onToggleLi
 }
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
-export default function ContractDetailPanel({ contractId, contracts, master, template, onUpdateContract, onGenerateSub, onClose, onDelete, onHomologate, generating, jumpToField, onJumpHandled, allContracts, onSubCascade, onFieldEditing, onImpactDetected }) {
+export default function ContractDetailPanel({ contractId, contracts, master, template, onUpdateContract, onGenerateSub, onClose, onDelete, onHomologate, generating, jumpToField, onJumpHandled, allContracts, onSubCascade, onFieldEditing, onImpactDetected, onEssCascade }) {
   const contract = contracts[contractId];
   const isMaster = contract && !contract.parentId;
   const meta     = contract ? (SUB_META[contract.type] ?? null) : null;
@@ -316,8 +316,8 @@ export default function ContractDetailPanel({ contractId, contracts, master, tem
     debounce.current[key] = setTimeout(async () => {
       try {
         await onUpdateContract(contractId, { ess: { [key]: val } });
-        // Notify impact panel after save completes
         onImpactDetected?.({ contractId, field: key, fieldLabel: key, oldValue: oldVal, newValue: val, group: "ess" });
+        onEssCascade?.(contractId, key, val);
       }
       catch (e) { setError(e.message); }
     }, 700);

@@ -55,9 +55,13 @@ export const getAmortization   = (principal, euribor, spread, termYears, months 
 export const updateEuribor     = (body)                         => req("/demo/kpmg/update-euribor", { method: "POST", body });
 
 // ─── Seguros demo endpoints ───────────────────────────────────────────────────
-export const seedSegurosDemo   = ()       => req("/demo/seguros/seed", { method: "POST" });
-export const declareSiniestro  = (body)   => req("/demo/seguros/siniestro",        { method: "POST", body });
-export const unblockCoverage   = (body)   => req("/demo/seguros/unblock-coverage", { method: "POST", body });
+export const seedSegurosDemo       = ()       => req("/demo/seguros/seed", { method: "POST" });
+export const declareSiniestro      = (body)   => req("/demo/seguros/siniestro",              { method: "POST", body });
+export const unblockCoverage       = (body)   => req("/demo/seguros/unblock-coverage",       { method: "POST", body });
+export const crossPolicyCascade    = (body)   => req("/demo/seguros/cross-policy-cascade",   { method: "POST", body });
+export const initOnePolicy         = (body)   => req("/demo/seguros/init-one-policy",         { method: "POST", body });
+export const fillPolicyData        = (body)   => req("/demo/seguros/fill-policy-data",        { method: "POST", body });
+export const clearSeguros          = ()       => req("/demo/seguros/clear",                   { method: "POST" });
 
 // ─── Ecosystem endpoints ──────────────────────────────────────────────────────
 export const getEcosystem             = (masterId)          => req(`/ecosystem/${masterId}`);

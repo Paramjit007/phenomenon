@@ -325,6 +325,176 @@ class SubCascadeEngine:
 
 
 @dataclass
+class CrossPolicyCascadeResult:
+    source_id: str
+    source_type: str
+    field: str
+    new_value: str
+    affected_ids: list[str] = field(default_factory=list)
+    trace: list[dict] = field(default_factory=list)
+
+
+# Cross-policy cascade map: sub-type + field → target sub-types in OTHER policy trees.
+# Connections are resolved at runtime by finding contracts of the target type
+# whose master shares the same partyA as the source contract's master.
+CROSS_POLICY_CASCADE_MAP: dict[str, dict[str, list[str]]] = {
+    # RIESGO_EMPRESARIAL (Crédito) → PERITACION (Daños)
+    # Business risk level affects property damage assessment for the same company.
+    "RIESGO_EMPRESARIAL": {
+        "riskCategory": ["PERITACION"],
+    },
+    # EXCLUSIONES_VIDA → COBERTURA_RC
+    # Medical exclusion on life policy means same insured's RC risk profile changes.
+    "EXCLUSIONES_VIDA": {
+        "blockingStatus": ["COBERTURA_RC"],
+    },
+    # Master-level: any master's partyA change → all sibling insurance masters NEEDS_REVIEW.
+    # Handled separately in CrossPolicyCascadeEngine.run_partyA_change().
+}
+
+
+class CrossPolicyCascadeEngine:
+    """
+    Propagates changes ACROSS insurance policy trees that share the same tomador (partyA).
+
+    Bloque II IF inter-fenómenica: policies held by the same legal entity are
+    structurally linked — changes in one policy's risk sub-contracts propagate
+    to the corresponding sub-contracts in sibling policies.
+
+    Three cascade types:
+      1. partyA change on any master → all sibling insurance masters NEEDS_REVIEW
+      2. RIESGO_EMPRESARIAL.riskCategory → PERITACION in the Daños policy
+      3. EXCLUSIONES_VIDA.blockingStatus → COBERTURA_RC in the RC policy
+    """
+
+    _INSURANCE_MASTER_TYPES = {
+        "SEGURO_VIDA", "SEGURO_RC", "SEGURO_DANOS", "SEGURO_CREDITO_COMERCIAL",
+    }
+
+    @staticmethod
+    def _template_key(contract) -> str:
+        try:
+            return contract.ag.get("terms", {}).get("templateKey", "") or ""
+        except Exception:
+            return ""
+
+    def run_partyA_change(
+        self,
+        source_master_id: str,
+        new_partyA: str,
+        repo: PhenomenonRepository,
+    ) -> CrossPolicyCascadeResult:
+        """
+        When partyA (tomador) changes on one insurance master:
+          - Updates partyA on all sibling insurance masters that share the same original tomador
+          - Cascades partyA down to all sub-contracts of each sibling master
+        """
+        source = repo.get(source_master_id)
+        source_template = self._template_key(source)
+
+        all_contracts = repo.list_all() if hasattr(repo, "list_all") else []
+        sibling_masters = [
+            c for c in all_contracts
+            if c.id != source_master_id
+            and c.parentId is None
+            and self._template_key(c) in self._INSURANCE_MASTER_TYPES
+        ]
+
+        sub_engine = CascadeEngine()
+        trace = []
+        all_affected_ids = []
+        for master in sibling_masters:
+            m_template = self._template_key(master)
+            # Use CascadeEngine to update partyA on the sibling master AND all its subs
+            result = sub_engine.run(master.id, "partyA", new_partyA, repo)
+            all_affected_ids.append(master.id)
+            all_affected_ids.extend(result.affected_ids)
+            trace.append({
+                "phenomenon_id": master.id,
+                "name": master.name,
+                "type": m_template or master.type,
+                "triggered_by": f"cross-policy partyA change on {source_template or source.type}",
+                "new_status": "MODIFIED",
+                "vector": f"IF_cross_policy(tomador:{source_template}→{m_template})",
+                "subs_updated": len(result.affected_ids),
+            })
+
+        return CrossPolicyCascadeResult(
+            source_id=source_master_id,
+            source_type=source_template or source.type,
+            field="partyA",
+            new_value=new_partyA,
+            affected_ids=all_affected_ids,
+            trace=trace,
+        )
+
+    def run_sub_change(
+        self,
+        source_id: str,
+        field: str,
+        new_value: str,
+        repo: PhenomenonRepository,
+    ) -> CrossPolicyCascadeResult:
+        """
+        When a sub-contract field changes, check CROSS_POLICY_CASCADE_MAP for
+        target sub-types in other policy trees with the same tomador.
+        """
+        source = repo.get(source_id)
+        if not source or not source.parentId:
+            return CrossPolicyCascadeResult(
+                source_id=source_id, source_type="UNKNOWN", field=field, new_value=new_value
+            )
+
+        target_types = CROSS_POLICY_CASCADE_MAP.get(source.type, {}).get(field, [])
+        if not target_types:
+            return CrossPolicyCascadeResult(
+                source_id=source_id, source_type=source.type, field=field, new_value=new_value
+            )
+
+        source_master = repo.get(source.parentId)
+        original_partyA = source_master.ess.partyA
+
+        all_contracts = repo.list_all() if hasattr(repo, "list_all") else []
+        targets = [
+            c for c in all_contracts
+            if c.type in target_types
+            and c.parentId is not None
+            and c.id != source_id
+        ]
+        # Filter to same tomador (partyA on the target's master must match)
+        same_tomador_targets = []
+        for t in targets:
+            t_master = repo.get(t.parentId)
+            if t_master and t_master.ess.partyA == original_partyA:
+                same_tomador_targets.append(t)
+
+        trace = []
+        for target in same_tomador_targets:
+            updated = target.model_copy(update={
+                "status": "NEEDS_REVIEW",
+                "opus": target.opus.model_copy(update={"homologation": "PENDING"}),
+            })
+            repo.save(updated)
+            trace.append({
+                "phenomenon_id": target.id,
+                "name": target.name,
+                "type": target.type,
+                "triggered_by": f"cross-policy {source.type}.{field} change",
+                "new_status": "NEEDS_REVIEW",
+                "vector": f"IF_cross_policy({source.type}→{target.type})",
+            })
+
+        return CrossPolicyCascadeResult(
+            source_id=source_id,
+            source_type=source.type,
+            field=field,
+            new_value=new_value,
+            affected_ids=[t.id for t in same_tomador_targets],
+            trace=trace,
+        )
+
+
+@dataclass
 class ReverseCascadeResult:
     source_id: str
     source_type: str

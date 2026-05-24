@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { C, font, CONTRACT_TEMPLATES, FINAL_RULE, OPUS_LEVELS } from "./constants.js";
+import { C, font, CONTRACT_TEMPLATES, FINAL_RULE, OPUS_LEVELS, SUB_IF_EDGES, SUB_META } from "./constants.js";
 import { usePhenomenon }        from "./hooks/usePhenomenon.js";
 import * as api                 from "./api/phenomenon.js";
 import SelectionScreen          from "./components/SelectionScreen.jsx";
@@ -29,13 +29,142 @@ const RIGHT_TABS = [
   { key: "ecosistema", label: "Ecosistema", icon: "🌐" },
   { key: "kpmg-demo",  label: "Demo KPMG",  icon: "⭐" },
   { key: "kpmg-corp",  label: "Gobernanza", icon: "🏛" },
-  { key: "seguros",    label: "Seguros",    icon: "🛡️" },
   { key: "riesgo",     label: "Riesgo",     icon: "⚠" },
   { key: "verificar",  label: "Verificar",  icon: "⊙" },
   { key: "red-if",     label: "Red IF",     icon: "⇄" },
   { key: "ia",         label: "Operadores", icon: "⬡" },
   { key: "documento",  label: "Documento",  icon: "◉" },
 ];
+
+// ── IF Link Map (left rail, between graph and log) ────────────────────────────
+function IFLinkMap({ master, subContracts, onSelectNode }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  if (!master || subContracts.length === 0) return null;
+
+  const subTypes = new Set(subContracts.map(c => c.type));
+
+  // Master → sub links
+  const masterLinks = subContracts.map(c => ({
+    from: master.name ?? master.type ?? "Master",
+    to:   c.name ?? c.type ?? c.id,
+    toId: c.id,
+    kind: "master-sub",
+    color: SUB_META[c.type]?.color ?? C.textMuted,
+  }));
+
+  // Sibling IF links (only where both contract types exist in this project)
+  const siblingLinks = SUB_IF_EDGES
+    .filter(e => subTypes.has(e.a) && subTypes.has(e.b))
+    .map(e => {
+      const src = subContracts.find(c => c.type === e.a);
+      const dst = subContracts.find(c => c.type === e.b);
+      return {
+        from:   src?.name ?? e.a,
+        to:     dst?.name ?? e.b,
+        fromId: src?.id,
+        toId:   dst?.id,
+        label:  e.label,
+        kind:   e.type ?? "if",
+        color:  e.type === "exclusion" ? C.red : e.type === "logic" ? C.cyan : C.textMuted,
+      };
+    });
+
+  const kindIcon = { "master-sub": "⬡", "exclusion": "⊗", "logic": "⇄", "if": "⇌" };
+
+  return (
+    <div style={{ flexShrink: 0, borderTop: `1px solid ${C.borderDark}`, background: C.navyDeep }}>
+      {/* header */}
+      <div
+        onClick={() => setCollapsed(p => !p)}
+        style={{
+          display: "flex", alignItems: "center", gap: 7,
+          padding: "5px 10px", cursor: "pointer",
+          background: C.navyDeep,
+          borderBottom: collapsed ? "none" : `1px solid ${C.borderDark}50`,
+        }}
+      >
+        <span style={{ fontSize: 11, color: C.cyan }}>⇄</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "#CBD5E1", letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: font.ui }}>
+          Red IF
+        </span>
+        <span style={{ fontSize: 10, color: "#64748B", fontFamily: font.mono }}>
+          {masterLinks.length + siblingLinks.length}
+        </span>
+        <span style={{ marginLeft: "auto", fontSize: 10, color: "#64748B" }}>{collapsed ? "▲" : "▼"}</span>
+      </div>
+
+      {/* body */}
+      {!collapsed && (
+        <div style={{ maxHeight: 170, overflowY: "auto", padding: "3px 0" }}>
+          {/* master → sub rows */}
+          {masterLinks.map((lnk, i) => (
+            <div
+              key={`ms-${i}`}
+              onClick={() => lnk.toId && onSelectNode(lnk.toId)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", cursor: "pointer",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "#ffffff10"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            >
+              <span style={{ fontSize: 10, color: lnk.color, flexShrink: 0 }}>⬡</span>
+              <span style={{ fontSize: 10, color: "#CBD5E1", fontFamily: font.ui, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {lnk.from}
+              </span>
+              <span style={{
+                fontSize: 9, fontWeight: 800, color: "#fff",
+                background: lnk.color, borderRadius: 3, padding: "1px 5px", flexShrink: 0,
+              }}>IF</span>
+              <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: font.ui, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
+                {lnk.to}
+              </span>
+            </div>
+          ))}
+
+          {/* sibling rows */}
+          {siblingLinks.map((lnk, i) => (
+            <div
+              key={`sib-${i}`}
+              onClick={() => lnk.fromId && onSelectNode(lnk.fromId)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "4px 10px", cursor: "pointer",
+                borderTop: `1px solid ${C.borderDark}40`,
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "#ffffff10"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            >
+              <span style={{ fontSize: 10, color: lnk.color, flexShrink: 0 }}>{kindIcon[lnk.kind] ?? "⇌"}</span>
+              <span style={{ fontSize: 10, color: "#CBD5E1", fontFamily: font.ui, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {lnk.from}
+              </span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: lnk.color,
+                border: `1px solid ${lnk.color}`, borderRadius: 3,
+                padding: "1px 4px", flexShrink: 0, whiteSpace: "nowrap",
+                maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis",
+              }}>
+                {lnk.label}
+              </span>
+              <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: font.ui, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
+                {lnk.to}
+              </span>
+            </div>
+          ))}
+
+          {siblingLinks.length === 0 && masterLinks.length === 0 && (
+            <div style={{ padding: "10px", fontSize: 10, color: "#64748B", textAlign: "center", fontFamily: font.ui }}>
+              Sin conexiones IF activas
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Permanent EngineLog strip (left rail, bottom 120px) ───────────────────────
 function EngineLog({ log, loading }) {
@@ -52,7 +181,7 @@ function EngineLog({ log, loading }) {
     <div
       aria-label="Engine activity log"
       style={{
-        height: 120,
+        height: 100,
         flexShrink: 0,
         background: C.navy,
         borderTop: `1px solid ${C.borderDark}`,
@@ -64,36 +193,38 @@ function EngineLog({ log, loading }) {
       {/* Log header */}
       <div
         style={{
-          height: 22,
+          height: 24,
           display: "flex",
           alignItems: "center",
           padding: "0 10px",
-          gap: 6,
+          gap: 7,
           borderBottom: `1px solid ${C.borderDark}`,
           flexShrink: 0,
         }}
       >
         <div
           style={{
-            width: 6,
-            height: 6,
+            width: 7,
+            height: 7,
             borderRadius: "50%",
             background: loading ? C.orange : C.green,
             flexShrink: 0,
+            boxShadow: loading ? `0 0 5px ${C.orange}80` : `0 0 5px ${C.green}80`,
           }}
         />
         <span
           style={{
-            fontSize: 9,
-            color: C.textNavy,
-            fontFamily: font.mono,
-            letterSpacing: "0.1em",
+            fontSize: 10,
+            color: "#CBD5E1",
+            fontFamily: font.ui,
+            fontWeight: 600,
+            letterSpacing: "0.04em",
             flex: 1,
           }}
         >
-          MOTOR · ACTIVIDAD
+          Motor · Actividad
         </span>
-        <span style={{ fontSize: 9, color: C.textNavy, fontFamily: font.mono }}>
+        <span style={{ fontSize: 10, color: "#64748B", fontFamily: font.mono }}>
           {log.length}
         </span>
       </div>
@@ -101,16 +232,15 @@ function EngineLog({ log, loading }) {
       {/* Log entries — last 6 */}
       <div
         ref={scrollRef}
-        style={{ flex: 1, overflowY: "auto", padding: "2px 0" }}
+        style={{ flex: 1, overflowY: "auto", padding: "3px 0" }}
       >
         {lastSix.length === 0 ? (
           <div
             style={{
               padding: "8px 10px",
               fontSize: 10,
-              color: C.textNavy,
-              fontFamily: font.mono,
-              opacity: 0.5,
+              color: "#64748B",
+              fontFamily: font.ui,
             }}
           >
             Sin actividad registrada
@@ -118,40 +248,39 @@ function EngineLog({ log, loading }) {
         ) : (
           lastSix.map((e) => {
             const col =
-              e.type === "error"   ? C.red    :
-              e.type === "ai"      ? C.purple :
-              e.type === "opus"    ? C.green  :
-              e.type === "cascade" ? C.orange : C.textWhite;
+              e.type === "error"   ? "#F87171" :
+              e.type === "ai"      ? "#A78BFA" :
+              e.type === "opus"    ? "#34D399" :
+              e.type === "cascade" ? "#FBB34A" : "#E2E8F0";
             return (
               <div
                 key={e.id}
                 style={{
                   display: "flex",
                   gap: 6,
-                  padding: "2px 10px",
+                  padding: "3px 10px",
                   alignItems: "flex-start",
                 }}
               >
                 <span
                   style={{
-                    fontSize: 8,
-                    color: C.textNavy,
+                    fontSize: 9,
+                    color: "#475569",
                     fontFamily: font.mono,
                     flexShrink: 0,
                     paddingTop: 2,
-                    minWidth: 42,
+                    minWidth: 44,
                   }}
                 >
                   {e.t}
                 </span>
                 <span
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     color: col,
                     fontFamily: font.ui,
                     lineHeight: 1.4,
                     flex: 1,
-                    wordBreak: "break-word",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
@@ -191,6 +320,20 @@ function AppInner() {
   const [graphFlashIds,  setGraphFlashIds]  = useState([]);
   const [pendingEditId,  setPendingEditId]  = useState(null);
   const [graphViewMode,  setGraphViewMode]  = useState("radial"); // "radial" | "full"
+  // null | "stage-wide" | "stage-full" | "centre-wide" | "centre-full" | "left-wide" | "left-full"
+  // stage-wide   → hide left; stage fills rest; centre shrinks to 280px
+  // stage-full   → hide left + centre; stage full width
+  // centre-wide  → hide stage; left + centre fill screen
+  // centre-full  → hide left + stage; centre full width
+  // left-wide    → hide stage; left + centre fill screen (left resizable)
+  // left-full    → hide centre + stage; left full width
+  const [expandedPanel,  setExpandedPanel]  = useState(null);
+  const hideLeft    = ["stage-wide","stage-full","centre-full"].includes(expandedPanel);
+  const hideCentre  = expandedPanel === "stage-full" || expandedPanel === "left-full";
+  const hideStage   = ["centre-wide","centre-full","left-wide","left-full"].includes(expandedPanel);
+  const stageIsWide = expandedPanel === "stage-wide";
+  const leftIsWide  = expandedPanel === "left-wide";
+  const leftIsFull  = expandedPanel === "left-full";
   const [impactData,     setImpactData]     = useState(null);
   const pendingEditTimer = useRef(null);
   const [verifyOpen,     setVerifyOpen]     = useState(false);
@@ -217,14 +360,25 @@ function AppInner() {
   );
   const visibleRightTabs = RIGHT_TABS.filter(t => {
     if (t.key === "kpmg-corp") return isKPMGCorporate;
-    if (t.key === "seguros")   return isSegurosCase;
+    if (t.key === "kpmg-demo") return !isSegurosCase;
     return true;
   });
 
   useEffect(() => {
     if (!isKPMGCorporate && rightTab === "kpmg-corp") setRightTab("campos");
-    if (!isSegurosCase   && rightTab === "seguros")   setRightTab("campos");
-  }, [isKPMGCorporate, isSegurosCase, rightTab]);
+  }, [isKPMGCorporate, rightTab]);
+
+  // Auto-switch to full network when seguros case is loaded; auto-widen right stage
+  useEffect(() => {
+    if (isSegurosCase) {
+      setGraphViewMode("full");
+      setStageW(580);
+    } else {
+      setGraphViewMode("radial");
+      setStageW(420);
+      setExpandedPanel(null);
+    }
+  }, [isSegurosCase]);
 
   // ── Watch for cascade events → trigger impact notification ─────────────────
   const prevNeedsReview = useRef(new Set());
@@ -544,6 +698,31 @@ function AppInner() {
           {demoMode ? "DEMO ON" : "DEMO"}
         </button>
 
+        {/* Inicio button — only in seguros mode */}
+        {isSegurosCase && (
+          <button
+            onClick={async () => {
+              try { await api.clearSeguros(); } catch (_) {}
+              await loadContracts();
+              setSelectedId(null);
+              setRightTab("campos");
+              setExpandedPanel(null);
+            }}
+            title="Borrar seguros y volver a la pantalla de inicio"
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "5px 11px", borderRadius: 6,
+              border: `1px solid #ef444440`,
+              background: "#fef2f2",
+              cursor: "pointer", fontFamily: font.mono,
+              fontSize: 10, fontWeight: 700,
+              color: "#dc2626", letterSpacing: "0.07em",
+            }}
+          >
+            ⟵ Inicio
+          </button>
+        )}
+
         {/* Verify button */}
         <button
           disabled={!master}
@@ -577,17 +756,49 @@ function AppInner() {
       {/* ── BODY: 3-pane workspace ── */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", background: C.bg }}>
 
-        {/* ── LEFT RAIL (~220px): graph + compact IA + permanent EngineLog ── */}
+        {/* ── LEFT RAIL (~380px): graph + compact IA + permanent EngineLog ── */}
         <div
           style={{
-            width: leftW,
-            display: "flex",
+            width: hideLeft ? 0 : leftIsFull ? undefined : leftW,
+            flex: hideLeft ? undefined : leftIsFull ? 1 : "none",
+            display: hideLeft ? "none" : "flex",
             flexDirection: "column",
             overflow: "hidden",
-            flexShrink: 0,
-            minWidth: 200,
+            flexShrink: hideLeft ? undefined : leftIsFull ? 1 : 0,
+            minWidth: hideLeft ? 0 : leftIsFull ? 0 : 200,
           }}
         >
+          {/* ── Left rail header with expand button ── */}
+          <div style={{
+            height: 30, flexShrink: 0,
+            background: C.navyDeep,
+            borderBottom: `1px solid ${C.borderDark}`,
+            display: "flex", alignItems: "center",
+            padding: "0 10px", gap: 8,
+          }}>
+            <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: font.ui, fontWeight: 600, flex: 1, letterSpacing: "0.04em" }}>
+              Grafo · IF · Motor
+            </span>
+            <button
+              onClick={() => setExpandedPanel(p => {
+                if (!p || p.startsWith("stage") || p.startsWith("centre")) return "left-wide";
+                if (p === "left-wide") return "left-full";
+                return null;
+              })}
+              title={leftIsFull ? "Restaurar 3 paneles" : leftIsWide ? "Pantalla completa" : "Ampliar grafo"}
+              style={{
+                width: 24, height: 24, borderRadius: 4, flexShrink: 0,
+                border: `1px solid ${leftIsFull || leftIsWide ? C.gold : "#2D3F5A"}`,
+                background: leftIsFull ? `${C.gold}40` : leftIsWide ? `${C.gold}20` : "transparent",
+                color: leftIsFull || leftIsWide ? C.gold : "#64748B",
+                cursor: "pointer", fontSize: 13,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              {leftIsFull ? "⊠" : leftIsWide ? "⊟" : "⊞"}
+            </button>
+          </div>
+
           {/* Contract graph */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
             <ErrorBoundary scope="graph">
@@ -608,18 +819,27 @@ function AppInner() {
             </ErrorBoundary>
           </div>
 
-          {/* IA panel resize handle */}
+          {/* IA panel resize handle — thin when collapsed */}
           <div
-            onMouseDown={startIaVResize}
+            onMouseDown={iaCollapsed ? undefined : startIaVResize}
             onMouseEnter={() => setIaHover(true)}
             onMouseLeave={() => setIaHover(false)}
             onDoubleClick={() => setIaCollapsed(p => !p)}
-            title="Arrastra · Doble clic para colapsar"
-            style={{ ...gripH(iaHover), cursor: "row-resize" }}
+            title="Doble clic para expandir Motor IA"
+            style={{
+              height: iaCollapsed ? 18 : 10,
+              flexShrink: 0,
+              background: iaHover ? `${C.blue}18` : C.bgAlt,
+              borderTop: `1px solid ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: iaCollapsed ? "pointer" : "row-resize",
+              transition: "height 0.2s",
+              gap: 4,
+            }}
           >
             {iaCollapsed
-              ? <span style={{ fontSize: 10, color: iaHover ? C.blue : C.textMuted, fontFamily: font.mono }}>⬡ Motor IA ▲</span>
-              : [0,1,2,3].map(i => <div key={i} style={{ width: 18, height: 2, background: iaHover ? C.blue : C.borderStrong, borderRadius: 1 }} />)
+              ? <span style={{ fontSize: 9, color: iaHover ? C.blue : C.textLight, fontFamily: font.mono, letterSpacing: 1 }}>⬡ IA ▲</span>
+              : [0,1,2,3].map(i => <div key={i} style={{ width: 14, height: 2, background: iaHover ? C.blue : C.borderStrong, borderRadius: 1 }} />)
             }
           </div>
 
@@ -642,7 +862,7 @@ function AppInner() {
         </div>
 
         {/* ── Drag splitter: left | centre ── */}
-        <div
+        {!hideLeft && !hideCentre && !leftIsFull && <div
           role="separator"
           aria-label="Resize left rail"
           onMouseDown={startLeftResize}
@@ -656,17 +876,17 @@ function AppInner() {
           {[0,1,2,3,4,5,6].map(i => (
             <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: leftGripHover ? C.navyDeep : C.borderStrong }} />
           ))}
-        </div>
+        </div>}
 
         {/* ── CENTRE PANE: ContractDetailPanel (all existing tabs) ── */}
-        <div
+        {!hideCentre && <div
           style={{
-            flex: 1,
+            flex: stageIsWide ? "0 0 280px" : 1,
             display: "flex",
             flexDirection: "column",
             background: C.white,
             overflow: "hidden",
-            minWidth: 160,
+            minWidth: stageIsWide ? 0 : 160,
           }}
         >
           {/* Tab bar */}
@@ -705,16 +925,46 @@ function AppInner() {
             })}
             {/* S/M/L/XL snap buttons — hidden in demoMode */}
             {!demoMode && (
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3, paddingRight: 10 }}>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3, paddingRight: 6 }}>
                 {[["S", 380], ["M", 580], ["L", 800], ["XL", 1100]].map(([lbl, w]) => (
                   <button key={lbl} onClick={() => setRightW(w)}
                     style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, border: `1px solid ${Math.abs(rightW - w) < 80 ? C.gold : C.border}`, background: Math.abs(rightW - w) < 80 ? C.goldBg : "none", color: Math.abs(rightW - w) < 80 ? C.goldDim : C.textMuted, cursor: "pointer", fontFamily: font.mono }}>
                     {lbl}
                   </button>
                 ))}
-                <span style={{ fontSize: 9, color: C.textLight, fontFamily: font.mono, marginLeft: 3 }}>{rightW}px</span>
+                <span style={{ fontSize: 9, color: C.textLight, fontFamily: font.mono, marginLeft: 3, marginRight: 6 }}>{rightW}px</span>
               </div>
             )}
+            {/* L2 expand / collapse button */}
+            {(() => {
+              const lvl = expandedPanel === "centre-full" ? 2 : expandedPanel === "centre-wide" ? 1 : 0;
+              const nextTitle = lvl === 0 ? "Ampliar: ocultar derecho" : lvl === 1 ? "Ampliar: pantalla completa" : "Restaurar 3 paneles";
+              const icon = lvl === 2 ? "⊠" : lvl === 1 ? "⊟" : "⊞";
+              const active = lvl > 0;
+              return (
+                <button
+                  onClick={() => setExpandedPanel(p => {
+                    if (!p || p.startsWith("stage")) return "centre-wide";
+                    if (p === "centre-wide") return "centre-full";
+                    return null;
+                  })}
+                  title={nextTitle}
+                  style={{
+                    marginLeft: demoMode ? "auto" : 0,
+                    marginRight: 8, flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 26, height: 26,
+                    border: `1px solid ${active ? C.gold : C.border}`,
+                    borderRadius: 5,
+                    background: active ? C.goldBg : "transparent",
+                    color: active ? C.goldDim : C.textMuted,
+                    cursor: "pointer", fontSize: 13,
+                  }}
+                >
+                  {icon}
+                </button>
+              );
+            })()}
           </div>
 
           {/* Tab content */}
@@ -753,6 +1003,20 @@ function AppInner() {
                       (c.parentId === cid || c.parentId === contract.parentId || c.id === contract.parentId)
                     );
                     setImpactData({ contractId: cid, fieldLabel: field, oldValue: String(oldValue ?? ""), newValue: String(newValue ?? ""), affectedContracts: affected, risks });
+                  }}
+                  onEssCascade={async (cid, field, val) => {
+                    const c = contracts[cid];
+                    if (!c || c.parentId || field !== "partyA") return;
+                    if (!INSURANCE_TEMPLATE_KEYS.includes(c.ag?.terms?.templateKey)) return;
+                    try {
+                      const res = await api.triggerCascade(cid, field, val);
+                      addLog("IF", `Tomador → ${res.affected_count} subcontrato(s) actualizado(s)`, "cascade");
+                      await api.crossPolicyCascade({ source_contract_id: cid, field, new_value: val });
+                      addLog("IF", `Tomador propagado a todas las pólizas: "${val}"`, "cascade");
+                      await loadContracts();
+                    } catch (e) {
+                      addLog("ERROR", "Cascade tomador: " + e.message, "error");
+                    }
                   }}
                 />
               ) : (
@@ -904,18 +1168,6 @@ function AppInner() {
               </ErrorBoundary>
             )}
 
-            {rightTab === "seguros" && (
-              <ErrorBoundary scope="seguros">
-                {!demoMode && <ErrorTriggerForTests scope="seguros" />}
-                <SegurosComparativeView
-                  contracts={contracts}
-                  onSelectContract={(id) => { setSelectedId(id); setRightTab("campos"); }}
-                  onLoadContracts={loadContracts}
-                  addLog={addLog}
-                />
-              </ErrorBoundary>
-            )}
-
             {rightTab === "red-if" && (
               <ErrorBoundary scope="red-if">
                 <CascadeControlPanel
@@ -945,10 +1197,10 @@ function AppInner() {
               </ErrorBoundary>
             )}
           </div>
-        </div>
+        </div>}
 
         {/* ── Drag splitter: centre | right stage ── */}
-        <div
+        {!hideLeft && !hideStage && !hideCentre && <div
           role="separator"
           aria-label="Resize right stage"
           onMouseDown={startRightResize}
@@ -961,45 +1213,61 @@ function AppInner() {
           {[0,1,2,3,4].map(i => (
             <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", background: rightGripHover ? C.blue : C.borderStrong }} />
           ))}
-        </div>
+        </div>}
 
-        {/* ── RIGHT STAGE (~420px): CenterStage ── */}
-        <div
+        {/* ── RIGHT STAGE (~420-580px): Seguros builder OR CenterStage ── */}
+        {!hideStage && <div
           style={{
-            width: stageW,
+            width: (hideCentre || stageIsWide) ? undefined : stageW,
+            flex: (hideCentre || stageIsWide) ? 1 : "none",
             display: "flex",
             flexDirection: "column",
             flexShrink: 0,
             overflow: "hidden",
-            minWidth: 160,
+            minWidth: 200,
           }}
         >
-          <ErrorBoundary scope="center-stage">
-            <CenterStage
-              master={master}
-              subContracts={subContracts}
-              contracts={contracts}
-              selectedContract={selectedId ? contracts[selectedId] ?? null : null}
-              onLoadContracts={loadContracts}
-              onHomologate={homologateContract}
-              addLog={addLog}
-              onCascadeComplete={(ids) => {
-                setGraphFlashIds(ids);
-                setTimeout(() => setGraphFlashIds([]), 2500);
-              }}
-              onClauseInserted={(contractId, clauseText) => {
-                // Log to engine log; additional side-effects can be added here.
-                addLog({
-                  id: Date.now(),
-                  t: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-                  msg: `Cláusula insertada en contrato ${contractId}`,
-                  type: "opus",
-                });
-              }}
-              onViewModeChange={(mode) => setGraphViewMode(mode)}
-            />
+          <ErrorBoundary scope="right-stage">
+            {isSegurosCase ? (
+              <SegurosComparativeView
+                contracts={contracts}
+                onSelectContract={(id) => { setSelectedId(id); setRightTab("campos"); }}
+                onLoadContracts={loadContracts}
+                addLog={addLog}
+                isExpanded={expandedPanel === "stage-wide" || expandedPanel === "stage-full"}
+                expandLevel={expandedPanel === "stage-full" ? 2 : expandedPanel === "stage-wide" ? 1 : 0}
+                onToggleExpand={() => setExpandedPanel(p => {
+                  if (!p || p.startsWith("centre")) return "stage-wide";
+                  if (p === "stage-wide") return "stage-full";
+                  return null;
+                })}
+              />
+            ) : (
+              <CenterStage
+                master={master}
+                subContracts={subContracts}
+                contracts={contracts}
+                selectedContract={selectedId ? contracts[selectedId] ?? null : null}
+                onLoadContracts={loadContracts}
+                onHomologate={homologateContract}
+                addLog={addLog}
+                onCascadeComplete={(ids) => {
+                  setGraphFlashIds(ids);
+                  setTimeout(() => setGraphFlashIds([]), 2500);
+                }}
+                onClauseInserted={(contractId, clauseText) => {
+                  addLog({
+                    id: Date.now(),
+                    t: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+                    msg: `Cláusula insertada en contrato ${contractId}`,
+                    type: "opus",
+                  });
+                }}
+                onViewModeChange={(mode) => setGraphViewMode(mode)}
+              />
+            )}
           </ErrorBoundary>
-        </div>
+        </div>}
 
       </div>
     </div>

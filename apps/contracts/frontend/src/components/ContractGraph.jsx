@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { C, font, SUB_META, statusColor, statusLabel, OPUS_LEVELS, getOpusLevel, SUB_IF_EDGES, SUB_CASCADE_MAP, SUB_CASCADE_FIELDS } from "../constants.js";
+import { C, font, SUB_META, statusColor, statusLabel, OPUS_LEVELS, getOpusLevel, SUB_IF_EDGES, SUB_CASCADE_MAP, SUB_CASCADE_FIELDS, INSURANCE_POLICY_CONFIG, CROSS_POLICY_IF_EDGES } from "../constants.js";
 import { detectRisks, getRiskLevel } from "./RiskEngine.jsx";
 import * as api from "../api/phenomenon.js";
 
@@ -453,11 +453,16 @@ const MASTER_PALETTE = [C.gold, C.cyan, "#059669", "#7C3AED", "#D97706", "#DB277
 function buildGroups(contractsMap) {
   const all = Object.values(contractsMap ?? {});
   const masters = all.filter(c => !c.parentId);
-  return masters.map((m, i) => ({
-    master: m,
-    subs: all.filter(c => c.parentId === m.id),
-    color: MASTER_PALETTE[i % MASTER_PALETTE.length],
-  }));
+  return masters.map((m, i) => {
+    const templateKey = m.ag?.terms?.templateKey;
+    const insuranceCfg = INSURANCE_POLICY_CONFIG?.[templateKey];
+    return {
+      master: m,
+      subs: all.filter(c => c.parentId === m.id),
+      color: insuranceCfg?.color ?? MASTER_PALETTE[i % MASTER_PALETTE.length],
+      templateKey: templateKey ?? null,
+    };
+  });
 }
 
 /**
@@ -599,13 +604,92 @@ function FullNetworkView({
         aria-label="Vista completa de la red contractual"
         role="img"
       >
-        {/* Background dots */}
+        {/* Background dots + cross-policy markers */}
         <defs>
           <pattern id="fn-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="0.8" fill={C.borderStrong} opacity="0.35" />
           </pattern>
+          {/* Arrowhead markers for cross-policy edges */}
+          {["#C9A84C","#D97706","#DC2626"].map(col => (
+            <marker key={col} id={`cp-arrow-${col.slice(1)}`}
+              markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
+              <path d="M0,0 L0,5 L6,2.5 z" fill={col} opacity="0.7" />
+            </marker>
+          ))}
+          <style>{`
+            @keyframes cpFlow {
+              from { stroke-dashoffset: 20; }
+              to   { stroke-dashoffset: 0; }
+            }
+            @keyframes cpPulse {
+              0%,100% { opacity: 0.55; }
+              50%      { opacity: 0.9; }
+            }
+          `}</style>
         </defs>
         <rect width="100%" height="100%" fill="url(#fn-dots)" />
+
+        {/* ── Cross-policy IF arcs (rendered before groups so they're behind nodes) ── */}
+        {(() => {
+          // Build policyKey → group lookup
+          const policyMap = {};
+          groups.forEach(g => { if (g.templateKey) policyMap[g.templateKey] = g; });
+
+          const getPos = (policyKey, nodeType) => {
+            const g = policyMap[policyKey];
+            if (!g) return null;
+            if (nodeType === "master") return nodePos[g.master.id];
+            const sub = g.subs.find(s => s.type === nodeType);
+            return sub ? nodePos[sub.id] : null;
+          };
+
+          return CROSS_POLICY_IF_EDGES.map((edge, ei) => {
+            const p1 = getPos(edge.aPolicyKey, edge.aType);
+            const p2 = getPos(edge.bPolicyKey, edge.bType);
+            if (!p1 || !p2) return null;
+
+            const isAbove = edge.arcDir === "above";
+            const ctrl = isAbove
+              ? { y: MASTER_Y - 28, x1: p1.cx, x2: p2.cx }
+              : { y: SUB_Y + SUB_R + 42, x1: p1.cx, x2: p2.cx };
+
+            const startY = isAbove ? p1.cy - p1.r : p1.cy + p1.r;
+            const endY   = isAbove ? p2.cy - p2.r : p2.cy + p2.r;
+            const midX   = (p1.cx + p2.cx) / 2;
+            const midY   = isAbove ? ctrl.y - 4 : ctrl.y + 4;
+
+            const d = `M ${p1.cx},${startY} C ${ctrl.x1},${ctrl.y} ${ctrl.x2},${ctrl.y} ${p2.cx},${endY}`;
+            const markerId = `cp-arrow-${edge.color.slice(1)}`;
+
+            return (
+              <g key={`cp-${ei}`} style={{ pointerEvents: "none" }}>
+                {/* Glow track */}
+                <path d={d} fill="none"
+                  stroke={edge.color} strokeWidth={4} opacity={0.08} />
+                {/* Animated dash line */}
+                <path d={d} fill="none"
+                  stroke={edge.color} strokeWidth={1.5}
+                  strokeDasharray="6 4"
+                  markerEnd={`url(#${markerId})`}
+                  opacity={0.55}
+                  style={{
+                    animation: "cpFlow 1.8s linear infinite, cpPulse 3s ease-in-out infinite",
+                  }}
+                />
+                {/* Label at midpoint */}
+                <rect x={midX - 32} y={midY - 8} width={64} height={14}
+                  rx={4} fill={C.white} opacity={0.85} />
+                <text x={midX} y={midY + 2}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={7} fontWeight={600} fill={edge.color}
+                  fontFamily="'JetBrains Mono','Courier New',monospace"
+                  style={{ pointerEvents: "none", userSelect: "none" }}>
+                  {edge.label}
+                </text>
+              </g>
+            );
+          });
+        })()}
 
         {/* Groups */}
         {groups.map((g, gi) => {
@@ -778,14 +862,15 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
   const dragging   = useRef(null);
   const containerRef = useRef(null);
 
-  // Internal view mode — external prop takes precedence when provided
-  const [internalViewMode, setInternalViewMode] = useState("radial");
-  const viewMode = externalViewMode ?? internalViewMode;
+  // internalViewMode is the single source of truth.
+  // External prop seeds the initial value and can sync later (e.g. Red tab).
+  const [internalViewMode, setInternalViewMode] = useState(externalViewMode ?? "radial");
+  const viewMode = internalViewMode;                       // ← local state wins always
   const toggleViewMode = useCallback(() => {
     setInternalViewMode(prev => prev === "radial" ? "full" : "radial");
   }, []);
 
-  // Sync internal state when external prop changes
+  // Allow external (App.jsx / CenterStage Red tab) to override local state
   useEffect(() => {
     if (externalViewMode) setInternalViewMode(externalViewMode);
   }, [externalViewMode]);
@@ -1193,13 +1278,21 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
                 <path d={d} stroke={C.orange} strokeWidth={3} fill="none" opacity={0.7} />
               )}
 
-              <path d={d} stroke={col} strokeWidth={isSel ? 2.5 : 1.5}
-                strokeDasharray="8 5" fill="none"
-                opacity={isFlash ? 1 : isSel ? 0.8 : 0.45}
+              {/* glow halo */}
+              <path d={d} stroke={col} strokeWidth={8} fill="none" opacity={isFlash ? 0.25 : 0.1} />
+              {/* main edge */}
+              <path d={d} stroke={col} strokeWidth={isSel ? 3.5 : 2.5}
+                strokeDasharray={isFlash ? "none" : "10 5"} fill="none"
+                opacity={isFlash ? 1 : isSel ? 1 : 0.75}
                 style={{ animation: isFlash ? "edgeFlash 0.5s ease 4" : "dashFlow 2.5s linear infinite" }} />
-              <path d={d} stroke={col} strokeWidth={5} fill="none" opacity={0.06} />
-              <text x={mid.x} y={mid.y} textAnchor="middle" fontSize={8} fill={col} opacity={isSel ? 0.9 : 0.65}
-                fontFamily="'JetBrains Mono','Courier New',monospace" fontWeight="600">IF</text>
+              {/* arrowhead at target end */}
+              {mid && <path d={`M ${mid.x - 6} ${mid.y - 4} L ${mid.x + 2} ${mid.y} L ${mid.x - 6} ${mid.y + 4}`}
+                stroke={col} strokeWidth={1.5} fill="none" opacity={0.8} />}
+              {/* label pill */}
+              <rect x={mid.x - 12} y={mid.y - 9} width={24} height={14} rx={4}
+                fill={col} opacity={isSel ? 0.9 : 0.8} />
+              <text x={mid.x} y={mid.y + 1} textAnchor="middle" fontSize={9} fill="#fff"
+                fontFamily="'JetBrains Mono','Courier New',monospace" fontWeight="800">IF</text>
 
               {/* ── Cascade edge pulse dot (travels master → sub while edge is active) ── */}
               {isFlash && !reducedMotion && (
@@ -1299,13 +1392,19 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
                    onClick={e => { e.stopPropagation(); setSelectedEdge({ kind:"sibling", fromId:src.id, toId:dst.id, fromType:edge.a, toType:edge.b, edgeDef:edge }); setQuickEditId(null); }}>
                   <path d={d} stroke="transparent" strokeWidth={18} fill="none" />
                   {isSel && <path d={d} stroke={col} strokeWidth={6} fill="none" opacity={0.2} />}
-                  <path d={d} stroke={col} strokeWidth={isSel ? 2 : 1} strokeDasharray={dash}
+                  {/* glow halo */}
+                  <path d={d} stroke={col} strokeWidth={6} fill="none" opacity={isFlash ? 0.3 : 0.12} />
+                  {/* main sibling IF edge */}
+                  <path d={d} stroke={col} strokeWidth={isSel ? 3 : 2.5} strokeDasharray={dash}
                     fill="none"
-                    opacity={isFlash ? 0.9 : isSel ? 0.7 : 0.3}
+                    opacity={isFlash ? 1 : isSel ? 1 : 0.7}
                     style={{ animation: isFlash ? animation : edge.type === "logic" ? undefined : animation }} />
-                  <text x={mid.x} y={mid.y + 14} textAnchor="middle" fontSize={7} fill={col}
-                    opacity={isSel ? 0.8 : 0.55} fontFamily="'JetBrains Mono','Courier New',monospace">
-                    IF·{edge.label}
+                  {/* label pill */}
+                  <rect x={mid.x - 22} y={mid.y + 6} width={44} height={14} rx={4}
+                    fill={col} opacity={0.85} />
+                  <text x={mid.x} y={mid.y + 17} textAnchor="middle" fontSize={8} fill="#fff"
+                    fontFamily="'JetBrains Mono','Courier New',monospace" fontWeight="700">
+                    IF·{(edge.label ?? "").slice(0, 6)}
                   </text>
                 </g>
               );

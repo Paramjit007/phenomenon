@@ -384,28 +384,28 @@ def seed_seguros(db: Session = Depends(get_db)):
     pv_id    = str(uuid.uuid4())  # PRIMA_VIDA
 
     ess_vida = EssFields(
-        partyA="D. Pedro García López",
+        partyA="Comerciales del Levante S.L.",
         partyB="AXA Vida S.A.",
-        jurisdiction="Madrid",
+        jurisdiction="Valencia",
         effectiveDate="2024-01-01",
         expiryDate="2044-01-01",
     )
 
     repo.save(PhenomenonRecord(
-        id=vida_id, name="Seguro de Vida — D. Pedro García López / AXA Vida S.A.",
+        id=vida_id, name="Seguro de Vida — Comerciales del Levante S.L. / AXA Vida S.A.",
         type="MASTER", status="ACTIVE", ess=ess_vida,
         ag={"clauses": [
-            "El asegurador AXA Vida S.A. garantiza el pago del capital asegurado de TRESCIENTOS MIL EUROS (300.000 €) a los beneficiarios designados en caso de fallecimiento o invalidez absoluta y permanente del asegurado D. Pedro García López, ocurridos durante la vigencia de la póliza.",
+            "El asegurador AXA Vida S.A. garantiza el pago del capital asegurado de TRESCIENTOS MIL EUROS (300.000 €) a los beneficiarios designados en caso de fallecimiento o invalidez absoluta y permanente del asegurado D. Javier Martínez Pérez (Consejero Delegado), ocurridos durante la vigencia de la póliza. Tomador: Comerciales del Levante S.L.",
             "La cobertura queda condicionada a la aceptación de la declaración de salud por parte del asegurador y al pago puntual de la prima anual. Cualquier ocultación o inexactitud dolosa en la declaración de salud faculta al asegurador a reducir la indemnización proporcionalmente (art. 10 LCS).",
-            "Se designan como beneficiarios: el cónyuge y los hijos del asegurado, a partes iguales. El asegurado puede modificar la designación de beneficiarios en cualquier momento mediante comunicación fehaciente al asegurador.",
+            "Se designan como beneficiarios: la propia empresa Comerciales del Levante S.L. como tomador, con subrogación a los herederos del asegurado en caso de disolución. El asegurado puede modificar la designación de beneficiarios en cualquier momento mediante comunicación fehaciente al asegurador.",
         ], "terms": {
             "templateKey": "SEGURO_VIDA",
-            "partyACIF": "50234567-A",
-            "partyAAddress": "Calle Mayor 10, 28001 Madrid",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
             "partyBCIF": "A-28123456",
             "partyBAddress": "Paseo de la Castellana 33, 28046 Madrid",
-            "insuredName": "D. Pedro García López",
-            "insuredAge": "45",
+            "insuredName": "D. Javier Martínez Pérez (Consejero Delegado)",
+            "insuredAge": "48",
             "capitalDeceso": "300000",
             "capitalInvalidez": "300000",
             "primaAnual": "1850",
@@ -483,26 +483,26 @@ def seed_seguros(db: Session = Depends(get_db)):
     frc_id   = str(uuid.uuid4())  # FRANQUICIA_RC
 
     ess_rc = EssFields(
-        partyA="Asesoría Jurídica Mediterránea S.L.",
+        partyA="Comerciales del Levante S.L.",
         partyB="Mapfre S.A.",
-        jurisdiction="Barcelona",
+        jurisdiction="Valencia",
         effectiveDate="2024-03-01",
         expiryDate="2025-03-01",
     )
 
     repo.save(PhenomenonRecord(
-        id=rc_id, name="Seguro RC Profesional — Asesoría Jurídica Mediterránea / Mapfre",
+        id=rc_id, name="Seguro RC Profesional — Comerciales del Levante S.L. / Mapfre S.A.",
         type="MASTER", status="ACTIVE", ess=ess_rc,
         ag={"clauses": [
-            "Mapfre S.A. asegura la responsabilidad civil profesional de Asesoría Jurídica Mediterránea S.L. frente a daños causados a terceros derivados del ejercicio de su actividad de asesoramiento jurídico, hasta el límite de SEISCIENTOS MIL EUROS (600.000 €) por siniestro y UN MILLÓN DOSCIENTOS MIL EUROS (1.200.000 €) en agregado anual.",
+            "Mapfre S.A. asegura la responsabilidad civil profesional de Comerciales del Levante S.L. frente a daños causados a terceros derivados del ejercicio de su actividad de distribución comercial e importación, hasta el límite de SEISCIENTOS MIL EUROS (600.000 €) por siniestro y UN MILLÓN DOSCIENTOS MIL EUROS (1.200.000 €) en agregado anual.",
             "La póliza tiene base claims made: cubre las reclamaciones presentadas durante la vigencia de la póliza por hechos acaecidos en dicha vigencia o durante el período de retroactividad acordado. Franquicia por siniestro: TRES MIL EUROS (3.000 €) a cargo del asegurado.",
         ], "terms": {
             "templateKey": "SEGURO_RC",
-            "partyACIF": "B-08123456",
-            "partyAAddress": "Passeig de Gràcia 55, 08007 Barcelona",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
             "partyBCIF": "A-28765432",
             "partyBAddress": "Carretera de Pozuelo 52, 28220 Majadahonda",
-            "activityInsured": "Prestación de servicios jurídicos y asesoramiento empresarial",
+            "activityInsured": "Distribución comercial e importación de productos industriales",
             "coverageLimit": "600000",
             "annualAggregateLimit": "1200000",
             "franquicia": "3000",
@@ -673,23 +673,23 @@ def seed_seguros(db: Session = Depends(get_db)):
     re_id     = str(uuid.uuid4())  # RIESGO_EMPRESARIAL
 
     ess_cred = EssFields(
-        partyA="Exportaciones Ibéricas S.A.",
+        partyA="Comerciales del Levante S.L.",
         partyB="Mapfre Crédito y Caución S.A.",
-        jurisdiction="Madrid",
+        jurisdiction="Valencia",
         effectiveDate="2024-02-01",
         expiryDate="2025-02-01",
     )
 
     repo.save(PhenomenonRecord(
-        id=cred_id, name="Seguro Crédito Comercial — Exportaciones Ibéricas / Mapfre Crédito",
+        id=cred_id, name="Seguro Crédito Comercial — Comerciales del Levante S.L. / Mapfre Crédito",
         type="MASTER", status="ACTIVE", ess=ess_cred,
         ag={"clauses": [
-            "Mapfre Crédito y Caución S.A. asegura a Exportaciones Ibéricas S.A. frente al impago de su deudor Distribuciones Sur S.L., hasta el límite de QUINIENTOS MIL EUROS (500.000 €), con un porcentaje de indemnización del OCHENTA Y CINCO POR CIENTO (85%) sobre las facturas impagas transcurrido el período de espera.",
+            "Mapfre Crédito y Caución S.A. asegura a Comerciales del Levante S.L. frente al impago de su deudor principal Distribuciones Sur S.L., hasta el límite de QUINIENTOS MIL EUROS (500.000 €), con un porcentaje de indemnización del OCHENTA Y CINCO POR CIENTO (85%) sobre las facturas impagas transcurrido el período de espera.",
             "Cobertura ACTIVA: la validación financiera del deudor Distribuciones Sur S.L. concluyó con rating A. La cobertura está plenamente operativa. El operador 'non' (IF_exclusion, Bloque II §4) permanece latente — se activará automáticamente si la calificación crediticia se degrada a C o D, bloqueando la cobertura por cascada.",
         ], "terms": {
             "templateKey": "SEGURO_CREDITO_COMERCIAL",
-            "partyACIF": "A-28123456",
-            "partyAAddress": "Calle Serrano 100, 28006 Madrid",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
             "partyBCIF": "A-28765000",
             "partyBAddress": "Carretera de Pozuelo 52, 28220 Majadahonda",
             "debtorName": "Distribuciones Sur S.L.",
@@ -911,3 +911,939 @@ def unblock_coverage(req: SiniestroRequest, db: Session = Depends(get_db)):
             pass
 
     return {"contract_id": req.contract_id, "new_status": "ACTIVE", "unblocked": True}
+
+
+# ─── Step-by-step demo seeders ────────────────────────────────────────────────
+
+class InitOnePolicyRequest(BaseModel):
+    policy_type: str = "SEGURO_VIDA"  # SEGURO_VIDA | SEGURO_RC | SEGURO_DANOS | SEGURO_CREDITO_COMERCIAL
+    party_a: str = "Comerciales del Levante S.L."
+    clear_existing: bool = True  # if True, delete all existing contracts first
+
+
+@router.post("/seguros/init-one-policy")
+def init_one_policy(req: InitOnePolicyRequest, db: Session = Depends(get_db)):
+    """
+    Creates ONE insurance policy (master + 3 subs) with intentionally incomplete data
+    so that validation errors are visible in the UI.  Supports step-by-step demos
+    where the user fills in the data afterwards via /seguros/fill-policy-data.
+    """
+    from fastapi import HTTPException
+
+    _VALID_TYPES = {
+        "SEGURO_VIDA", "SEGURO_RC", "SEGURO_DANOS", "SEGURO_CREDITO_COMERCIAL",
+    }
+    if req.policy_type not in _VALID_TYPES:
+        raise HTTPException(
+            400,
+            f"policy_type must be one of {sorted(_VALID_TYPES)}; got {req.policy_type!r}",
+        )
+
+    repo = PhenomenaRepository(db)
+
+    if req.clear_existing:
+        _delete_all_contracts(repo)
+
+    vec_m = lambda: VectorEngine().generate(ia_type="ad-actio", is_sub=False)
+    vec_s = lambda ia: VectorEngine().generate(ia_type=ia, is_sub=True)
+
+    master_id = str(uuid.uuid4())
+    sub1_id   = str(uuid.uuid4())
+    sub2_id   = str(uuid.uuid4())
+    sub3_id   = str(uuid.uuid4())
+
+    opus_pending = OpusState(status="ACTIVE", homologation="PENDING")
+
+    if req.policy_type == "SEGURO_VIDA":
+        ess = EssFields(
+            partyA=req.party_a,
+            partyB="AXA Vida S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-01-01",
+            expiryDate="2044-01-01",
+        )
+        master = PhenomenonRecord(
+            id=master_id,
+            name=f"Seguro de Vida — {req.party_a} / AXA Vida S.A.",
+            type="MASTER", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "El asegurador AXA Vida S.A. garantiza el pago del capital asegurado a los beneficiarios "
+                "designados en caso de fallecimiento o invalidez absoluta y permanente del asegurado. "
+                "PENDIENTE: datos del asegurado, capital y prima por completar.",
+            ], "terms": {
+                "templateKey": "SEGURO_VIDA",
+                "partyACIF": "B-46123456",
+                "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+                "partyBCIF": "A-28123456",
+                "partyBAddress": "Paseo de la Castellana 33, 28046 Madrid",
+                "insuredName": "",
+                "insuredAge": "",
+                "capitalDeceso": "",
+                "capitalInvalidez": "",
+                "primaAnual": "",
+                "beneficiaries": "",
+                "coverageType": "",
+                "medicalValidation": "",
+            }},
+            ia_instances=["ad-actio", "co-implication"],
+            vectors=[vec_m()],
+            opus=opus_pending,
+            parentId=None,
+        )
+        repo.save(master)
+
+        repo.save(PhenomenonRecord(
+            id=sub1_id, name="Cobertura de Vida — PENDIENTE de datos",
+            type="COBERTURA_VIDA", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Cobertura pendiente de configurar. Complete los datos del asegurado y el capital.",
+            ], "terms": {
+                "coverageCapital": "",
+                "coverageActivationDate": "",
+                "waitingPeriodMonths": "",
+                "coverageStatus": "PENDIENTE — sin datos",
+                "activationCondition": "",
+                "beneficiaryConfirmed": "",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub2_id, name="Exclusiones Vida — PENDIENTE revisión médica",
+            type="EXCLUSIONES_VIDA", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Exclusiones pendientes de revisión médica. Se requiere declaración de salud completa.",
+            ], "terms": {
+                "preExistingConditions": "",
+                "riskActivities": "",
+                "exclusionPeriod": "",
+                "blockingStatus": "Bloquea — pendiente revisión médica",
+                "medicalExamRequired": "",
+                "medicalExamDate": "",
+            }},
+            ia_instances=["non", "de-actio"],
+            vectors=[vec_s("non")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub3_id, name="Prima Vida — PENDIENTE de cálculo",
+            type="PRIMA_VIDA", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Prima pendiente de cálculo actuarial. Complete los datos del asegurado.",
+            ], "terms": {
+                "annualPremium": "",
+                "fractionalSurcharge": "",
+                "paymentFrequency": "",
+                "premiumReviewDate": "",
+                "premiumIndexation": "",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        sub_ids = {
+            "COBERTURA_VIDA": sub1_id,
+            "EXCLUSIONES_VIDA": sub2_id,
+            "PRIMA_VIDA": sub3_id,
+        }
+        errors_seeded = 8  # insuredName, insuredAge, capitalDeceso, capitalInvalidez, primaAnual,
+                           # beneficiaries, coverageType, medicalValidation
+
+    elif req.policy_type == "SEGURO_RC":
+        ess = EssFields(
+            partyA=req.party_a,
+            partyB="Mapfre S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-03-01",
+            expiryDate="2025-03-01",
+        )
+        master = PhenomenonRecord(
+            id=master_id,
+            name=f"Seguro RC Profesional — {req.party_a} / Mapfre S.A.",
+            type="MASTER", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Mapfre S.A. asegura la responsabilidad civil profesional del tomador frente a daños "
+                "causados a terceros derivados del ejercicio de su actividad. "
+                "PENDIENTE: actividad asegurada, límites y prima por completar.",
+            ], "terms": {
+                "templateKey": "SEGURO_RC",
+                "partyACIF": "B-46123456",
+                "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+                "partyBCIF": "A-28765432",
+                "partyBAddress": "Carretera de Pozuelo 52, 28220 Majadahonda",
+                "activityInsured": "",
+                "coverageLimit": "",
+                "annualAggregateLimit": "",
+                "franquicia": "",
+                "primaAnual": "",
+                "rcType": "",
+            }},
+            ia_instances=["ad-actio", "co-implication"],
+            vectors=[vec_m()],
+            opus=opus_pending,
+            parentId=None,
+        )
+        repo.save(master)
+
+        repo.save(PhenomenonRecord(
+            id=sub1_id, name="Cobertura RC — PENDIENTE de datos",
+            type="COBERTURA_RC", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Cobertura RC pendiente de configurar. Complete los límites y alcance.",
+            ], "terms": {
+                "coverageLimit": "",
+                "annualAggregateLimit": "",
+                "coverageScope": "",
+                "retroactiveCoverage": "",
+                "claimBasis": "",
+                "coverageStatus": "PENDIENTE",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub2_id, name="Límites RC — PENDIENTE de datos",
+            type="LIMITES_RC", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Límites de indemnización pendientes de configurar.",
+            ], "terms": {
+                "perClaimLimit": "",
+                "perPersonLimit": "",
+                "propertyDamageLimit": "",
+                "legalDefenseLimit": "",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub3_id, name="Franquicia RC — PENDIENTE de datos",
+            type="FRANQUICIA_RC", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Franquicia pendiente de configurar.",
+            ], "terms": {
+                "deductibleAmount": "",
+                "deductibleType": "",
+                "deductibleApplied": "",
+            }},
+            ia_instances=["non", "de-actio"],
+            vectors=[vec_s("non")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        sub_ids = {
+            "COBERTURA_RC": sub1_id,
+            "LIMITES_RC": sub2_id,
+            "FRANQUICIA_RC": sub3_id,
+        }
+        errors_seeded = 8  # activityInsured, coverageLimit, annualAggregateLimit, franquicia,
+                           # primaAnual, rcType, perClaimLimit, deductibleAmount
+
+    elif req.policy_type == "SEGURO_DANOS":
+        ess = EssFields(
+            partyA=req.party_a,
+            partyB="Allianz S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-01-15",
+            expiryDate="2025-01-15",
+        )
+        master = PhenomenonRecord(
+            id=master_id,
+            name=f"Seguro Daños — {req.party_a} / Allianz S.A.",
+            type="MASTER", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Allianz S.A. asegura los daños materiales que sufra la propiedad del tomador. "
+                "PENDIENTE: descripción del inmueble, valor, riesgos cubiertos y prima por completar.",
+            ], "terms": {
+                "templateKey": "SEGURO_DANOS",
+                "partyACIF": "B-46123456",
+                "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+                "partyBCIF": "A-28765432",
+                "partyBAddress": "Gran Vía 24, 28001 Madrid",
+                "propertyDescription": "",
+                "propertyValue": "",
+                "coverageRisks": "",
+                "primaAnual": "",
+                "deductible": "",
+                "peritacionMethod": "",
+            }},
+            ia_instances=["ad-actio", "co-implication"],
+            vectors=[vec_m()],
+            opus=opus_pending,
+            parentId=None,
+        )
+        repo.save(master)
+
+        repo.save(PhenomenonRecord(
+            id=sub1_id, name="Cobertura Daños — PENDIENTE de datos",
+            type="COBERTURA_DANOS", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Cobertura de daños pendiente de configurar. Complete el valor asegurado y riesgos.",
+            ], "terms": {
+                "insuredValue": "",
+                "coverageRisks": "",
+                "coverageStatus": "PENDIENTE",
+                "infravaluation": "",
+                "valueBasis": "",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub2_id, name="Peritación — Sin siniestro activo",
+            type="PERITACION", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "No existe siniestro activo. El proceso de peritación se activará cuando se produzca "
+                "un siniestro cubierto.",
+            ], "terms": {
+                "peritacionStatus": "Sin siniestro activo",
+                "aseguradoraPerito": "Pendiente de designación (5 días hábiles desde siniestro)",
+                "aseguradoPerito": "",
+                "damageCause": "No aplica",
+                "estimatedDamage": "0",
+                "agreedIndemnity": "0",
+                "peritacionDeadline": "2026-12-31",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub3_id, name="Exclusiones Daños — PENDIENTE de datos",
+            type="EXCLUSIONES_DANOS", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Exclusiones pendientes de configurar.",
+            ], "terms": {
+                "excludedRisks": "",
+                "excludedProperty": "",
+                "maintenanceExclusion": "",
+                "blockingExclusion": "",
+            }},
+            ia_instances=["non"],
+            vectors=[vec_s("non")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        sub_ids = {
+            "COBERTURA_DANOS": sub1_id,
+            "PERITACION": sub2_id,
+            "EXCLUSIONES_DANOS": sub3_id,
+        }
+        errors_seeded = 8  # propertyDescription, propertyValue, coverageRisks, primaAnual,
+                           # deductible, peritacionMethod, insuredValue, excludedRisks
+
+    else:  # SEGURO_CREDITO_COMERCIAL
+        ess = EssFields(
+            partyA=req.party_a,
+            partyB="Mapfre Crédito y Caución S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-02-01",
+            expiryDate="2025-02-01",
+        )
+        master = PhenomenonRecord(
+            id=master_id,
+            name=f"Seguro Crédito Comercial — {req.party_a} / Mapfre Crédito",
+            type="MASTER", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Mapfre Crédito y Caución S.A. asegura al tomador frente al impago de su deudor principal. "
+                "PENDIENTE: nombre del deudor, límite de crédito, porcentaje de indemnización y validación "
+                "financiera por completar.",
+            ], "terms": {
+                "templateKey": "SEGURO_CREDITO_COMERCIAL",
+                "partyACIF": "B-46123456",
+                "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+                "partyBCIF": "A-28765000",
+                "partyBAddress": "Carretera de Pozuelo 52, 28220 Majadahonda",
+                "debtorName": "",
+                "creditLimit": "",
+                "indemnityPct": "",
+                "primaAnual": "",
+                "waitingPeriod": "",
+                "financialValidation": "",
+            }},
+            ia_instances=["ad-actio", "co-implication"],
+            vectors=[vec_m()],
+            opus=opus_pending,
+            parentId=None,
+        )
+        repo.save(master)
+
+        repo.save(PhenomenonRecord(
+            id=sub1_id, name="Cobertura Crédito — PENDIENTE de validación financiera",
+            type="COBERTURA_CREDITO", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Cobertura de crédito pendiente de validación financiera del deudor.",
+            ], "terms": {
+                "coveredDebtors": "",
+                "totalCoverageLimit": "",
+                "indemnityPercentage": "",
+                "coverageStatus": "PENDIENTE — sin validación",
+                "blockingReason": "Sin validación financiera",
+                "unblockCondition": "",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub2_id, name="Validación Financiera — PENDIENTE",
+            type="VALIDACION_FINANCIERA", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Validación financiera del deudor pendiente de completar.",
+            ], "terms": {
+                "debtorName": "",
+                "financialRating": "Pendiente — sin calificación",
+                "validationDate": "",
+                "validationPending": "Sí — validación pendiente",
+                "annualRevenue": "",
+                "debtRatio": "",
+                "blockingEffect": "Bloquea COBERTURA_CREDITO hasta completar validación",
+            }},
+            ia_instances=["non", "de-actio"],
+            vectors=[vec_s("non")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        repo.save(PhenomenonRecord(
+            id=sub3_id, name="Riesgo Empresarial — PENDIENTE de evaluación",
+            type="RIESGO_EMPRESARIAL", status="ACTIVE", ess=ess,
+            ag={"clauses": [
+                "Evaluación de riesgo empresarial del deudor pendiente de completar.",
+            ], "terms": {
+                "riskCategory": "Pendiente evaluación",
+                "sectorRisk": "",
+                "paymentHistory": "",
+                "riskNotes": "",
+            }},
+            ia_instances=["ad-actio"],
+            vectors=[vec_s("ad-actio")],
+            opus=opus_pending,
+            parentId=master_id,
+        ))
+
+        sub_ids = {
+            "COBERTURA_CREDITO": sub1_id,
+            "VALIDACION_FINANCIERA": sub2_id,
+            "RIESGO_EMPRESARIAL": sub3_id,
+        }
+        errors_seeded = 8  # debtorName, creditLimit, indemnityPct, primaAnual, waitingPeriod,
+                           # financialValidation, coveredDebtors, totalCoverageLimit
+
+    return {
+        "master_id": master_id,
+        "sub_ids": sub_ids,
+        "policy_type": req.policy_type,
+        "party_a": req.party_a,
+        "errors_seeded": errors_seeded,
+        "cleared_existing": req.clear_existing,
+    }
+
+
+class FillPolicyRequest(BaseModel):
+    master_id: str
+
+
+@router.post("/seguros/fill-policy-data")
+def fill_policy_data(req: FillPolicyRequest, db: Session = Depends(get_db)):
+    """
+    Fills in all intentionally-blank fields for a policy previously created by
+    /seguros/init-one-policy.  Reads the master's templateKey to determine which
+    complete data set to apply, then patches master + all 3 sub-contracts.
+    """
+    from fastapi import HTTPException
+
+    repo = PhenomenaRepository(db)
+
+    try:
+        master = repo.get(req.master_id)
+    except KeyError:
+        raise HTTPException(404, f"Master contract {req.master_id!r} not found")
+
+    template_key: str = master.ag.get("terms", {}).get("templateKey", "")
+
+    _VALID_KEYS = {
+        "SEGURO_VIDA", "SEGURO_RC", "SEGURO_DANOS", "SEGURO_CREDITO_COMERCIAL",
+    }
+    if template_key not in _VALID_KEYS:
+        raise HTTPException(
+            400,
+            f"Master templateKey {template_key!r} is not a recognised seguros type. "
+            f"Expected one of {sorted(_VALID_KEYS)}.",
+        )
+
+    opus_valid = OpusState(status="ACTIVE", homologation="VALID")
+    children   = repo.get_children(req.master_id)
+
+    # Index children by type for easy lookup.
+    child_by_type: dict[str, PhenomenonRecord] = {c.type: c for c in children}
+
+    updated_count = 0
+
+    if template_key == "SEGURO_VIDA":
+        new_ess = EssFields(
+            partyA=master.ess.partyA,
+            partyB="AXA Vida S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-01-01",
+            expiryDate="2044-01-01",
+        )
+        new_master_terms = {
+            "templateKey": "SEGURO_VIDA",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+            "partyBCIF": "A-28123456",
+            "partyBAddress": "Paseo de la Castellana 33, 28046 Madrid",
+            "insuredName": "D. Javier Martínez Pérez (Consejero Delegado)",
+            "insuredAge": "48",
+            "capitalDeceso": "300000",
+            "capitalInvalidez": "300000",
+            "primaAnual": "1850",
+            "beneficiaries": "La empresa tomadora y herederos del asegurado",
+            "coverageType": "Fallecimiento e invalidez absoluta permanente",
+            "medicalValidation": "Aprobada sin exclusiones",
+        }
+        new_master_clauses = [
+            "El asegurador AXA Vida S.A. garantiza el pago del capital asegurado de TRESCIENTOS MIL EUROS "
+            "(300.000 €) a los beneficiarios designados en caso de fallecimiento o invalidez absoluta y "
+            "permanente del asegurado D. Javier Martínez Pérez (Consejero Delegado), ocurridos durante la "
+            "vigencia de la póliza. Tomador: " + master.ess.partyA + ".",
+            "La cobertura queda condicionada a la aceptación de la declaración de salud por parte del "
+            "asegurador y al pago puntual de la prima anual. Cualquier ocultación o inexactitud dolosa en "
+            "la declaración de salud faculta al asegurador a reducir la indemnización proporcionalmente "
+            "(art. 10 LCS).",
+            "Se designan como beneficiarios: la propia empresa " + master.ess.partyA + " como tomador, "
+            "con subrogación a los herederos del asegurado en caso de disolución.",
+        ]
+        repo.save(master.model_copy(update={
+            "name": f"Seguro de Vida — {master.ess.partyA} / AXA Vida S.A.",
+            "ess": new_ess,
+            "ag": {**master.ag, "clauses": new_master_clauses, "terms": new_master_terms},
+            "opus": opus_valid,
+        }))
+        updated_count += 1
+
+        sub_data: dict[str, dict] = {
+            "COBERTURA_VIDA": {
+                "name": "Cobertura de Vida — Capital 300.000 € — Activa",
+                "clauses": [
+                    "La cobertura de vida está ACTIVA. Declaración de salud aceptada sin exclusiones. "
+                    "Capital asegurado: 300.000 €. Condición IF cumplida: prima en vigor y declaración "
+                    "de salud aceptada.",
+                ],
+                "terms": {
+                    "coverageCapital": "300000",
+                    "coverageActivationDate": "2024-01-01",
+                    "waitingPeriodMonths": "0",
+                    "coverageStatus": "ACTIVA — Sin exclusiones activas",
+                    "activationCondition": "Todas las condiciones cumplidas",
+                    "beneficiaryConfirmed": "Sí",
+                },
+            },
+            "EXCLUSIONES_VIDA": {
+                "name": "Exclusiones Vida — Sin exclusiones activas",
+                "clauses": [
+                    "No existen exclusiones médicas activas. La declaración de salud fue aceptada "
+                    "íntegramente. El asegurado no practica actividades de riesgo excluidas.",
+                    "Exclusiones generales de la póliza: suicidio durante los primeros 12 meses; "
+                    "muerte causada por participación activa en conflictos armados; actos dolosos "
+                    "del beneficiario.",
+                ],
+                "terms": {
+                    "preExistingConditions": "Ninguna — declaración de salud aceptada sin exclusiones",
+                    "riskActivities": "Ninguna — no practica deportes de alto riesgo",
+                    "exclusionPeriod": "0",
+                    "blockingStatus": "No bloquea la cobertura principal",
+                    "medicalExamRequired": "No requerido (suma < 300.000 €)",
+                    "medicalExamDate": "2023-12-15",
+                },
+            },
+            "PRIMA_VIDA": {
+                "name": "Prima Vida — 1.850 €/año — Pago anual",
+                "clauses": [
+                    "La prima anual neta es de MIL OCHOCIENTOS CINCUENTA EUROS (1.850 €/año), "
+                    "pagadera anualmente por domiciliación bancaria. El impago de la prima no produce "
+                    "la resolución automática del contrato sino la suspensión de la cobertura previo "
+                    "requerimiento fehaciente (art. 15 LCS).",
+                ],
+                "terms": {
+                    "annualPremium": "1850",
+                    "fractionalSurcharge": "0",
+                    "paymentFrequency": "Anual",
+                    "premiumReviewDate": "2025-01-01",
+                    "premiumIndexation": "IPC anual",
+                },
+            },
+        }
+
+    elif template_key == "SEGURO_RC":
+        new_ess = EssFields(
+            partyA=master.ess.partyA,
+            partyB="Mapfre S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-03-01",
+            expiryDate="2025-03-01",
+        )
+        new_master_terms = {
+            "templateKey": "SEGURO_RC",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+            "partyBCIF": "A-28765432",
+            "partyBAddress": "Carretera de Pozuelo 52, 28220 Majadahonda",
+            "activityInsured": "Distribución comercial e importación de productos industriales",
+            "coverageLimit": "600000",
+            "annualAggregateLimit": "1200000",
+            "franquicia": "3000",
+            "primaAnual": "4200",
+            "rcType": "RC Profesional (errores y omisiones)",
+        }
+        new_master_clauses = [
+            "Mapfre S.A. asegura la responsabilidad civil profesional de " + master.ess.partyA +
+            " frente a daños causados a terceros derivados del ejercicio de su actividad de "
+            "distribución comercial e importación, hasta el límite de SEISCIENTOS MIL EUROS "
+            "(600.000 €) por siniestro y UN MILLÓN DOSCIENTOS MIL EUROS (1.200.000 €) en agregado anual.",
+            "La póliza tiene base claims made: cubre las reclamaciones presentadas durante la vigencia "
+            "de la póliza por hechos acaecidos en dicha vigencia o durante el período de retroactividad "
+            "acordado. Franquicia por siniestro: TRES MIL EUROS (3.000 €) a cargo del asegurado.",
+        ]
+        repo.save(master.model_copy(update={
+            "name": f"Seguro RC Profesional — {master.ess.partyA} / Mapfre S.A.",
+            "ess": new_ess,
+            "ag": {**master.ag, "clauses": new_master_clauses, "terms": new_master_terms},
+            "opus": opus_valid,
+        }))
+        updated_count += 1
+
+        sub_data = {
+            "COBERTURA_RC": {
+                "name": "Cobertura RC — 600.000 € por siniestro — Activa",
+                "clauses": [
+                    "Cobertura RC profesional ACTIVA. Cubre daños personales, materiales y perjuicios "
+                    "económicos causados a terceros en el ejercicio de la actividad asegurada. "
+                    "Base claims made. Límite: 600.000 €/siniestro.",
+                ],
+                "terms": {
+                    "coverageLimit": "600000",
+                    "annualAggregateLimit": "1200000",
+                    "coverageScope": "Daños personales, materiales y perjuicios económicos",
+                    "retroactiveCoverage": "Desde fecha de contratación",
+                    "claimBasis": "Claims made (reclamación durante vigencia)",
+                    "coverageStatus": "ACTIVA",
+                },
+            },
+            "LIMITES_RC": {
+                "name": "Límites RC — 600.000 €/siniestro · 1.200.000 €/año",
+                "clauses": [
+                    "Límites de indemnización: SEISCIENTOS MIL EUROS (600.000 €) por siniestro "
+                    "individual. UN MILLÓN DOSCIENTOS MIL EUROS (1.200.000 €) como agregado anual. "
+                    "Sublímite defensa jurídica: TREINTA MIL EUROS (30.000 €) por expediente.",
+                ],
+                "terms": {
+                    "perClaimLimit": "600000",
+                    "perPersonLimit": "300000",
+                    "propertyDamageLimit": "200000",
+                    "legalDefenseLimit": "30000",
+                },
+            },
+            "FRANQUICIA_RC": {
+                "name": "Franquicia RC — 3.000 € por siniestro (IF_posición)",
+                "clauses": [
+                    "Franquicia absoluta de TRES MIL EUROS (3.000 €) por siniestro, a cargo del "
+                    "asegurado en todos los casos.",
+                ],
+                "terms": {
+                    "deductibleAmount": "3000",
+                    "deductibleType": "Absoluta (siempre a cargo del asegurado)",
+                    "deductibleApplied": "No aplica (sin siniestros)",
+                },
+            },
+        }
+
+    elif template_key == "SEGURO_DANOS":
+        new_ess = EssFields(
+            partyA=master.ess.partyA,
+            partyB="Allianz S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-01-15",
+            expiryDate="2025-01-15",
+        )
+        new_master_terms = {
+            "templateKey": "SEGURO_DANOS",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+            "partyBCIF": "A-28765432",
+            "partyBAddress": "Gran Vía 24, 28001 Madrid",
+            "propertyDescription": (
+                "Nave industrial de 1.500 m², estructura metálica, cubierta de hormigón prefabricado, "
+                "instalación eléctrica trifásica. Polígono Industrial Norte, Nave 12, 46015 Valencia."
+            ),
+            "propertyValue": "750000",
+            "coverageRisks": "Todo riesgo (all-risk)",
+            "primaAnual": "3150",
+            "deductible": "10",
+            "peritacionMethod": "Perito de parte + árbitro (art. 38 LCS)",
+        }
+        new_master_clauses = [
+            "Allianz S.A. asegura los daños materiales que sufra la nave industrial sita en "
+            "Polígono Industrial Norte, Nave 12, 46015 Valencia, valorada en SETECIENTOS CINCUENTA MIL "
+            "EUROS (750.000 €) en valor de nuevo, frente a los riesgos de incendio, explosión, daños "
+            "por agua, robo y daños eléctricos.",
+            "En caso de siniestro, el valor de los daños se determinará mediante peritación conforme "
+            "al art. 38 LCS. Si existe discrepancia entre los peritos, se nombrará un árbitro.",
+            "Franquicia del DIEZ POR CIENTO (10%) sobre el importe de cada siniestro, con un mínimo "
+            "de 1.500 €.",
+        ]
+        repo.save(master.model_copy(update={
+            "name": f"Seguro Daños — {master.ess.partyA} / Allianz S.A.",
+            "ess": new_ess,
+            "ag": {**master.ag, "clauses": new_master_clauses, "terms": new_master_terms},
+            "opus": opus_valid,
+        }))
+        updated_count += 1
+
+        sub_data = {
+            "COBERTURA_DANOS": {
+                "name": "Cobertura Daños — Todo Riesgo — 750.000 € en nuevo",
+                "clauses": [
+                    "Cobertura todo riesgo sobre la nave industrial. Valor en nuevo: 750.000 €. "
+                    "Riesgos cubiertos: incendio, explosión, daños por agua, robo, daños eléctricos "
+                    "y avería de maquinaria. Franquicia: 10% por siniestro (mín. 1.500 €).",
+                ],
+                "terms": {
+                    "insuredValue": "750000",
+                    "coverageRisks": "Incendio, explosión, daños por agua, robo, daños eléctricos",
+                    "coverageStatus": "ACTIVA",
+                    "infravaluation": "Sin infraseguro declarado",
+                    "valueBasis": "Valor en nuevo",
+                },
+            },
+            "PERITACION": {
+                "name": "Peritación — Sin siniestro activo",
+                "clauses": [
+                    "No existe siniestro activo en la fecha de emisión. El proceso de peritación se "
+                    "activará en el momento en que se produzca un siniestro cubierto. El perito de la "
+                    "aseguradora será designado en un plazo máximo de 5 días hábiles.",
+                ],
+                "terms": {
+                    "peritacionStatus": "Sin siniestro activo",
+                    "aseguradoraPerito": "Pendiente de designación (5 días hábiles desde siniestro)",
+                    "aseguradoPerito": "No aplica — sin contradicción activa",
+                    "damageCause": "No aplica — sin siniestro activo",
+                    "estimatedDamage": "0",
+                    "agreedIndemnity": "0",
+                    "peritacionDeadline": "2026-12-31",
+                },
+            },
+            "EXCLUSIONES_DANOS": {
+                "name": "Exclusiones Daños — Desgaste normal, guerra, dolo",
+                "clauses": [
+                    "Quedan excluidos de la cobertura: el desgaste normal y progresivo de los bienes; "
+                    "los daños causados dolosamente por el asegurado; los daños causados por guerra, "
+                    "terrorismo o convulsión social; los daños por falta de mantenimiento acreditada.",
+                ],
+                "terms": {
+                    "excludedRisks": "Desgaste normal, dolo del asegurado, guerra, terrorismo, daños en tránsito",
+                    "excludedProperty": "Bienes en tránsito, efectivo, joyas no declaradas",
+                    "maintenanceExclusion": "Aplica (daños por no mantenimiento excluidos)",
+                    "blockingExclusion": "No — cobertura activa",
+                },
+            },
+        }
+
+    else:  # SEGURO_CREDITO_COMERCIAL
+        new_ess = EssFields(
+            partyA=master.ess.partyA,
+            partyB="Mapfre Crédito y Caución S.A.",
+            jurisdiction="Valencia",
+            effectiveDate="2024-02-01",
+            expiryDate="2025-02-01",
+        )
+        new_master_terms = {
+            "templateKey": "SEGURO_CREDITO_COMERCIAL",
+            "partyACIF": "B-46123456",
+            "partyAAddress": "Polígono Industrial Norte, Nave 12, 46015 Valencia",
+            "partyBCIF": "A-28765000",
+            "partyBAddress": "Carretera de Pozuelo 52, 28220 Majadahonda",
+            "debtorName": "Distribuciones Sur S.L.",
+            "creditLimit": "500000",
+            "indemnityPct": "85",
+            "primaAnual": "8750",
+            "waitingPeriod": "6",
+            "financialValidation": "Completada — rating A (cobertura activa)",
+        }
+        new_master_clauses = [
+            "Mapfre Crédito y Caución S.A. asegura a " + master.ess.partyA +
+            " frente al impago de su deudor principal Distribuciones Sur S.L., hasta el límite de "
+            "QUINIENTOS MIL EUROS (500.000 €), con un porcentaje de indemnización del OCHENTA Y CINCO "
+            "POR CIENTO (85%) sobre las facturas impagas transcurrido el período de espera.",
+            "Cobertura ACTIVA: la validación financiera del deudor Distribuciones Sur S.L. concluyó "
+            "con rating A. La cobertura está plenamente operativa.",
+        ]
+        repo.save(master.model_copy(update={
+            "name": f"Seguro Crédito Comercial — {master.ess.partyA} / Mapfre Crédito",
+            "ess": new_ess,
+            "ag": {**master.ag, "clauses": new_master_clauses, "terms": new_master_terms},
+            "opus": opus_valid,
+        }))
+        updated_count += 1
+
+        sub_data = {
+            "COBERTURA_CREDITO": {
+                "name": "Cobertura Crédito — Distribuciones Sur — Activa",
+                "clauses": [
+                    "Cobertura de crédito comercial sobre el deudor principal Distribuciones Sur S.L. "
+                    "activada tras superar la validación financiera con rating A. Límite total de "
+                    "cobertura: 500.000 €. Indemnización al 85% del crédito impagado.",
+                    "PHENOMENON: la cobertura está activa porque el operador 'non' (IF_exclusion, "
+                    "Bloque II §4) no se ha disparado — el rating A despeja la posición de bloqueo.",
+                ],
+                "terms": {
+                    "coveredDebtors": "Distribuciones Sur S.L. — límite 500.000 € — rating A",
+                    "totalCoverageLimit": "500000",
+                    "indemnityPercentage": "85",
+                    "coverageStatus": "ACTIVA — validación financiera superada",
+                    "blockingReason": "Sin bloqueo activo — rating A vigente.",
+                    "unblockCondition": "Validación financiera con rating A o B",
+                },
+            },
+            "VALIDACION_FINANCIERA": {
+                "name": "Validación Financiera — Distribuciones Sur — Rating A",
+                "clauses": [
+                    "El departamento de riesgo de Mapfre Crédito ha completado la calificación "
+                    "crediticia de Distribuciones Sur S.L. Calificación final: A (excelente). "
+                    "La cobertura de crédito queda HABILITADA sin restricciones adicionales.",
+                ],
+                "terms": {
+                    "debtorName": "Distribuciones Sur S.L.",
+                    "financialRating": "A — Excelente (cobertura activa)",
+                    "validationDate": "2026-01-15",
+                    "validationPending": "No — validación completada",
+                    "annualRevenue": "5800000",
+                    "debtRatio": "35",
+                    "blockingEffect": "Desbloquea COBERTURA_CREDITO (rating suficiente)",
+                },
+            },
+            "RIESGO_EMPRESARIAL": {
+                "name": "Riesgo Empresarial — Distribuciones Sur — Riesgo BAJO",
+                "clauses": [
+                    "El análisis de riesgo empresarial de Distribuciones Sur S.L. arroja indicadores "
+                    "favorables: ratio de endeudamiento del 35%; historial de pagos sin incidencias en "
+                    "los últimos 36 meses. CONCLUSIÓN: riesgo BAJO.",
+                ],
+                "terms": {
+                    "riskCategory": "Bajo — sector estable, historial de pagos impecable",
+                    "sectorRisk": "Alimentación y distribución — riesgo bajo",
+                    "paymentHistory": "Sin incidencias",
+                    "riskNotes": "Ratio endeudamiento 35% (saludable). Sin retrasos en 36 meses.",
+                },
+            },
+        }
+
+    # Apply sub-contract patches.
+    for sub_type, data in sub_data.items():
+        child = child_by_type.get(sub_type)
+        if child is None:
+            continue  # sub not present — skip gracefully
+        repo.save(child.model_copy(update={
+            "name": data["name"],
+            "ess": new_ess,
+            "ag": {**child.ag, "clauses": data["clauses"], "terms": data["terms"]},
+            "opus": opus_valid,
+        }))
+        updated_count += 1
+
+    return {
+        "success": True,
+        "policy_type": template_key,
+        "master_id": req.master_id,
+        "updated_count": updated_count,
+        "party_a": master.ess.partyA,
+    }
+
+
+# ─── Cross-policy cascade ─────────────────────────────────────────────────────
+
+class CrossPolicyCascadeRequest(BaseModel):
+    source_contract_id: str   # ID of the sub-contract or master that changed
+    field: str                # field that changed (e.g. "riskCategory", "blockingStatus", "partyA")
+    new_value: str            # new value (informational; state change already applied by caller)
+
+
+_INSURANCE_MASTER_TYPES = {
+    "SEGURO_VIDA", "SEGURO_RC", "SEGURO_DANOS", "SEGURO_CREDITO_COMERCIAL",
+}
+
+
+@router.post("/seguros/cross-policy-cascade")
+def cross_policy_cascade(req: CrossPolicyCascadeRequest, db: Session = Depends(get_db)):
+    """
+    Propagates a change ACROSS insurance policy trees that share the same tomador.
+
+    Two scenarios handled:
+      1. field == "partyA" and source is a master → all sibling insurance masters NEEDS_REVIEW
+      2. source is a sub-contract in CROSS_POLICY_CASCADE_MAP → target subs in sibling policies
+    """
+    from phenomenon_engine.cascade_engine import CrossPolicyCascadeEngine
+    repo = PhenomenaRepository(db)
+
+    try:
+        source = repo.get(req.source_contract_id)
+    except KeyError:
+        from fastapi import HTTPException
+        raise HTTPException(404, "Source contract not found")
+
+    engine = CrossPolicyCascadeEngine()
+
+    source_template_key = (source.ag or {}).get("terms", {}).get("templateKey", "")
+    if req.field == "partyA" and source_template_key in _INSURANCE_MASTER_TYPES:
+        result = engine.run_partyA_change(
+            source_master_id=req.source_contract_id,
+            new_partyA=req.new_value,
+            repo=repo,
+        )
+    else:
+        result = engine.run_sub_change(
+            source_id=req.source_contract_id,
+            field=req.field,
+            new_value=req.new_value,
+            repo=repo,
+        )
+
+    return {
+        "source_id": result.source_id,
+        "source_type": result.source_type,
+        "field": result.field,
+        "affected_count": len(result.affected_ids),
+        "affected_ids": result.affected_ids,
+        "trace": result.trace,
+        "cross_policy": True,
+    }
+
+
+@router.post("/seguros/clear")
+def clear_seguros(db: Session = Depends(get_db)):
+    """Deletes all contracts and returns to clean state (triggers SelectionScreen on frontend)."""
+    repo = PhenomenaRepository(db)
+    _delete_all_contracts(repo)
+    return {"cleared": True, "message": "All contracts deleted. Frontend will show SelectionScreen."}

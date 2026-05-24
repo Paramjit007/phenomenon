@@ -1277,3 +1277,37 @@ export const INSURANCE_POLICY_CONFIG = {
   SEGURO_DANOS:            { label: "Daños",     color: "#D97706", icon: "⊕", subs: ["COBERTURA_DANOS","PERITACION","EXCLUSIONES_DANOS"] },
   SEGURO_CREDITO_COMERCIAL:{ label: "Crédito",   color: "#7C3AED", icon: "⬡", subs: ["COBERTURA_CREDITO","VALIDACION_FINANCIERA","RIESGO_EMPRESARIAL"] },
 };
+
+// ─── Cross-policy IF edges (inter-group connections in the live graph) ────────
+// These represent real legal/operational interdependencies between insurance
+// policies held by the same company (shared tomador / partyA).
+export const CROSS_POLICY_IF_EDGES = [
+  // ── Tomador identity backbone: shared company across all 4 masters ──────────
+  { aPolicyKey: "SEGURO_VIDA",             aType: "master",
+    bPolicyKey: "SEGURO_RC",               bType: "master",
+    label: "Tomador compartido",  type: "identity",  color: "#C9A84C",
+    arcDir: "above",
+    description: "Misma persona jurídica — cambio de partyA afecta a todas las pólizas" },
+  { aPolicyKey: "SEGURO_RC",               aType: "master",
+    bPolicyKey: "SEGURO_DANOS",            bType: "master",
+    label: "Tomador compartido",  type: "identity",  color: "#C9A84C",
+    arcDir: "above",
+    description: "Misma persona jurídica — cambio de partyA afecta a todas las pólizas" },
+  { aPolicyKey: "SEGURO_DANOS",            aType: "master",
+    bPolicyKey: "SEGURO_CREDITO_COMERCIAL",bType: "master",
+    label: "Tomador compartido",  type: "identity",  color: "#C9A84C",
+    arcDir: "above",
+    description: "Misma persona jurídica — cambio de partyA afecta a todas las pólizas" },
+  // ── Risk correlation: credit risk → property damage assessment ───────────────
+  { aPolicyKey: "SEGURO_CREDITO_COMERCIAL", aType: "RIESGO_EMPRESARIAL",
+    bPolicyKey: "SEGURO_DANOS",             bType: "PERITACION",
+    label: "Riesgo → valoración", type: "risk",      color: "#D97706",
+    arcDir: "below",
+    description: "Rating crediticio del tomador afecta la valoración del bien asegurado" },
+  // ── Medical exclusion → RC risk profile ─────────────────────────────────────
+  { aPolicyKey: "SEGURO_VIDA",  aType: "EXCLUSIONES_VIDA",
+    bPolicyKey: "SEGURO_RC",    bType: "COBERTURA_RC",
+    label: "Exclusión → RC",    type: "exclusion",  color: "#DC2626",
+    arcDir: "below",
+    description: "Exclusión médica activa en Vida modifica el perfil de riesgo RC del mismo asegurado" },
+];

@@ -40,21 +40,22 @@ export default function SelectionScreen({ onSelect, onLoadExisting, loading }) {
     setSeeding("seguros");
     setSeedError(null);
     try {
-      await api.seedSegurosDemo();
-      // Load existing contracts — 4 insurance masters will appear
+      // Create ONE empty Seguro de Vida — user builds the portfolio from here
+      await api.initOnePolicy({
+        policy_type: "SEGURO_VIDA",
+        party_a: "Comerciales del Levante S.L.",
+        clear_existing: true,
+      });
       if (onLoadExisting) {
         setTimeout(() => {
           onLoadExisting();
           setSeeding(null);
         }, 300);
       } else {
-        setTimeout(() => {
-          onSelect("SEGURO_VIDA", CONTRACT_TEMPLATES["SEGURO_VIDA"]);
-          setSeeding(null);
-        }, 300);
+        setTimeout(() => setSeeding(null), 300);
       }
     } catch (e) {
-      setSeedError("Error cargando demo Seguros: " + e.message);
+      setSeedError("Error iniciando demo Seguros: " + e.message);
       setSeeding(null);
     }
   }
@@ -150,8 +151,8 @@ export default function SelectionScreen({ onSelect, onLoadExisting, loading }) {
             <div style={{ display:"flex", alignItems:"flex-start", gap:16 }}>
               <div style={{ fontSize:36, flexShrink:0 }}>🛡️</div>
               <div style={{ flex:1 }}>
-                <div style={{ fontSize:16, fontWeight:700, color:C.textWhite, marginBottom:3 }}>Caso Seguros — 4 Pólizas Simultáneas</div>
-                <div style={{ fontSize:10, color:"#A7F3D0", marginBottom:10, lineHeight:1.6 }}>PHENOMENON combinatoria: Vida · RC · Daños · Crédito. Misma estructura, 4 modulaciones. IF_exclusion bloquea cobertura.</div>
+                <div style={{ fontSize:16, fontWeight:700, color:C.textWhite, marginBottom:3 }}>Caso Seguros — Cartera Interactiva</div>
+                <div style={{ fontSize:10, color:"#A7F3D0", marginBottom:10, lineHeight:1.6 }}>Construye póliza por póliza. Sistema valida en tiempo real. Relleno auto · IF live · Cascada cross-póliza.</div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
                   {[["♡ Vida","#059669"],["◎ RC","#2563EB"],["⊕ Daños","#D97706"],["⬡ Crédito","#7C3AED"],["⛔ IF_excl.","#DC2626"]].map(([l,col])=>(
                     <span key={l} style={{ fontSize:9, color:C.white, background:`${col}50`, border:`1px solid ${col}80`, borderRadius:10, padding:"1px 7px", fontFamily:font.mono }}>{l}</span>
@@ -159,7 +160,7 @@ export default function SelectionScreen({ onSelect, onLoadExisting, loading }) {
                 </div>
                 <button disabled={isSeeding} onClick={e=>{ e.stopPropagation(); loadSegurosDemo(); }}
                   style={{ padding:"8px 20px", background:seeding==="seguros"?"#065F46":"#059669", color:C.white, border:"none", borderRadius:7, cursor:isSeeding?"not-allowed":"pointer", fontSize:12, fontFamily:font.ui, fontWeight:700 }}>
-                  {seeding==="seguros" ? "⟳ Cargando 16 contratos…" : "▶ Abrir Demo Seguros"}
+                  {seeding==="seguros" ? "⟳ Iniciando cartera…" : "▶ Construir Cartera Seguros"}
                 </button>
               </div>
             </div>
