@@ -3,7 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from .config import settings
 from .models import Base
 
-engine = create_engine(settings.database_url)
+_db_url = settings.database_url.replace("postgres://", "postgresql://", 1)
+engine = create_engine(_db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
