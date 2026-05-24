@@ -112,16 +112,13 @@ export default function SelectionScreen({ onSelect, onLoadExisting, loading }) {
           </div>
         </div>
 
-        {/* KPMG CORPORATE CARD */}
+        {/* KPMG CORPORATE CARD — disabled, coming soon */}
         <div style={{ flex:"1 1 320px", minWidth:300 }}>
-          <div onClick={!isSeeding ? () => pick("KPMG_CORPORATE") : undefined}
-            style={{ background:"linear-gradient(135deg,#1E3A8A 0%,#2563EB 50%,#60A5FA 100%)",
+          <div style={{ background:"linear-gradient(135deg,#1E3A8A 0%,#2563EB 50%,#60A5FA 100%)",
               border:`2px solid #93C5FD`, borderRadius:16, padding:"22px 26px",
-              cursor:isSeeding?"not-allowed":"pointer", position:"relative", overflow:"hidden",
-              boxShadow:`0 24px 60px rgba(37,99,235,0.35)`, transition:"transform 0.2s, box-shadow 0.2s" }}
-            onMouseEnter={e=>{ if(!isSeeding){e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 40px 80px rgba(37,99,235,0.5)";} }}
-            onMouseLeave={e=>{ e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 24px 60px rgba(37,99,235,0.35)" }}>
-            <div style={{ position:"absolute", top:12, right:12, background:"#EFF6FF", color:"#1D4ED8", fontSize:9, fontWeight:800, padding:"2px 8px", borderRadius:20, fontFamily:font.mono }}>KPMG CORPORATE</div>
+              cursor:"default", position:"relative", overflow:"hidden", opacity:0.45,
+              boxShadow:`0 24px 60px rgba(37,99,235,0.15)`, pointerEvents:"none" }}>
+            <div style={{ position:"absolute", top:12, right:12, background:"#334155", color:"#94A3B8", fontSize:9, fontWeight:800, padding:"2px 8px", borderRadius:20, fontFamily:font.mono }}>PRÓXIMAMENTE</div>
             <div style={{ display:"flex", alignItems:"flex-start", gap:16 }}>
               <div style={{ fontSize:36, flexShrink:0 }}>🏛</div>
               <div style={{ flex:1 }}>
@@ -132,7 +129,7 @@ export default function SelectionScreen({ onSelect, onLoadExisting, loading }) {
                     <span key={l} style={{ fontSize:9, color:C.white, background:`${col}40`, border:`1px solid ${col}80`, borderRadius:10, padding:"1px 7px", fontFamily:font.mono }}>{l}</span>
                   ))}
                 </div>
-                <button disabled={isSeeding} style={{ padding:"8px 20px", background:isSeeding?"#1E40AF":"#2563EB", color:C.white, border:"none", borderRadius:7, cursor:isSeeding?"not-allowed":"pointer", fontSize:12, fontFamily:font.ui, fontWeight:700 }}>▶ Crear Proyecto Corporativo</button>
+                <button disabled style={{ padding:"8px 20px", background:"#1E40AF", color:C.white, border:"none", borderRadius:7, cursor:"not-allowed", fontSize:12, fontFamily:font.ui, fontWeight:700 }}>▶ Crear Proyecto Corporativo</button>
               </div>
             </div>
           </div>
@@ -170,86 +167,6 @@ export default function SelectionScreen({ onSelect, onLoadExisting, loading }) {
 
       {seedError && <div style={{ marginBottom:16, fontSize:11, color:"#F87171", fontFamily:font.mono }}>{seedError}</div>}
 
-      <div style={{ fontSize: 13, color: C.textNavy, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: font.mono, marginBottom: 10, animation: "fadeUp 0.6s ease 0.1s both" }}>
-        ¿Qué tipo de acuerdo vas a crear?
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 300, color: C.textWhite, marginBottom: 40, textAlign: "center", fontFamily: font.serif, animation: "fadeUp 0.6s ease 0.15s both" }}>
-        Selecciona la base contractual
-      </div>
-
-      {/* Template grid — excludes isDemo templates (shown above as featured cards) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, maxWidth: 1320, width: "100%", animation: "fadeUp 0.6s ease 0.25s both" }}>
-        {Object.entries(CONTRACT_TEMPLATES).filter(([, tmpl]) => !tmpl.isDemo).map(([key, tmpl]) => {
-          const isH = hovered === key;
-          const isSel = selected === key;
-          return (
-            <div
-              key={key}
-              onClick={() => pick(key)}
-              onMouseEnter={() => setHovered(key)}
-              onMouseLeave={() => setHovered(null)}
-              style={{
-                background: isH ? `${tmpl.color}14` : "rgba(255,255,255,0.04)",
-                border: `1.5px solid ${isH || isSel ? tmpl.color : "rgba(255,255,255,0.10)"}`,
-                borderRadius: 12,
-                padding: "28px 24px",
-                cursor: "pointer",
-                transform: isH ? "translateY(-6px)" : "none",
-                boxShadow: isH ? `0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px ${tmpl.color}30` : "0 2px 12px rgba(0,0,0,0.2)",
-                transition: "all 0.25s ease",
-                opacity: isSel ? 0.6 : 1,
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              {/* Top glow on hover */}
-              {isH && <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 160, height: 160, borderRadius: "50%", background: `${tmpl.color}15`, pointerEvents: "none" }} />}
-
-              {/* Complexity dots */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                <span style={{ fontSize: 36, color: tmpl.color, lineHeight: 1 }}>{tmpl.icon}</span>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= tmpl.complexity ? tmpl.color : "rgba(255,255,255,0.12)" }} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Title */}
-              <div style={{ fontSize: 17, fontWeight: 700, color: isH ? tmpl.color : C.textWhite, fontFamily: font.ui, marginBottom: 5, transition: "color 0.2s" }}>{tmpl.label}</div>
-              <div style={{ fontSize: 11, color: tmpl.color, fontFamily: font.mono, letterSpacing: "0.08em", marginBottom: 12, textTransform: "uppercase" }}>{tmpl.subtitle}</div>
-              <div style={{ fontSize: 13, color: C.textNavy, lineHeight: 1.7, marginBottom: 18, minHeight: 58 }}>{tmpl.description}</div>
-
-              {/* Law reference */}
-              <div style={{ fontSize: 10, color: `${tmpl.color}80`, fontFamily: font.mono, marginBottom: 14, fontStyle: "italic" }}>{tmpl.law}</div>
-
-              {/* Auto-generates */}
-              {tmpl.autoGenerates.length > 0 && (
-                <div>
-                  <div style={{ fontSize: 9, color: C.textNavy, fontFamily: font.mono, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7 }}>Genera automáticamente</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                    {tmpl.autoGenerates.map(t => {
-                      const m = SUB_META[t];
-                      return (
-                        <span key={t} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, border: `1px solid ${m.color}50`, color: m.color, fontFamily: font.mono }}>
-                          {m.icon} {m.short}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* CTA */}
-              <div style={{ marginTop: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 11, color: C.textNavy, fontFamily: font.mono }}>{tmpl.requiredEss.length} campos requeridos</span>
-                {isH && !isSel && <span style={{ fontSize: 12, color: tmpl.color, fontFamily: font.ui, fontWeight: 600 }}>Seleccionar →</span>}
-                {isSel && loading && <span style={{ fontSize: 11, color: tmpl.color, fontFamily: font.mono, animation: "pulse 1s infinite" }}>⟳ Creando…</span>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
       {/* The Final Rule — Regla Final del Sistema */}
       <div style={{ marginTop: 48, textAlign: "center", animation: "fadeUp 0.6s ease 0.5s both" }}>
