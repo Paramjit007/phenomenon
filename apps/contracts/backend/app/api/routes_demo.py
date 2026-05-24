@@ -352,6 +352,118 @@ def update_euribor(req: EuriborUpdateRequest, db: Session = Depends(get_db)):
     }
 
 
+class FillKPMGFieldsRequest(BaseModel):
+    master_id: str
+
+
+@router.post("/kpmg/fill-demo-fields")
+def fill_kpmg_demo_fields(req: FillKPMGFieldsRequest, db: Session = Depends(get_db)):
+    """
+    Fills all KPMG contracts with demo field data and resets homologation to PENDING.
+    Enables the PARTIAL → COMPLETE homologation demonstration flow.
+    """
+    from ..repositories.phenomena_repo import PhenomenaRepository
+
+    repo    = PhenomenaRepository(db)
+    master  = repo.get(req.master_id)
+    if not master:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    euribor, spread = 3.50, 2.00
+    term_years      = 20
+    principal       = 100_000_000.0
+    monthly         = pmt(principal, euribor + spread, term_years)
+
+    base_terms = dict(
+        templateKey="KPMG",
+        partyACIF="A-46123456",
+        partyAAddress="Paseo de la Alameda 45, 46010 Valencia",
+        partyARepresentative="D. Carlos Mendoza Ruiz, Consejero Delegado",
+        partyBCIF="B-46987654",
+        partyBAddress="Calle del Mar 15, 46001 Valencia",
+        partyBRepresentative="D. Antonio García Pérez, Administrador Único",
+        hotelName="Hotel Mediterráneo Valencia 5*",
+        catastralReference="7820517YJ2782A0001UB",
+        buildingArea="3250",
+        constructionTarget="2026-12-31",
+        baseAmount=str(int(principal)),
+        euriborRate=str(euribor),
+        spread=str(spread),
+        termYears=str(term_years),
+        monthlyRentHotel="1064583",
+        ivaDevolutionEst="8400000",
+        hotelCategory="5 Estrellas",
+        registryOffice="Registro de la Propiedad de Valencia nº 5",
+    )
+
+    updated_master = master.model_copy(update={
+        "ag":     {**master.ag, "terms": {**master.ag.get("terms", {}), **base_terms}},
+        "opus":   master.opus.model_copy(update={"homologation": "PENDING"}),
+        "status": "ACTIVE",
+    })
+    repo.save(updated_master)
+    updated_ids = [master.id]
+
+    for child in repo.get_children(req.master_id):
+        terms = dict(child.ag.get("terms", {}))
+        if child.type == "FINANCIACION":
+            terms.update(
+                circumcontractType="CA2 — Arrendamiento de Servicios Financieros (art. 1544 CC) — NO es préstamo",
+                legalBasis="No es préstamo (art. 1.740 CC) sino arrendamiento de servicios financieros in faciendo (art. 1.544 CC).",
+                capitalAmount=str(int(principal)),
+                euriborRate=str(euribor),
+                spread=str(spread),
+                termYears=str(term_years),
+                monthlyPayment=str(round(monthly, 0)),
+                amortizationMethod="Cuota constante — Sistema Francés (capital + intereses)",
+                interestReview="Anual (1 de enero, EURIBOR publicado por BCE)",
+                iban="ES91 2100 0418 4502 0005 1332",
+                swift="CAIXESBBXXX",
+                earlyPayment="Permitida en cualquier momento, previo aviso 30 días",
+                linkedToLease="Sí — si el arrendamiento queda sin efecto, este CA2 también queda sin efecto (IF link Bloque II)",
+            )
+        elif child.type == "HIPOTECA_GARANTIA":
+            terms.update(
+                mortgageAmount=str(int(principal)),
+                additionalCoverage="30",
+                totalMortgage="130000000",
+                mortgagedProperty="Solar urbano + futura edificación hotelera 5* (3.250 m²). Referencia catastral: 7820517YJ2782A0001UB.",
+                catastralReference="7820517YJ2782A0001UB",
+                fincaFutura="Sí — la edificación aún no existe (Art. 110 LH · hipoteca edificación futura)",
+                registryOffice="Registro de la Propiedad de Valencia nº 5",
+                registrySection="Pendiente de inscripción",
+                ajdRate="1.5",
+                ajdAmount="1950000",
+                registrationStatus="Pendiente de inscripción — Opus PARCIAL",
+                legitimacion="Actio pecuniae creditae (art. 1111 CC + arts. 1526 ss CC)",
+                cessionRights="Permitida libremente (Arts. 1.526 y ss CC)",
+            )
+        elif child.type == "CESION_CREDITO":
+            terms.update(
+                cedente="Promotora Hotel Mediterráneo Valencia S.L.",
+                cesionario="Banco Mediterráneo de Inversiones S.A.",
+                deudorCedido="Gestión Hotelera Costa Levante S.L.",
+                monthlyRent="1064583",
+                annualRent="12775000",
+                cedidoRentas="Rentas que pague mensualmente Gestión Hotelera Costa Levante S.L., 1.064.583 €/mes.",
+                cedidoIVA="Devoluciones del IVA de inversión (21%) generadas durante la ejecución de obras. Importe estimado: 8.400.000 €.",
+                ivaDevolution="8400000",
+                oponibilidadCesion="Notificación fehaciente al deudor cedido (Art. 1527 CC) — notificación enviada",
+                garantiaCesion="Garantía de existencia del crédito (cedente responde de que el crédito existe)",
+                notificationMethod="Burofax con acuse de recibo",
+            )
+        updated_child = child.model_copy(update={
+            "ag":     {**child.ag, "terms": terms},
+            "opus":   child.opus.model_copy(update={"homologation": "PENDING"}),
+            "status": "ACTIVE",
+        })
+        repo.save(updated_child)
+        updated_ids.append(child.id)
+
+    return {"filled": True, "updated_ids": updated_ids, "count": len(updated_ids)}
+
+
 # ─── Seguros seeder ───────────────────────────────────────────────────────────
 # Seeds 4 insurance master contracts simultaneously, each with 3 sub-contracts.
 # Demonstrates PHENOMENON combinatoria: same ESS/AG/IF/Opus engine, 4 modulaciones.

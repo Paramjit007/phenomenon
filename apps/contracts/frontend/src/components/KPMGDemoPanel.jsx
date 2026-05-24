@@ -99,17 +99,20 @@ export default function KPMGDemoPanel({ master, subContracts, loadContracts, add
   const BASE_TERM    = 20;
   const BASE_CAPITAL = 100_000_000;
 
-  const [euribor,    setEuribor]    = useState(BASE_EURIBOR);
-  const [spread,     setSpread]     = useState(BASE_SPREAD);
-  const [termYears,  setTermYears]  = useState(BASE_TERM);
-  const [capital,    setCapital]    = useState(BASE_CAPITAL);
-  const [section,    setSection]    = useState("financiero");
-  const [schedule,   setSchedule]   = useState([]);
-  const [cascading,  setCascading]  = useState(false);
-  const [crisisMode, setCrisisMode] = useState(false);
-  const [step,       setStep]       = useState(0); // demo walkthrough step
-  const [buildDone,  setBuildDone]  = useState(false);
-  const [hipRegDone, setHipRegDone] = useState(false);
+  const [euribor,       setEuribor]       = useState(BASE_EURIBOR);
+  const [spread,        setSpread]        = useState(BASE_SPREAD);
+  const [termYears,     setTermYears]     = useState(BASE_TERM);
+  const [capital,       setCapital]       = useState(BASE_CAPITAL);
+  const [section,       setSection]       = useState("financiero");
+  const [schedule,      setSchedule]      = useState([]);
+  const [cascading,     setCascading]     = useState(false);
+  const [crisisMode,    setCrisisMode]    = useState(false);
+  const [step,          setStep]          = useState(0);
+  const [buildDone,     setBuildDone]     = useState(false);
+  const [hipRegDone,    setHipRegDone]    = useState(false);
+  const [filling,       setFilling]       = useState(false);
+  const [homologating,  setHomologating]  = useState(false);
+  const [homoResults,   setHomoResults]   = useState(null);
   const debounceRef = useRef(null);
 
   const totalRate    = euribor + spread;
@@ -243,10 +246,11 @@ export default function KPMGDemoPanel({ master, subContracts, loadContracts, add
       {/* Tab bar */}
       <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, background:C.white, flexShrink:0 }}>
         {[
-          { key:"financiero", label:"💱 Financiero" },
-          { key:"amortizacion", label:"📊 Amortización" },
-          { key:"demo",       label:"🎬 Demo Story" },
-          { key:"riesgos",    label:"⚠ Sensibilidad" },
+          { key:"financiero",  label:"💱 Financiero" },
+          { key:"amortizacion",label:"📊 Amortización" },
+          { key:"demo",        label:"🎬 Demo Story" },
+          { key:"riesgos",     label:"⚠ Sensibilidad" },
+          { key:"homologacion",label:"⊙ Homologación" },
         ].map(t => (
           <button key={t.key} onClick={() => setSection(t.key)}
             style={{ padding:"8px 14px", border:"none", background:"none", cursor:"pointer",
@@ -396,6 +400,127 @@ export default function KPMGDemoPanel({ master, subContracts, loadContracts, add
               <div style={{ fontSize:11, color:C.textNavy, lineHeight:1.7 }}>
                 "Ningún sistema legaltech del mercado puede modelar un circumcontrato CA2. PHENOMENON sí. El engine entiende que este contrato NO es un préstamo desde la ontología jurídica, no desde una caja de texto. Eso es la diferencia entre inteligencia contractual real e inteligencia artificial genérica."
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Homologación Demo ── */}
+        {section === "homologacion" && (
+          <div>
+            <div style={{ fontSize:10, fontWeight:700, color:C.textMuted, textTransform:"uppercase",
+              letterSpacing:"0.07em", marginBottom:14 }}>
+              Flujo de Homologación — PARTIAL → COMPLETE → OPONIBLE
+            </div>
+
+            {/* Step 1 — Fill demo fields */}
+            <div style={{ background:`#7C3AED10`, border:`1px solid #7C3AED30`, borderRadius:10,
+              padding:"14px 16px", marginBottom:12 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:"#7C3AED", marginBottom:6 }}>
+                Paso 1 — Rellenar Campos con Datos Demo
+              </div>
+              <div style={{ fontSize:10, color:C.textMuted, marginBottom:10, lineHeight:1.5 }}>
+                Rellena todos los campos de los contratos KPMG con datos reales (CIF, referencias catastrales, importes, IBAN…).
+                Los contratos quedarán en estado <strong>PARTIAL</strong> — listos para ser homologados.
+              </div>
+              <button
+                disabled={!master?.id || filling || homologating}
+                onClick={async () => {
+                  if (!master?.id) return;
+                  setFilling(true);
+                  setHomoResults(null);
+                  try {
+                    await api.fillKPMGDemoFields({ master_id: master.id });
+                    await loadContracts();
+                    addLog?.("INIT", "Campos demo rellenados — contratos en estado PARTIAL listos para homologar", "init");
+                  } catch (e) {
+                    addLog?.("ERROR", "Error rellenando campos: " + e.message, "error");
+                  }
+                  setFilling(false);
+                }}
+                style={{ width:"100%", padding:"10px 16px", background: filling ? "#4C1D95" : "#7C3AED",
+                  color:"#fff", border:"none", borderRadius:8, cursor: (filling || !master?.id) ? "not-allowed" : "pointer",
+                  fontSize:12, fontFamily:"inherit", fontWeight:700 }}>
+                {filling ? "⟳ Rellenando campos…" : "◈ Rellenar Datos Demo (PARTIAL)"}
+              </button>
+            </div>
+
+            {/* Step 2 — Run homologation */}
+            <div style={{ background:`#05966910`, border:`1px solid #05966930`, borderRadius:10,
+              padding:"14px 16px", marginBottom:12 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:C.green, marginBottom:6 }}>
+                Paso 2 — Ejecutar Homologación del Ecosistema
+              </div>
+              <div style={{ fontSize:10, color:C.textMuted, marginBottom:10, lineHeight:1.5 }}>
+                El motor PHENOMENON verifica cada contrato contra el Bloque VI (Estabilización).
+                Los contratos completos suben a <strong>COMPLETE</strong>. La hipoteca inscrita llega a <strong>OPONIBLE</strong>.
+              </div>
+              <button
+                disabled={!master?.id || filling || homologating}
+                onClick={async () => {
+                  if (!master?.id) return;
+                  setHomologating(true);
+                  setHomoResults(null);
+                  try {
+                    const result = await api.ecosystemHomologate(master.id);
+                    await loadContracts();
+                    setHomoResults(result);
+                    addLog?.("OPUS", `⊙ Ecosistema homologado — ${result.homologated_count ?? "todos"} contratos verificados`, "opus");
+                  } catch (e) {
+                    addLog?.("ERROR", "Error en homologación: " + e.message, "error");
+                  }
+                  setHomologating(false);
+                }}
+                style={{ width:"100%", padding:"10px 16px", background: homologating ? "#065F46" : C.green,
+                  color:"#fff", border:"none", borderRadius:8, cursor: (homologating || !master?.id) ? "not-allowed" : "pointer",
+                  fontSize:12, fontFamily:"inherit", fontWeight:700 }}>
+                {homologating ? "⟳ Homologando ecosistema…" : "⊙ Homologar Ecosistema (COMPLETE)"}
+              </button>
+            </div>
+
+            {/* Contract status table */}
+            <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:10,
+              padding:"14px 16px", marginBottom:12 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:C.textDark, marginBottom:10,
+                textTransform:"uppercase", letterSpacing:"0.07em" }}>
+                Estado Opus del Ecosistema
+              </div>
+              {[master, ...subContracts].filter(Boolean).map(ph => {
+                const h   = ph.opus?.homologation;
+                const reg = ph.ag?.terms?.registry;
+                const lvl = reg ? "OPONIBLE" : h === "VALID" ? "COMPLETE" : "PARTIAL";
+                const colMap = { OPONIBLE: C.blue, COMPLETE: C.green, PARTIAL: C.orange };
+                const iconMap = { OPONIBLE: "🔵", COMPLETE: "✅", PARTIAL: "⏳" };
+                return (
+                  <div key={ph.id} style={{ display:"flex", alignItems:"center", gap:10,
+                    padding:"9px 12px", marginBottom:6,
+                    background: lvl === "OPONIBLE" ? C.blueBg : lvl === "COMPLETE" ? C.greenBg : C.orangeBg,
+                    border:`1px solid ${colMap[lvl]}25`, borderRadius:8 }}>
+                    <span style={{ fontSize:16, flexShrink:0 }}>{iconMap[lvl]}</span>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:C.textDark,
+                        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                        {ph.name}
+                      </div>
+                      <div style={{ fontSize:9, color:C.textMuted, fontFamily:"monospace", marginTop:2 }}>
+                        {ph.type}
+                      </div>
+                    </div>
+                    <span style={{ fontSize:10, fontWeight:700, color:colMap[lvl],
+                      fontFamily:"monospace", flexShrink:0 }}>
+                      {lvl}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Explanation */}
+            <div style={{ background:C.bgAlt, borderRadius:8, padding:"12px 14px",
+              fontSize:10, color:C.textMuted, lineHeight:1.6 }}>
+              <strong style={{ color:C.textDark }}>¿Qué significa cada nivel?</strong><br/>
+              <span style={{ color:C.orange }}>⏳ PARTIAL</span> — Campos incompletos o no verificados.<br/>
+              <span style={{ color:C.green }}>✅ COMPLETE</span> — Todos los requisitos PHENOMENON verificados. Vincula a las partes.<br/>
+              <span style={{ color:C.blue }}>🔵 OPONIBLE</span> — Inscrito en Registro. Vincula a terceros (erga omnes).
             </div>
           </div>
         )}

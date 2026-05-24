@@ -27,7 +27,6 @@ import { INSURANCE_TEMPLATE_KEYS } from "./constants.js";
 const RIGHT_TABS = [
   { key: "campos",     label: "Campos",     icon: "◈" },
   { key: "ecosistema", label: "Ecosistema", icon: "🌐" },
-  { key: "kpmg-demo",  label: "Demo KPMG",  icon: "⭐" },
   { key: "kpmg-corp",  label: "Gobernanza", icon: "🏛" },
   { key: "riesgo",     label: "Riesgo",     icon: "⚠" },
   { key: "verificar",  label: "Verificar",  icon: "⊙" },
@@ -355,12 +354,12 @@ function AppInner() {
   } = usePhenomenon();
 
   const isKPMGCorporate = master?.ag?.terms?.templateKey === "KPMG_CORPORATE";
+  const isKPMGCase      = master?.ag?.terms?.templateKey === "KPMG";
   const isSegurosCase   = Object.values(contracts).some(c =>
     c.parentId === null && INSURANCE_TEMPLATE_KEYS.includes(c.ag?.terms?.templateKey)
   );
   const visibleRightTabs = RIGHT_TABS.filter(t => {
     if (t.key === "kpmg-corp") return isKPMGCorporate;
-    if (t.key === "kpmg-demo") return !isSegurosCase;
     return true;
   });
 
@@ -1147,21 +1146,6 @@ function AppInner() {
               </ErrorBoundary>
             )}
 
-            {rightTab === "kpmg-demo" && (
-              <ErrorBoundary scope="kpmg-demo">
-                <KPMGDemoPanel
-                  master={master}
-                  subContracts={subContracts}
-                  loadContracts={loadContracts}
-                  addLog={addLog}
-                  onEuriborCascade={(ids) => {
-                    setGraphFlashIds(ids);
-                    setTimeout(() => setGraphFlashIds([]), 2500);
-                  }}
-                />
-              </ErrorBoundary>
-            )}
-
             {rightTab === "kpmg-corp" && (
               <ErrorBoundary scope="kpmg-corp">
                 <ApprovalChainView master={master} subContracts={subContracts} />
@@ -1241,6 +1225,17 @@ function AppInner() {
                   if (p === "stage-wide") return "stage-full";
                   return null;
                 })}
+              />
+            ) : isKPMGCase ? (
+              <KPMGDemoPanel
+                master={master}
+                subContracts={subContracts}
+                loadContracts={loadContracts}
+                addLog={addLog}
+                onEuriborCascade={(ids) => {
+                  setGraphFlashIds(ids);
+                  setTimeout(() => setGraphFlashIds([]), 2500);
+                }}
               />
             ) : (
               <CenterStage

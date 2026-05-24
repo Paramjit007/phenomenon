@@ -50,6 +50,7 @@ export async function generateContract(contract_type, master_summary, ess) {
 
 // ─── Demo endpoints ───────────────────────────────────────────────────────────
 export const seedKPMGDemo      = ()                             => req("/demo/kpmg/seed", { method: "POST" });
+export const fillKPMGDemoFields = (body)                        => req("/demo/kpmg/fill-demo-fields", { method: "POST", body });
 export const getAmortization   = (principal, euribor, spread, termYears, months = 24) =>
   req(`/demo/amortization?principal=${principal}&euribor=${euribor}&spread=${spread}&term_years=${termYears}&months=${months}`);
 export const updateEuribor     = (body)                         => req("/demo/kpmg/update-euribor", { method: "POST", body });
