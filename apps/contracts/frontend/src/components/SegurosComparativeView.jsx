@@ -550,55 +550,62 @@ function SiniestroWizard({ wizard, onClose, onLoadContracts, addLog }) {
   const [rejectBasis,  setRejectBasis]  = useState("");
   const [busy,         setBusy]         = useState(false);
   const [result,       setResult]       = useState(null);
+  const [wizardError,  setWizardError]  = useState(null);
 
   const { contractId, contractType } = wizard;
   const isVida = contractType === "COBERTURA_VIDA";
 
   async function handleInitiate() {
-    if (!cause.trim()) return;
-    if (!isVida && (!damage || isNaN(parseFloat(damage)) || parseFloat(damage) <= 0)) return;
+    setWizardError(null);
     setBusy(true);
     try {
       const res = await api.initiateSiniestro({
         contract_id: contractId,
-        cause: cause.trim(),
-        estimated_damage: isVida ? 0 : parseFloat(damage),
+        cause: cause.trim() || "Siniestro declarado",
+        estimated_damage: isVida ? 0 : (parseFloat(damage) || 0),
       });
       setHypothesis(res.hypothesis);
       setStep(2);
-      addLog?.("SINIESTRO", `⚡ Siniestro ${res.siniestro_id} — ID Justificación creado. Hipótesis pendiente de confirmación.`, "cascade");
+      addLog?.("SINIESTRO", `⚡ Siniestro ${res.siniestro_id} — ID Justificación creado.`, "cascade");
       await onLoadContracts();
     } catch (e) {
-      addLog?.("ERROR", "Error iniciando siniestro: " + e.message, "error");
+      const msg = e.message || "Error desconocido";
+      setWizardError(msg);
+      addLog?.("ERROR", "Error iniciando siniestro: " + msg, "error");
     }
     setBusy(false);
   }
 
   async function handleConfirm() {
+    setWizardError(null);
     setBusy(true);
     try {
       const res = await api.confirmSiniestro({ contract_id: contractId });
       setResult({ type: "confirmed", indemnizacion: res.indemnizacion, id: res.siniestro_id });
       setStep(3);
-      addLog?.("OPUS", `✅ Indemnización confirmada — ${parseFloat(res.indemnizacion).toLocaleString("es-ES")} € emitida. ${res.siniestro_id}`, "opus");
+      addLog?.("OPUS", `✅ Indemnización ${parseFloat(res.indemnizacion).toLocaleString("es-ES")} € emitida.`, "opus");
       await onLoadContracts();
     } catch (e) {
-      addLog?.("ERROR", "Error confirmando: " + e.message, "error");
+      const msg = e.message || "Error desconocido";
+      setWizardError(msg);
+      addLog?.("ERROR", "Error confirmando: " + msg, "error");
     }
     setBusy(false);
   }
 
   async function handleReject() {
-    if (!rejectReason.trim()) return;
+    setWizardError(null);
     setBusy(true);
     try {
-      const res = await api.rejectSiniestro({ contract_id: contractId, reason: rejectReason.trim(), legal_basis: rejectBasis.trim() });
+      const res = await api.rejectSiniestro({ contract_id: contractId, reason: rejectReason.trim() || "Motivo no especificado", legal_basis: rejectBasis.trim() });
       setResult({ type: "rejected", reason: rejectReason, basis: rejectBasis, id: res.siniestro_id });
       setStep(3);
       addLog?.("SINIESTRO", `⛔ Siniestro ${res.siniestro_id} RECHAZADO — ${rejectReason}`, "error");
       await onLoadContracts();
     } catch (e) {
-      addLog?.("ERROR", "Error rechazando: " + e.message, "error");
+      const msg = e.message || "Error desconocido";
+      setWizardError(msg);
+      addLog?.("ERROR", "Error rechazando: " + msg, "error");
     }
     setBusy(false);
   }
@@ -673,12 +680,18 @@ function SiniestroWizard({ wizard, onClose, onLoadContracts, addLog }) {
                   Seguro de Vida: la indemnización es el capital pactado — sin franquicia (art. 25 LCS).
                 </div>
               )}
-              <button disabled={busy || !cause.trim() || (!isVida && (!damage || parseFloat(damage) <= 0))}
+              <button disabled={busy}
                 onClick={handleInitiate}
                 style={{ padding:"11px", background: busy ? C.orange+"99" : C.orange, color:C.white, border:"none",
-                  borderRadius:8, cursor:"pointer", fontSize:13, fontFamily:"inherit", fontWeight:700 }}>
+                  borderRadius:8, cursor: busy ? "wait" : "pointer", fontSize:13, fontFamily:"inherit", fontWeight:700 }}>
                 {busy ? "⟳ Creando ID Justificación…" : "⚡ Iniciar Siniestro → Calcular Hipótesis"}
               </button>
+              {wizardError && (
+                <div style={{ padding:"10px 12px", background:"#FEF2F2", border:"1px solid #FECACA",
+                  borderRadius:8, fontSize:11, color:C.red, fontFamily:"monospace", wordBreak:"break-word" }}>
+                  <strong>Error:</strong> {wizardError}
+                </div>
+              )}
             </div>
           )}
 
@@ -721,7 +734,7 @@ function SiniestroWizard({ wizard, onClose, onLoadContracts, addLog }) {
                       border:"none", borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:700 }}>
                     {busy ? "⟳ Confirmando…" : `✅ Confirmar — Emitir ${fmtEur(hypothesis.indemnizacion_derivada)}`}
                   </button>
-                  <button disabled={busy} onClick={() => setRejecting(true)}
+                  <button disabled={busy} onClick={() => { setRejecting(true); setWizardError(null); }}
                     style={{ flex:1, padding:"11px", background:"#FEF2F2", color:C.red,
                       border:`1px solid #FECACA`, borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:700 }}>
                     ⛔ Rechazar Siniestro
@@ -752,6 +765,12 @@ function SiniestroWizard({ wizard, onClose, onLoadContracts, addLog }) {
                       {busy ? "⟳ Rechazando…" : "⛔ Confirmar Rechazo"}
                     </button>
                   </div>
+                </div>
+              )}
+              {wizardError && (
+                <div style={{ padding:"10px 12px", background:"#FEF2F2", border:"1px solid #FECACA",
+                  borderRadius:8, fontSize:11, color:C.red, fontFamily:"monospace", wordBreak:"break-word" }}>
+                  <strong>Error:</strong> {wizardError}
                 </div>
               )}
             </div>
