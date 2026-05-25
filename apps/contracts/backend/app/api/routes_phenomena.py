@@ -792,6 +792,30 @@ def homologate_phenomenon(id: str, db: Session = Depends(get_db)):
                         f"({child_state}) — verifique este contrato antes de homologar el maestro."
                     )
 
+        # ── 4c. Noria balance check (seguros only — advisory) ─────────────────────
+        # "En el carrusel-noria deben existir tantas IA como CA² operativas."
+        # Flujograma Fenomenológico PHENOMENON § 6. Not blocking — advisory warning.
+        template_key_check = terms.get("templateKey", "")
+        if not is_sub and template_key_check.startswith("SEGURO_"):
+            all_children = children if children else repo.get_children(id)
+            ca2_active = [c for c in all_children if c.status not in ("TERMINATED", "RECHAZO")]
+            ia_count  = len(record.ia_instances or [])
+            ca2_count = len(ca2_active)
+            noria_ok  = ia_count == ca2_count
+            ecosystem_checks.append({
+                "key":      "noria_balance",
+                "label":    f"Noria: {ia_count} IA operadores · {ca2_count} CA² activas",
+                "valid":    noria_ok,
+                "required": False,
+                "group":    "Coherencia Noria — Flujograma Fenomenológico",
+                "advisory": True,
+            })
+            if not noria_ok:
+                ecosystem_checks[-1]["warning"] = (
+                    f"Desequilibrio noria: {ia_count} IA vs {ca2_count} CA² operativas. "
+                    "Añade o elimina operadores IA para equilibrar el carrusel."
+                )
+
     # ── 4b. KPMG corporate governance blocking logic ──────────────────────────
     # Regulatory approval cannot be homologated until the compliance check sub-contract
     # is valid. This represents a governance-style IF dependency with a WAITING state.

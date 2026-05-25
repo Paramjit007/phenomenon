@@ -6,6 +6,44 @@ import {
 } from "../constants.js";
 import * as api from "../api/phenomenon.js";
 
+// ─── Phenomenological CA type map (Flujograma § 6) ──────────────────────────
+// CA-CD: displaces/gates the flow (excludes, thresholds)
+// CA-CST: sustains/stabilises the flow (premiums, coverage, assessments)
+const CA_TYPE_MAP = {
+  COBERTURA_VIDA:       "CA-CST",
+  COBERTURA_RC:         "CA-CST",
+  COBERTURA_DANOS:      "CA-CST",
+  COBERTURA_CREDITO:    "CA-CST",
+  EXCLUSIONES_VIDA:     "CA-CD",
+  EXCLUSIONES_DANOS:    "CA-CD",
+  PRIMA_VIDA:           "CA-CST",
+  LIMITES_RC:           "CA-CST",
+  FRANQUICIA_RC:        "CA-CD",
+  PERITACION:           "CA-CST",
+  VALIDACION_FINANCIERA:"CA-CD",
+  RIESGO_EMPRESARIAL:   "CA-CST",
+};
+
+function getPhase(contract) {
+  const stored = contract?.ag?.terms?.phenomenological_phase;
+  if (stored) return stored;
+  const s = contract?.status;
+  if (s === "SINIESTRO_PENDIENTE") return "SINIESTRO";
+  if (s === "INDEMNIZACION_PAGADA") return "INDEMNIZACION";
+  if (s === "RECHAZO")             return "RECHAZO";
+  if (contract?.type?.startsWith("COBERTURA_") && s === "ACTIVE") return "COBERTURA_ACTIVA";
+  return "SA1";
+}
+
+const PHASE_CFG = {
+  SA1:              { label:"SA1",           color:"#6B7280", bg:"#F3F4F6" },
+  COBERTURA_ACTIVA: { label:"COBERTURA",     color:"#059669", bg:"#ECFDF5" },
+  SINIESTRO:        { label:"SINIESTRO ⚡",  color:"#D97706", bg:"#FFFBEB" },
+  HIPOTESIS:        { label:"HIPÓTESIS",     color:"#7C3AED", bg:"#F5F3FF" },
+  INDEMNIZACION:    { label:"INDEMNIZACIÓN", color:"#2563EB", bg:"#EFF6FF" },
+  RECHAZO:          { label:"RECHAZADO",     color:"#DC2626", bg:"#FEF2F2" },
+};
+
 // ─── Policy build order ───────────────────────────────────────────────────────
 const POLICY_ORDER = [
   "SEGURO_VIDA",
@@ -244,8 +282,35 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
                   transition:"all 0.2s",
                 }}>
                   <span style={{ fontSize:12, color:meta.color }}>{meta.icon}</span>
-                  <div style={{ flex:1 }}>
+                  <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:11, fontWeight:600, color:C.textBody, fontFamily:font.ui }}>{meta.label ?? meta.short ?? sub.type.slice(0,12)}</div>
+                    <div style={{ display:"flex", gap:3, marginTop:2, flexWrap:"wrap" }}>
+                      {/* CA-type badge */}
+                      {CA_TYPE_MAP[sub.type] && (() => {
+                        const isCD = CA_TYPE_MAP[sub.type] === "CA-CD";
+                        return (
+                          <span style={{ fontSize:8, fontFamily:"monospace", padding:"1px 5px", borderRadius:6,
+                            background: isCD ? "#FEF2F2" : "#F0FDF4",
+                            color: isCD ? "#DC2626" : "#16A34A",
+                            border: `1px solid ${isCD ? "#FECACA" : "#86EFAC"}`,
+                            fontWeight:700 }}>
+                            {CA_TYPE_MAP[sub.type]}
+                          </span>
+                        );
+                      })()}
+                      {/* Phase badge */}
+                      {(() => {
+                        const ph = getPhase(sub);
+                        const cfg = PHASE_CFG[ph] ?? PHASE_CFG.SA1;
+                        return (
+                          <span style={{ fontSize:8, fontFamily:"monospace", padding:"1px 5px", borderRadius:6,
+                            background:cfg.bg, color:cfg.color,
+                            border:`1px solid ${cfg.color}40`, fontWeight:600 }}>
+                            {cfg.label}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <StatusDot status={sub.status} size={7} />
                   {subRules.length > 0 && (
@@ -328,15 +393,41 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
             </button>
           )}
 
-          {/* Siniestro button (only when valid) */}
-          {isValid && !hasSin && !isBlocked && (
-            <button
-              onClick={() => onSiniestro(subs.find(s => s?.type?.startsWith("COBERTURA_"))?.id)}
-              style={{ padding:"8px 12px", fontFamily:font.ui, fontWeight:600, fontSize:11,
-                background:`${C.orange}12`, color:"#92400E", border:`1px solid ${C.orange}50`, borderRadius:8, cursor:"pointer" }}>
-              ⚡ Declarar siniestro
-            </button>
-          )}
+          {/* Siniestro button (only when valid and no pending siniestro) */}
+          {isValid && !hasSin && !isBlocked && (() => {
+            const cobertura = subs.find(s => s?.type?.startsWith("COBERTURA_"));
+            return cobertura ? (
+              <button
+                onClick={() => onSiniestro(cobertura.id, cobertura.type)}
+                style={{ padding:"8px 12px", fontFamily:font.ui, fontWeight:600, fontSize:11,
+                  background:`${C.orange}12`, color:"#92400E", border:`1px solid ${C.orange}50`, borderRadius:8, cursor:"pointer" }}>
+                ⚡ Declarar siniestro
+              </button>
+            ) : null;
+          })()}
+
+          {/* Resolve siniestro — opens wizard at step 2 with existing hypothesis */}
+          {hasSin && (() => {
+            const pendingSub = subs.find(s => s?.status === "SINIESTRO_PENDIENTE");
+            if (!pendingSub) return null;
+            const pt = pendingSub?.ag?.terms ?? {};
+            const existingHypothesis = pt.hipotesis_status === "PENDING" ? {
+              cause: pt.siniestro_cause ?? "",
+              estimated_damage: parseFloat(pt.estimated_damage ?? 0),
+              franquicia_applied: parseFloat(pt.franquicia_applied ?? 0),
+              indemnizacion_derivada: parseFloat(pt.indemnizacion_derivada ?? 0),
+              notes: pt.hipotesis_notes ?? "",
+            } : null;
+            return (
+              <button
+                onClick={() => onSiniestro(pendingSub.id, pendingSub.type, existingHypothesis)}
+                style={{ padding:"8px 12px", fontFamily:font.ui, fontWeight:600, fontSize:11,
+                  background:`${C.orange}22`, color:"#92400E", border:`1px solid ${C.orange}80`,
+                  borderRadius:8, cursor:"pointer", animation:"fillPulse 2s ease infinite" }}>
+                ⚡ Resolver siniestro pendiente →
+              </button>
+            );
+          })()}
 
           {/* Cross-policy cascade (only when valid and 2+ policies) */}
           {isValid && isCrossLinked && (
@@ -447,12 +538,282 @@ function ComparisonTable({ policies }) {
   );
 }
 
+// ─── Siniestro Wizard Modal ───────────────────────────────────────────────────
+function SiniestroWizard({ wizard, onClose, onLoadContracts, addLog }) {
+  const existing = wizard.existingHypothesis ?? null;
+  const [cause,        setCause]        = useState("");
+  const [damage,       setDamage]       = useState("");
+  const [step,         setStep]         = useState(existing ? 2 : 1);
+  const [hypothesis,   setHypothesis]   = useState(existing);
+  const [rejecting,    setRejecting]    = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectBasis,  setRejectBasis]  = useState("");
+  const [busy,         setBusy]         = useState(false);
+  const [result,       setResult]       = useState(null);
+
+  const { contractId, contractType } = wizard;
+  const isVida = contractType === "COBERTURA_VIDA";
+
+  async function handleInitiate() {
+    if (!cause.trim()) return;
+    if (!isVida && (!damage || isNaN(parseFloat(damage)) || parseFloat(damage) <= 0)) return;
+    setBusy(true);
+    try {
+      const res = await api.initiateSiniestro({
+        contract_id: contractId,
+        cause: cause.trim(),
+        estimated_damage: isVida ? 0 : parseFloat(damage),
+      });
+      setHypothesis(res.hypothesis);
+      setStep(2);
+      addLog?.("SINIESTRO", `⚡ Siniestro ${res.siniestro_id} — ID Justificación creado. Hipótesis pendiente de confirmación.`, "cascade");
+      await onLoadContracts();
+    } catch (e) {
+      addLog?.("ERROR", "Error iniciando siniestro: " + e.message, "error");
+    }
+    setBusy(false);
+  }
+
+  async function handleConfirm() {
+    setBusy(true);
+    try {
+      const res = await api.confirmSiniestro({ contract_id: contractId });
+      setResult({ type: "confirmed", indemnizacion: res.indemnizacion, id: res.siniestro_id });
+      setStep(3);
+      addLog?.("OPUS", `✅ Indemnización confirmada — ${parseFloat(res.indemnizacion).toLocaleString("es-ES")} € emitida. ${res.siniestro_id}`, "opus");
+      await onLoadContracts();
+    } catch (e) {
+      addLog?.("ERROR", "Error confirmando: " + e.message, "error");
+    }
+    setBusy(false);
+  }
+
+  async function handleReject() {
+    if (!rejectReason.trim()) return;
+    setBusy(true);
+    try {
+      const res = await api.rejectSiniestro({ contract_id: contractId, reason: rejectReason.trim(), legal_basis: rejectBasis.trim() });
+      setResult({ type: "rejected", reason: rejectReason, basis: rejectBasis, id: res.siniestro_id });
+      setStep(3);
+      addLog?.("SINIESTRO", `⛔ Siniestro ${res.siniestro_id} RECHAZADO — ${rejectReason}`, "error");
+      await onLoadContracts();
+    } catch (e) {
+      addLog?.("ERROR", "Error rechazando: " + e.message, "error");
+    }
+    setBusy(false);
+  }
+
+  const fmtEur = (v) => parseFloat(v || 0).toLocaleString("es-ES", { style:"currency", currency:"EUR", maximumFractionDigits:0 });
+
+  return (
+    <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.6)",
+      display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background:C.white, borderRadius:16, width:"100%", maxWidth:480,
+        boxShadow:"0 24px 60px rgba(0,0,0,0.3)", overflow:"hidden" }}>
+
+        {/* Header */}
+        <div style={{ background:"linear-gradient(135deg,#92400E 0%,#D97706 100%)", padding:"16px 20px",
+          display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:24 }}>⚡</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:C.white }}>Siniestro — ID Justificación</div>
+            <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", fontFamily:"monospace" }}>
+              SA1 → YA → SINIESTRO → ID → HIPÓTESIS → INDEMNIZACIÓN
+            </div>
+          </div>
+          <div style={{ display:"flex", gap:6 }}>
+            {[1,2,3].map(n => (
+              <div key={n} style={{ width:24, height:24, borderRadius:"50%", display:"flex",
+                alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700,
+                background: step >= n ? C.white : "rgba(255,255,255,0.25)",
+                color: step >= n ? "#92400E" : C.white }}>
+                {n}
+              </div>
+            ))}
+          </div>
+          <button onClick={onClose} style={{ background:"rgba(255,255,255,0.2)", border:"none", color:C.white,
+            borderRadius:6, width:28, height:28, cursor:"pointer", fontSize:16 }}>✕</button>
+        </div>
+
+        <div style={{ padding:"20px 24px" }}>
+
+          {/* ── Step 1: Input ── */}
+          {step === 1 && (
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              <div style={{ fontSize:12, color:C.textMuted, lineHeight:1.6 }}>
+                <strong style={{ color:C.textDark }}>Paso 1 — Declarar Siniestro</strong><br/>
+                El motor crea un <strong>ID Justificación</strong> y calcula la hipótesis de indemnización antes de que el asegurador decida.
+              </div>
+              <div>
+                <label style={{ fontSize:11, fontWeight:700, color:C.textMuted, textTransform:"uppercase",
+                  letterSpacing:"0.05em", display:"block", marginBottom:5 }}>
+                  Causa del siniestro *
+                </label>
+                <textarea value={cause} onChange={e => setCause(e.target.value)} rows={3}
+                  placeholder="Describe el evento que origina la reclamación…"
+                  style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:7,
+                    fontSize:12, fontFamily:"inherit", resize:"vertical", boxSizing:"border-box" }} />
+              </div>
+              {!isVida && (
+                <div>
+                  <label style={{ fontSize:11, fontWeight:700, color:C.textMuted, textTransform:"uppercase",
+                    letterSpacing:"0.05em", display:"block", marginBottom:5 }}>
+                    Daño reclamado (€) *
+                  </label>
+                  <input type="number" value={damage} onChange={e => setDamage(e.target.value)} min={0}
+                    placeholder="Importe estimado del daño…"
+                    style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:7,
+                      fontSize:12, fontFamily:"monospace", boxSizing:"border-box" }} />
+                </div>
+              )}
+              {isVida && (
+                <div style={{ background:"#FFF7ED", border:"1px solid #FED7AA", borderRadius:8, padding:"10px 12px",
+                  fontSize:11, color:"#92400E" }}>
+                  Seguro de Vida: la indemnización es el capital pactado — sin franquicia (art. 25 LCS).
+                </div>
+              )}
+              <button disabled={busy || !cause.trim() || (!isVida && (!damage || parseFloat(damage) <= 0))}
+                onClick={handleInitiate}
+                style={{ padding:"11px", background: busy ? C.orange+"99" : C.orange, color:C.white, border:"none",
+                  borderRadius:8, cursor:"pointer", fontSize:13, fontFamily:"inherit", fontWeight:700 }}>
+                {busy ? "⟳ Creando ID Justificación…" : "⚡ Iniciar Siniestro → Calcular Hipótesis"}
+              </button>
+            </div>
+          )}
+
+          {/* ── Step 2: Hypothesis review ── */}
+          {step === 2 && hypothesis && (
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              <div style={{ fontSize:12, color:C.textMuted, lineHeight:1.6 }}>
+                <strong style={{ color:C.textDark }}>Paso 2 — Revisar Hipótesis</strong><br/>
+                El motor ha calculado la indemnización derivada. El asegurador decide confirmar o rechazar.
+              </div>
+
+              {/* Hypothesis card */}
+              <div style={{ background:"#F5F3FF", border:"1.5px solid #A78BFA", borderRadius:10, padding:"14px 16px" }}>
+                <div style={{ fontSize:10, fontWeight:700, color:"#7C3AED", marginBottom:10,
+                  textTransform:"uppercase", letterSpacing:"0.06em" }}>
+                  ID Justificación — Hipótesis de Indemnización
+                </div>
+                {[
+                  ["Causa del siniestro", hypothesis.cause],
+                  hypothesis.estimated_damage > 0 && ["Daño reclamado", fmtEur(hypothesis.estimated_damage)],
+                  hypothesis.franquicia_applied > 0 && ["Franquicia aplicada", `− ${fmtEur(hypothesis.franquicia_applied)}`],
+                  ["Indemnización derivada", fmtEur(hypothesis.indemnizacion_derivada)],
+                ].filter(Boolean).map(([label, value], i) => (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline",
+                    padding:"5px 0", borderBottom:i < 3 ? `1px solid #DDD6FE` : "none" }}>
+                    <span style={{ fontSize:11, color:"#6B21A8" }}>{label}</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:"#4C1D95", fontFamily:"monospace" }}>{value}</span>
+                  </div>
+                ))}
+                <div style={{ marginTop:8, fontSize:10, color:"#7C3AED", lineHeight:1.5,
+                  background:"#EDE9FE", borderRadius:6, padding:"6px 8px" }}>
+                  {hypothesis.notes}
+                </div>
+              </div>
+
+              {!rejecting ? (
+                <div style={{ display:"flex", gap:8 }}>
+                  <button disabled={busy} onClick={handleConfirm}
+                    style={{ flex:1, padding:"11px", background: busy ? C.green+"99" : C.green, color:C.white,
+                      border:"none", borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:700 }}>
+                    {busy ? "⟳ Confirmando…" : `✅ Confirmar — Emitir ${fmtEur(hypothesis.indemnizacion_derivada)}`}
+                  </button>
+                  <button disabled={busy} onClick={() => setRejecting(true)}
+                    style={{ flex:1, padding:"11px", background:"#FEF2F2", color:C.red,
+                      border:`1px solid #FECACA`, borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:700 }}>
+                    ⛔ Rechazar Siniestro
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:"12px" }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:C.red, marginBottom:8 }}>Motivo del rechazo *</div>
+                    <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={2}
+                      placeholder="Razón del rechazo (ej: daño por desgaste normal)…"
+                      style={{ width:"100%", padding:"7px 9px", border:`1px solid #FECACA`, borderRadius:6,
+                        fontSize:11, fontFamily:"inherit", resize:"none", boxSizing:"border-box", marginBottom:6 }} />
+                    <input value={rejectBasis} onChange={e => setRejectBasis(e.target.value)}
+                      placeholder="Base legal (ej: art. 20 LCS — exclusión por desgaste)"
+                      style={{ width:"100%", padding:"7px 9px", border:`1px solid #FECACA`, borderRadius:6,
+                        fontSize:11, fontFamily:"monospace", boxSizing:"border-box" }} />
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button onClick={() => setRejecting(false)}
+                      style={{ flex:1, padding:"9px", background:C.bgAlt, color:C.textMuted,
+                        border:`1px solid ${C.border}`, borderRadius:8, cursor:"pointer", fontSize:11 }}>
+                      ← Volver
+                    </button>
+                    <button disabled={busy || !rejectReason.trim()} onClick={handleReject}
+                      style={{ flex:2, padding:"9px", background: busy ? C.red+"99" : C.red, color:C.white,
+                        border:"none", borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:700 }}>
+                      {busy ? "⟳ Rechazando…" : "⛔ Confirmar Rechazo"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 3: Result ── */}
+          {step === 3 && result && (
+            <div style={{ display:"flex", flexDirection:"column", gap:14, textAlign:"center" }}>
+              {result.type === "confirmed" ? (
+                <>
+                  <div style={{ fontSize:40 }}>✅</div>
+                  <div style={{ fontSize:16, fontWeight:700, color:C.green }}>Indemnización Emitida</div>
+                  <div style={{ fontSize:28, fontWeight:800, color:C.green, fontFamily:"monospace" }}>
+                    {fmtEur(result.indemnizacion)}
+                  </div>
+                  <div style={{ fontSize:11, color:C.textMuted }}>
+                    {result.id} · Estado: INDEMNIZACION_PAGADA · Fase: INDEMNIZACIÓN
+                  </div>
+                  <div style={{ fontSize:10, color:C.textMuted, lineHeight:1.6, background:C.bgAlt,
+                    borderRadius:8, padding:"10px 12px" }}>
+                    El contrato de cobertura ha completado el ciclo fenomenológico:<br/>
+                    <strong>SA1 → A1 → COBERTURA → SINIESTRO → ID → HIPÓTESIS → INDEMNIZACIÓN</strong>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize:40 }}>⛔</div>
+                  <div style={{ fontSize:16, fontWeight:700, color:C.red }}>Siniestro Rechazado</div>
+                  <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8,
+                    padding:"12px", textAlign:"left" }}>
+                    <div style={{ fontSize:11, color:C.red, fontWeight:700, marginBottom:4 }}>Motivo</div>
+                    <div style={{ fontSize:12, color:"#7F1D1D" }}>{result.reason}</div>
+                    {result.basis && (
+                      <div style={{ fontSize:10, color:C.red, fontFamily:"monospace", marginTop:6 }}>{result.basis}</div>
+                    )}
+                  </div>
+                  <div style={{ fontSize:11, color:C.textMuted }}>
+                    {result.id} · Estado: RECHAZO · Fase: RECHAZO<br/>
+                    El asegurado puede impugnar (art. 1902 CC — nueva órbita fenomenológica)
+                  </div>
+                </>
+              )}
+              <button onClick={onClose}
+                style={{ padding:"10px", background:C.navy, color:C.white, border:"none",
+                  borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:700 }}>
+                Cerrar
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function SegurosComparativeView({ contracts, onSelectContract, onLoadContracts, addLog, isExpanded, onToggleExpand, expandLevel = 0 }) {
-  const [creating, setCreating]   = useState(null);   // policy key being init'd
-  const [fillingId, setFillingId] = useState(null);   // master_id being auto-filled
-  const [processing, setProcessing] = useState(false);
-  const [flashIds, setFlashIds]   = useState(new Set());
+  const [creating,       setCreating]       = useState(null);
+  const [fillingId,      setFillingId]      = useState(null);
+  const [processing,     setProcessing]     = useState(false);
+  const [flashIds,       setFlashIds]       = useState(new Set());
+  const [siniestroWizard,setSiniestroWizard]= useState(null); // null | {contractId, contractType}
   const safetyTimer = useRef(null);
 
   // ── Parse policies ─────────────────────────────────────────────────────────
@@ -508,18 +869,9 @@ export default function SegurosComparativeView({ contracts, onSelectContract, on
     }
   }
 
-  async function handleSiniestro(contractId) {
-    if (processing || !contractId) return;
-    setProcessing(true);
-    try {
-      await api.declareSiniestro({ contract_id: contractId, resolution: "" });
-      addLog?.("SINIESTRO", "Siniestro declarado", "cascade");
-      await onLoadContracts();
-    } catch (e) {
-      addLog?.("ERROR", "Error siniestro: " + e.message, "error");
-    } finally {
-      setProcessing(false);
-    }
+  function handleSiniestro(contractId, contractType, existingHypothesis = null) {
+    if (!contractId) return;
+    setSiniestroWizard({ contractId, contractType, existingHypothesis });
   }
 
   async function handleCrossCascade(policyKey, masterId) {
@@ -708,6 +1060,16 @@ export default function SegurosComparativeView({ contracts, onSelectContract, on
           </div>
         )}
       </div>
+
+      {/* Siniestro wizard modal */}
+      {siniestroWizard && (
+        <SiniestroWizard
+          wizard={siniestroWizard}
+          onClose={() => setSiniestroWizard(null)}
+          onLoadContracts={onLoadContracts}
+          addLog={addLog}
+        />
+      )}
     </div>
   );
 }

@@ -1025,6 +1025,235 @@ def unblock_coverage(req: SiniestroRequest, db: Session = Depends(get_db)):
     return {"contract_id": req.contract_id, "new_status": "ACTIVE", "unblocked": True}
 
 
+# ─── Phased siniestro flow (Flujograma Fenomenológico §3) ─────────────────────
+# SA1 → YA → A1 → Cobertura → YA → Siniestro → ID → Hipótesis → Indemnización
+# Replaces the single-click declare flow for the phenomenological demo.
+
+class InitiateSiniestroRequest(BaseModel):
+    contract_id: str
+    cause: str
+    estimated_damage: float = 0.0
+
+
+class ConfirmSiniestroRequest(BaseModel):
+    contract_id: str
+    notes: str = ""
+
+
+class RejectSiniestroRequest(BaseModel):
+    contract_id: str
+    reason: str
+    legal_basis: str = ""
+
+
+@router.post("/seguros/initiate-siniestro")
+def initiate_siniestro(req: InitiateSiniestroRequest, db: Session = Depends(get_db)):
+    """
+    Step 1 — YA transition: Cobertura → Siniestro.
+    Creates ID Justificación, computes hypothesis, stores in contract terms.
+    Returns hypothesis for frontend review before confirmation.
+    """
+    from fastapi import HTTPException
+    from datetime import datetime, timezone as tz
+
+    repo = PhenomenaRepository(db)
+    try:
+        contract = repo.get(req.contract_id)
+    except KeyError:
+        raise HTTPException(404, "Contract not found")
+
+    if contract.type not in _SINIESTRO_ELIGIBLE_TYPES:
+        raise HTTPException(400, f"Solo COBERTURA_* puede declarar siniestro; tipo: {contract.type}")
+    if contract.status != "ACTIVE":
+        raise HTTPException(409, f"Requiere ACTIVE; estado actual: {contract.status}")
+
+    master = None
+    if contract.parentId:
+        try:
+            master = repo.get(contract.parentId)
+        except KeyError:
+            pass
+    master_terms = master.ag.get("terms", {}) if master else {}
+
+    # ── Compute hypothesis based on policy type ───────────────────────────────
+    damage = req.estimated_damage
+    franquicia = 0.0
+    indemnizacion = 0.0
+    hipotesis_notes = ""
+
+    if contract.type == "COBERTURA_VIDA":
+        capital = float(master_terms.get("capitalDeceso") or 300000)
+        indemnizacion = capital
+        hipotesis_notes = (
+            f"Seguro Vida: capital por fallecimiento/invalidez {capital:,.0f} €. "
+            "Sin franquicia aplicable (art. 25 LCS)."
+        )
+    elif contract.type == "COBERTURA_RC":
+        franquicia = 3000.0
+        if contract.parentId:
+            siblings = repo.get_children(contract.parentId)
+            fran_sub = next((s for s in siblings if s.type == "FRANQUICIA_RC"), None)
+            if fran_sub:
+                try:
+                    franquicia = float(fran_sub.ag.get("terms", {}).get("deductibleAmount") or 3000)
+                except (ValueError, TypeError):
+                    pass
+        limit = float(master_terms.get("coverageLimit") or 600000)
+        indemnizacion = min(max(0, damage - franquicia), limit)
+        hipotesis_notes = (
+            f"RC: daño {damage:,.0f} € − franquicia {franquicia:,.0f} € = "
+            f"{indemnizacion:,.0f} € (límite póliza: {limit:,.0f} €)."
+        )
+    elif contract.type == "COBERTURA_DANOS":
+        deductible_pct = float(master_terms.get("deductible") or 10) / 100
+        franquicia = round(damage * deductible_pct, 2)
+        prop_value = float(master_terms.get("propertyValue") or 750000)
+        indemnizacion = min(max(0, damage - franquicia), prop_value)
+        hipotesis_notes = (
+            f"Daños: {damage:,.0f} € − franquicia {deductible_pct*100:.0f}% "
+            f"({franquicia:,.0f} €) = {indemnizacion:,.0f} € (art. 38 LCS peritación)."
+        )
+    elif contract.type == "COBERTURA_CREDITO":
+        pct = float(master_terms.get("indemnityPct") or 85) / 100
+        indemnizacion = round(damage * pct, 2)
+        franquicia = round(damage - indemnizacion, 2)
+        hipotesis_notes = (
+            f"Crédito: impagado {damage:,.0f} € × {pct*100:.0f}% = "
+            f"{indemnizacion:,.0f} € (período de espera transcurrido)."
+        )
+
+    siniestro_id = f"SIN-{datetime.now(tz.utc).strftime('%Y%m%d')}-{req.contract_id[:6].upper()}"
+
+    terms = dict(contract.ag.get("terms", {}))
+    terms.update({
+        "siniestro_id": siniestro_id,
+        "siniestro_cause": req.cause,
+        "siniestro_declared_at": datetime.now(tz.utc).isoformat(),
+        "estimated_damage": str(damage),
+        "franquicia_applied": str(franquicia),
+        "indemnizacion_derivada": str(indemnizacion),
+        "hipotesis_notes": hipotesis_notes,
+        "hipotesis_status": "PENDING",
+        "phenomenological_phase": "SINIESTRO",
+    })
+
+    repo.save(contract.model_copy(update={
+        "status": "SINIESTRO_PENDIENTE",
+        "ag": {**contract.ag, "terms": terms},
+        "opus": contract.opus.model_copy(update={"homologation": "PENDING"}),
+    }))
+
+    if master:
+        repo.save(master.model_copy(update={
+            "status": "NEEDS_REVIEW",
+            "opus": master.opus.model_copy(update={"homologation": "PENDING"}),
+        }))
+
+    return {
+        "contract_id": req.contract_id,
+        "siniestro_id": siniestro_id,
+        "new_status": "SINIESTRO_PENDIENTE",
+        "hypothesis": {
+            "estimated_damage": damage,
+            "franquicia_applied": franquicia,
+            "indemnizacion_derivada": indemnizacion,
+            "notes": hipotesis_notes,
+            "cause": req.cause,
+        },
+        "master_flagged": bool(master),
+    }
+
+
+@router.post("/seguros/confirm-siniestro")
+def confirm_siniestro(req: ConfirmSiniestroRequest, db: Session = Depends(get_db)):
+    """
+    Step 2a — YA transition: Hipótesis → Indemnización.
+    Asegurador confirms the hypothesis; contract → INDEMNIZACION_PAGADA.
+    """
+    from fastapi import HTTPException
+    from datetime import datetime, timezone as tz
+
+    repo = PhenomenaRepository(db)
+    try:
+        contract = repo.get(req.contract_id)
+    except KeyError:
+        raise HTTPException(404, "Contract not found")
+
+    if contract.status != "SINIESTRO_PENDIENTE":
+        raise HTTPException(409, f"Confirmación requiere SINIESTRO_PENDIENTE; estado: {contract.status}")
+
+    terms = dict(contract.ag.get("terms", {}))
+    terms.update({
+        "hipotesis_status": "CONFIRMED",
+        "hipotesis_confirmed_at": datetime.now(tz.utc).isoformat(),
+        "hipotesis_notes_final": req.notes,
+        "phenomenological_phase": "INDEMNIZACION",
+    })
+
+    repo.save(contract.model_copy(update={
+        "status": "INDEMNIZACION_PAGADA",
+        "ag": {**contract.ag, "terms": terms},
+        "opus": contract.opus.model_copy(update={"homologation": "VALID"}),
+    }))
+
+    return {
+        "contract_id": req.contract_id,
+        "new_status": "INDEMNIZACION_PAGADA",
+        "siniestro_id": terms.get("siniestro_id", ""),
+        "indemnizacion": terms.get("indemnizacion_derivada", "0"),
+    }
+
+
+@router.post("/seguros/reject-siniestro")
+def reject_siniestro(req: RejectSiniestroRequest, db: Session = Depends(get_db)):
+    """
+    Step 2b — YA transition: Hipótesis → Rechazo.
+    Asegurador rejects with legal reason; contract → RECHAZO.
+    """
+    from fastapi import HTTPException
+    from datetime import datetime, timezone as tz
+
+    repo = PhenomenaRepository(db)
+    try:
+        contract = repo.get(req.contract_id)
+    except KeyError:
+        raise HTTPException(404, "Contract not found")
+
+    if contract.status != "SINIESTRO_PENDIENTE":
+        raise HTTPException(409, f"Rechazo requiere SINIESTRO_PENDIENTE; estado: {contract.status}")
+
+    terms = dict(contract.ag.get("terms", {}))
+    terms.update({
+        "hipotesis_status": "REJECTED",
+        "hipotesis_rejection_reason": req.reason,
+        "hipotesis_legal_basis": req.legal_basis,
+        "hipotesis_rejected_at": datetime.now(tz.utc).isoformat(),
+        "phenomenological_phase": "RECHAZO",
+    })
+
+    repo.save(contract.model_copy(update={
+        "status": "RECHAZO",
+        "ag": {**contract.ag, "terms": terms},
+        "opus": contract.opus.model_copy(update={"homologation": "INVALID"}),
+    }))
+
+    if contract.parentId:
+        try:
+            master = repo.get(contract.parentId)
+            if master.status == "NEEDS_REVIEW":
+                repo.save(master.model_copy(update={"status": "ACTIVE"}))
+        except Exception:
+            pass
+
+    return {
+        "contract_id": req.contract_id,
+        "new_status": "RECHAZO",
+        "siniestro_id": terms.get("siniestro_id", ""),
+        "reason": req.reason,
+        "legal_basis": req.legal_basis,
+    }
+
+
 # ─── Step-by-step demo seeders ────────────────────────────────────────────────
 
 class InitOnePolicyRequest(BaseModel):

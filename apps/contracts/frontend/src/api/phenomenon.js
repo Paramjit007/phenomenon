@@ -58,6 +58,9 @@ export const updateEuribor     = (body)                         => req("/demo/kp
 // ─── Seguros demo endpoints ───────────────────────────────────────────────────
 export const seedSegurosDemo       = ()       => req("/demo/seguros/seed", { method: "POST" });
 export const declareSiniestro      = (body)   => req("/demo/seguros/siniestro",              { method: "POST", body });
+export const initiateSiniestro    = (body)   => req("/demo/seguros/initiate-siniestro",      { method: "POST", body });
+export const confirmSiniestro     = (body)   => req("/demo/seguros/confirm-siniestro",       { method: "POST", body });
+export const rejectSiniestro      = (body)   => req("/demo/seguros/reject-siniestro",        { method: "POST", body });
 export const unblockCoverage       = (body)   => req("/demo/seguros/unblock-coverage",       { method: "POST", body });
 export const crossPolicyCascade    = (body)   => req("/demo/seguros/cross-policy-cascade",   { method: "POST", body });
 export const initOnePolicy         = (body)   => req("/demo/seguros/init-one-policy",         { method: "POST", body });

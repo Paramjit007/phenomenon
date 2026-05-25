@@ -2,6 +2,108 @@
 
 ---
 
+## [2026-05-25] — Phased siniestro flow + CA-type/phase badges + noria validation
+
+**Source:** `Flujograma_Fenomenologico_Seguro_PHENOMENON.docx` — implemented §3 (flow), §6 (CA types), §8 (SA vs Cobertura), §10 (noria).
+
+### Backend — `apps/contracts/backend/app/api/routes_demo.py`
+
+**3 new phased siniestro endpoints** (existing `/seguros/siniestro` kept for backward compat):
+
+- `POST /demo/seguros/initiate-siniestro` — Step 1 YA transition (ACTIVE → SINIESTRO_PENDIENTE). Computes policy-specific hypothesis (franquicia, indemnización derivada) and writes ID Justificación into contract `ag.terms`. Returns hypothesis for frontend review. Sets `phenomenological_phase = "SINIESTRO"`.
+  - COBERTURA_VIDA: capital_deceso, no franquicia (art. 25 LCS)
+  - COBERTURA_RC: damage − franquicia_RC sub-contract (default 3000€) capped at coverageLimit
+  - COBERTURA_DANOS: damage − deductible% of propertyValue (art. 38 LCS peritación)
+  - COBERTURA_CREDITO: damage × indemnityPct% (período espera transcurrido)
+- `POST /demo/seguros/confirm-siniestro` — Step 2a (SINIESTRO_PENDIENTE → INDEMNIZACION_PAGADA). Sets `phenomenological_phase = "INDEMNIZACION"`, opus VALID.
+- `POST /demo/seguros/reject-siniestro` — Step 2b (SINIESTRO_PENDIENTE → RECHAZO). Records legal basis + rejection reason. Sets `phenomenological_phase = "RECHAZO"`, opus INVALID. Restores master to ACTIVE if was NEEDS_REVIEW.
+
+**New request models:** `InitiateSiniestroRequest`, `ConfirmSiniestroRequest`, `RejectSiniestroRequest`.
+
+### Backend — `apps/contracts/backend/app/api/routes_phenomena.py`
+
+**Noria balance check** added to `homologate` (§ 4c, advisory — not blocking):
+- Applies to seguros master contracts only (templateKey starts with "SEGURO_")
+- Validates: `count(IA operators) == count(active CA²)` per Flujograma § 6
+- Added to `ecosystem_checks` with `required: False, advisory: True`
+- Returns warning string in check if unbalanced (does not block VALID status)
+
+### Frontend — `apps/contracts/frontend/src/api/phenomenon.js`
+
+3 new API client functions:
+- `initiateSiniestro(body)` → `POST /demo/seguros/initiate-siniestro`
+- `confirmSiniestro(body)` → `POST /demo/seguros/confirm-siniestro`
+- `rejectSiniestro(body)` → `POST /demo/seguros/reject-siniestro`
+
+### Frontend — `apps/contracts/frontend/src/components/SegurosComparativeView.jsx`
+
+**CA-type map** (static, derived from contract type):
+- `CA-CD` (displaza/gate): EXCLUSIONES_VIDA, EXCLUSIONES_DANOS, FRANQUICIA_RC, VALIDACION_FINANCIERA
+- `CA-CST` (sustains): COBERTURA_*, PRIMA_VIDA, LIMITES_RC, PERITACION, RIESGO_EMPRESARIAL
+
+**`getPhase(contract)`** — derives phenomenological phase from `ag.terms.phenomenological_phase` (set by new endpoints) or falls back from contract status: ACTIVE COBERTURA_* → "COBERTURA_ACTIVA", SINIESTRO_PENDIENTE → "SINIESTRO", etc.
+
+**Sub-contract row badges** (below the sub-contract name):
+- Orange/red CA-CD badge or green CA-CST badge (structural type)
+- Phase badge: SA1 (grey) / COBERTURA (green) / SINIESTRO (orange) / HIPÓTESIS (purple) / INDEMNIZACIÓN (blue) / RECHAZADO (red)
+
+**`SiniestroWizard` modal component** (full-screen overlay, 3 steps):
+- Step 1: Input cause + estimated damage → calls `initiateSiniestro` → shows ID Justificación
+- Step 2: Hypothesis review card (cause, franquicia, indemnización derivada, notes) → confirm or reject
+  - Confirm: calls `confirmSiniestro` → green result screen
+  - Reject: text input for reason + legal basis → calls `rejectSiniestro` → red result screen with art. 1902 CC note
+- Step 3: Final result (amount paid or rejection reason + legal basis)
+- If contract already in SINIESTRO_PENDIENTE: opens at Step 2 with existing hypothesis loaded from `ag.terms`
+
+**Button updates:**
+- "Declarar siniestro" → opens wizard (was single API call)
+- "Resolver siniestro pendiente" button (pulsing orange) → opens wizard at Step 2 with pre-loaded hypothesis
+
+---
+
+## [2026-05-25] — Move KPMGDemoPanel to right stage + homologation section
+
+**User request:** (1) Move Demo KPMG tab from centre pane to right window, KPMG case only. (2) Button to fill dummy data to show homologation.
+
+### Frontend — `apps/contracts/frontend/src/App.jsx`
+- Removed `{ key: "kpmg-demo" }` from `RIGHT_TABS`
+- Added `isKPMGCase = master?.ag?.terms?.templateKey === "KPMG"`
+- Right stage: `isKPMGCase ? <KPMGDemoPanel ...> : <CenterStage ...>` (alongside existing `isSegurosCase` branch)
+- Removed kpmg-demo content block from centre pane
+
+### Frontend — `apps/contracts/frontend/src/components/KPMGDemoPanel.jsx`
+- Added `homologacion` tab to KPMGDemoPanel tab bar
+- Paso 1 button: "Rellenar Datos Demo" → calls `fillKPMGDemoFields` (resets opus to PENDING, fills all fields)
+- Paso 2 button: "Homologar Ecosistema" → calls `ecosystemHomologate` → shows result
+- Contract status table (PARTIAL / COMPLETE / OPONIBLE) with color coding
+
+### Backend — `apps/contracts/backend/app/api/routes_demo.py`
+- `POST /demo/kpmg/fill-demo-fields` — fills all KPMG contract terms with demo data, resets opus to PENDING. Enables PARTIAL → COMPLETE demo flow.
+
+### Frontend — `apps/contracts/frontend/src/api/phenomenon.js`
+- `fillKPMGDemoFields(body)` added
+
+---
+
+## [2026-05-25] — Railway deployment + SelectionScreen cleanup
+
+**User request:** Deploy to Railway.app. Remove hyperlinks from selection screen (keep only KPMG and Seguros demo cards active).
+
+### Deployment
+- Backend deployed to Railway at `celebrated-adventure-production-4b92.up.railway.app`
+- Frontend deployed to Railway at `phenomenon-production-6c36.up.railway.app`
+- Postgres managed database connected
+- Root-level `Dockerfile.backend` and `Dockerfile.frontend` created for Railway path resolution
+- `vite.config.js`: proxy target defaults to Railway internal URL; `secure: false` added
+- `database.py`: `postgres://` → `postgresql://` URL scheme fix for SQLAlchemy
+
+### Frontend — `apps/contracts/frontend/src/components/SelectionScreen.jsx`
+- KPMG Corporate card: `opacity: 0.45`, `pointerEvents: "none"`, badge "PRÓXIMAMENTE"
+- Removed entire template type grid (contract type selection cards)
+- Only KPMG Hotel and Seguros Cartera cards remain interactive
+
+---
+
 ## [2026-05-24] — Cross-policy IF connections + staged insurance reveal
 
 **User request:** Progressive seguros demo (Vida→RC→Daños→Crédito→All) with cross-policy IF arcs visible in graph.
