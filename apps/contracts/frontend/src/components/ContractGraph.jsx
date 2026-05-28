@@ -18,8 +18,8 @@ function useReducedMotion() {
   return reduced;
 }
 
-const MASTER_W = 190; const MASTER_H = 110;
-const NODE_W   = 160; const NODE_H   = 95;
+const MASTER_W = 150; const MASTER_H = 150;
+const NODE_W   = 120; const NODE_H   = 120;
 const CX = 520; const CY = 300; const RADIUS = 230;
 
 // ─── KPMG financial label extraction ─────────────────────────────────────────
@@ -106,7 +106,6 @@ function NodeCard({ id, contract, meta, pos, selected, isMaster, onClick, onDoub
   const riskLevel  = getRiskLevel(risks);
   const riskBadge  = { high:"🔴", medium:"🟡", low:"", none:"" }[riskLevel];
   const w = isMaster ? MASTER_W : NODE_W;
-  const h = isMaster ? MASTER_H : NODE_H;
   const isReview     = contract.status === "NEEDS_REVIEW";
   const isTerminated = contract.status === "TERMINATED";
 
@@ -117,10 +116,10 @@ function NodeCard({ id, contract, meta, pos, selected, isMaster, onClick, onDoub
       onDoubleClick={e => { e.stopPropagation(); onDoubleClick(id); }}
       title="Clic: seleccionar · Doble clic: edición rápida"
       style={{
-        position: "absolute", left: pos.x, top: pos.y, width: w, height: h,
-        background: isTerminated ? "#F3F4F6" : pendingEdit ? `#FEF9C3` : selected ? `${color}10` : C.white,
-        border: `2px solid ${isTerminated ? C.textLight : pendingEdit ? "#CA8A04" : selected ? color : isReview ? C.orange : `${color}60`}`,
-        borderRadius: 10,
+        position: "absolute", left: pos.x, top: pos.y, width: w, height: w,
+        background: isTerminated ? "#F3F4F6" : pendingEdit ? `#FEF9C3` : selected ? `${color}35` : `${color}18`,
+        border: `2.5px solid ${isTerminated ? C.textLight : pendingEdit ? "#CA8A04" : selected ? color : isReview ? C.orange : `${color}90`}`,
+        borderRadius: "50%",
         boxShadow: pendingEdit
           ? `0 0 0 4px #FDE04760, 0 8px 24px rgba(202,138,4,0.2)`
           : flash
@@ -129,71 +128,50 @@ function NodeCard({ id, contract, meta, pos, selected, isMaster, onClick, onDoub
               ? `0 0 0 4px ${color}25, 0 12px 32px rgba(0,0,0,0.15)`
             : "0 3px 10px rgba(0,0,0,0.09)",
         cursor: "grab", userSelect: "none", overflow: "hidden",
-        display: "flex", flexDirection: "column",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 2,
         opacity: isTerminated ? 0.55 : 1,
         transition: "box-shadow 0.3s, border-color 0.2s, opacity 0.3s",
       }}
     >
-      <div style={{ height: 5, background: isTerminated ? C.textLight : color, flexShrink: 0 }} />
-      <div style={{ padding: "10px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ fontSize: isMaster ? 18 : 15, color: isTerminated ? C.textLight : color, lineHeight: 1 }}>
-            {isTerminated ? "✕" : isMaster ? "⬡" : (meta?.icon ?? "○")}
-          </span>
-          <span style={{ fontSize: isMaster ? 12 : 11, fontWeight: 700, color: isTerminated ? C.textLight : C.textDark, fontFamily: font.ui, letterSpacing: "0.03em", textTransform: "uppercase" }}>
-            {isMaster ? "Contrato Marco" : (meta?.short ?? contract.type)}
-          </span>
-          {isReview     && <span style={{ marginLeft:"auto", fontSize:11, color:C.orange }}>⚠</span>}
-          {isTerminated && <span style={{ marginLeft:"auto", fontSize:9, color:C.textLight, fontFamily:font.mono }}>TERM.</span>}
-        </div>
-        <div style={{ fontSize:11, color:C.textMuted, fontFamily:font.ui, lineHeight:1.35 }}>
-          {contract.name?.split(" ").slice(0,5).join(" ")}
-        </div>
-        {riskBadge && (
-          <div style={{ position:"absolute", top:-5, right:-5, fontSize:12, zIndex:2, filter:"drop-shadow(0 1px 3px rgba(0,0,0,0.25))" }}>{riskBadge}</div>
-        )}
-        <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:"auto", flexWrap:"wrap" }}>
-          <div style={{ width:7, height:7, borderRadius:"50%", background: isTerminated ? C.textLight : statusColor(contract.status), flexShrink:0 }} />
-          <span style={{ fontSize:10, color: isTerminated ? C.textLight : statusColor(contract.status), fontFamily:font.mono }}>
-            {isTerminated ? "Terminado" : statusLabel(contract.status)}
-          </span>
-          {(() => {
-            const level = getOpusLevel(contract);
-            const cfg = OPUS_LEVELS[level];
-            return (
-              <span title={cfg.desc} style={{ fontSize:9, padding:"1px 6px", borderRadius:3, background:cfg.bg, color:cfg.color, fontFamily:font.mono, fontWeight:700, border:`1px solid ${cfg.color}50`, marginLeft:"auto" }}>
-                {cfg.icon} {level === "OPONIBLE" ? "OPO." : level === "COMPLETE" ? "COMP." : "PARC."}
-              </span>
-            );
-          })()}
-        </div>
-        {/* Pending edit indicator */}
-        {pendingEdit && (
-          <div style={{ position:"absolute", top:4, right:4, fontSize:10, zIndex:5,
-            background:"#FDE047", borderRadius:4, padding:"1px 5px",
-            fontFamily:font.mono, color:"#78350F", fontWeight:700,
-            animation:"contractPulse 1s ease infinite" }}>
-            ✎ editando…
-          </div>
-        )}
-        {/* KPMG financial amount label */}
-        {(() => {
-          const lbl = kpmgLabel(contract);
-          return lbl ? (
-            <div style={{ position:"absolute", top:-10, left:0, right:0, textAlign:"center",
-              fontSize:8, color:C.white, fontFamily:font.mono, fontWeight:700,
-              background:color, borderRadius:"4px 4px 0 0", padding:"1px 4px", opacity:0.9 }}>
-              {lbl}
-            </div>
-          ) : null;
-        })()}
-        {/* Double-click hint when selected */}
-        {selected && !isTerminated && (
-          <div style={{ position:"absolute", bottom:4, left:0, right:0, textAlign:"center", fontSize:8, color:color, fontFamily:font.mono, opacity:0.7 }}>
-            ✎ doble clic para editar
-          </div>
-        )}
+      <span style={{ fontSize: isMaster ? 18 : 15, color: isTerminated ? C.textLight : color, lineHeight: 1 }}>
+        {isTerminated ? "✕" : isMaster ? "⬡" : (meta?.icon ?? "○")}
+      </span>
+      <span style={{ fontSize: isMaster ? 10 : 9, fontWeight: 700, color: isTerminated ? C.textLight : C.textDark, fontFamily: font.ui, letterSpacing: "0.03em", textTransform: "uppercase", textAlign: "center", padding: "0 8px" }}>
+        {isMaster ? "Marco" : (meta?.short ?? contract.type)}
+      </span>
+      <div style={{ fontSize: 9, color: C.textMuted, fontFamily: font.ui, lineHeight: 1.2, textAlign: "center", padding: "0 12px" }}>
+        {contract.name?.split(" ").slice(0, 3).join(" ")}
       </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, flexWrap: "wrap", justifyContent: "center" }}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: isTerminated ? C.textLight : statusColor(contract.status), flexShrink: 0 }} />
+        {(() => {
+          const level = getOpusLevel(contract);
+          const cfg = OPUS_LEVELS[level];
+          return (
+            <span title={cfg.desc} style={{ fontSize: 8, padding: "1px 5px", borderRadius: 3, background: cfg.bg, color: cfg.color, fontFamily: font.mono, fontWeight: 700, border: `1px solid ${cfg.color}50` }}>
+              {cfg.icon} {level === "OPONIBLE" ? "OPO." : level === "COMPLETE" ? "COMP." : "PARC."}
+            </span>
+          );
+        })()}
+      </div>
+      {riskBadge && (
+        <div style={{ position: "absolute", top: 6, right: 16, fontSize: 11, zIndex: 2, filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.25))" }}>{riskBadge}</div>
+      )}
+      {isReview && <span style={{ position: "absolute", top: 8, right: 14, fontSize: 10, color: C.orange }}>⚠</span>}
+      {isTerminated && <span style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "flex-start", justifyContent: "flex-end", padding: "10px 12px", fontSize: 8, color: C.textLight, fontFamily: font.mono, pointerEvents: "none" }}>TERM.</span>}
+      {pendingEdit && (
+        <div style={{ position: "absolute", bottom: 18, left: 0, right: 0, textAlign: "center", fontSize: 8, zIndex: 5,
+          color: "#78350F", fontFamily: font.mono, fontWeight: 700,
+          animation: "contractPulse 1s ease infinite" }}>
+          ✎ editando
+        </div>
+      )}
+      {selected && !isTerminated && (
+        <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, textAlign: "center", fontSize: 7, color: color, fontFamily: font.mono, opacity: 0.7 }}>
+          ✎ doble clic
+        </div>
+      )}
     </div>
   );
 }
@@ -1326,8 +1304,8 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
               {subPos && opusLevel === "OPONIBLE" && (
                 <rect
                   x={subPos.x - 4} y={subPos.y - 4}
-                  width={NODE_W + 8} height={NODE_H + 8}
-                  rx={14} ry={14}
+                  width={NODE_W + 8} height={NODE_W + 8}
+                  rx={64} ry={64}
                   fill="none"
                   stroke={C.gold} strokeWidth={2}
                   pointerEvents="none"
@@ -1337,8 +1315,8 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
               {subPos && opusLevel === "COMPLETE" && (
                 <rect
                   x={subPos.x - 4} y={subPos.y - 4}
-                  width={NODE_W + 8} height={NODE_H + 8}
-                  rx={14} ry={14}
+                  width={NODE_W + 8} height={NODE_W + 8}
+                  rx={64} ry={64}
                   fill="none"
                   stroke={C.white} strokeWidth={1}
                   strokeDasharray="4 4"
@@ -1349,8 +1327,8 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
               {subPos && opusLevel === "PARTIAL" && subContract.status === "NEEDS_REVIEW" && (
                 <rect
                   x={subPos.x - 4} y={subPos.y - 4}
-                  width={NODE_W + 8} height={NODE_H + 8}
-                  rx={14} ry={14}
+                  width={NODE_W + 8} height={NODE_W + 8}
+                  rx={64} ry={64}
                   fill="none"
                   stroke={C.orange} strokeWidth={2}
                   pointerEvents="none"
@@ -1421,8 +1399,8 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
             return (
               <rect
                 x={masterPos.x - 4} y={masterPos.y - 4}
-                width={MASTER_W + 8} height={MASTER_H + 8}
-                rx={14} ry={14}
+                width={MASTER_W + 8} height={MASTER_W + 8}
+                rx={79} ry={79}
                 fill="none"
                 stroke={C.gold} strokeWidth={2}
                 pointerEvents="none"
@@ -1434,8 +1412,8 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
             return (
               <rect
                 x={masterPos.x - 4} y={masterPos.y - 4}
-                width={MASTER_W + 8} height={MASTER_H + 8}
-                rx={14} ry={14}
+                width={MASTER_W + 8} height={MASTER_W + 8}
+                rx={79} ry={79}
                 fill="none"
                 stroke={C.white} strokeWidth={1}
                 strokeDasharray="4 4"
@@ -1448,8 +1426,8 @@ export default function ContractGraph({ master, subContracts, selectedId, onSele
             return (
               <rect
                 x={masterPos.x - 4} y={masterPos.y - 4}
-                width={MASTER_W + 8} height={MASTER_H + 8}
-                rx={14} ry={14}
+                width={MASTER_W + 8} height={MASTER_W + 8}
+                rx={79} ry={79}
                 fill="none"
                 stroke={C.orange} strokeWidth={2}
                 pointerEvents="none"
