@@ -1311,3 +1311,146 @@ export const CROSS_POLICY_IF_EDGES = [
     arcDir: "below",
     description: "Exclusión médica activa en Vida modifica el perfil de riesgo RC del mismo asegurado" },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PHENOMENON III — F1/F2/F3 Insurance Structure
+// Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+// Integration tracked in: PHENOMENON_III_PROGRESS.md
+//
+// FEATURE FLAG: set to true only after Phase 3 visual verification in browser.
+// When false, nothing in the UI changes — this block is data-only.
+// To instantly revert all Phase 3 visual changes: set this back to false.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const PHENOMENON_III_ENABLED = false;
+
+// F1/F2/F3 phase display config — colors, labels, border style for rendering
+export const PHENOMENON_PHASE_CFG = {
+  F1: {
+    label:       "F1 — Coverage",
+    sublabel:    "Active coverage (IA co-activa) — always exists",
+    color:       "#3b82f6",
+    borderStyle: "solid",
+    opacity:     1.0,
+    icon:        "◉",
+    description: "The insurer is currently providing the coverage service. The premium pays for this present operation, not a future payment. The insured object (ferencia sensual) is covered but not yet damaged.",
+  },
+  F2: {
+    label:       "F2 — Claim / Indemnification",
+    sublabel:    "Opens ONLY when a specific loss event (CST) occurs",
+    color:       "#f97316",
+    borderStyle: "solid",
+    opacity:     1.0,
+    icon:        "⚡",
+    description: "F2 does not pre-exist. It is created when the loss event actualises the insured object. Legal basis: Art. 1089 CC. NOT a debt payment. NOT solventio (Art. 1158 CC). NOT automatic subrogation.",
+  },
+  F3: {
+    label:       "F3 — Recovery",
+    sublabel:    "Eventual — only if a culpable party is identified",
+    color:       "#a855f7",
+    borderStyle: "dashed",
+    opacity:     0.72,
+    icon:        "⬡",
+    description: "F3 is optional and independent. It is its own legal path via Art. 1902 CC + Art. 1089 CC. Do not confuse with F2. Do not treat as automatic subrogation.",
+  },
+};
+
+// SEC (Consequential Effect Classes) — modulation layers of F1 coverage
+export const SEC_TYPES = {
+  DE: {
+    label: "DE — Daño Emergente",
+    labelEn: "Direct Loss",
+    color: "#60a5fa",
+    description: "First modulation layer of F1 coverage. The immediate direct loss to the insured object.",
+  },
+  DS: {
+    label: "DS — Daño Siguiente",
+    labelEn: "Consequential Loss",
+    color: "#34d399",
+    description: "Second modulation layer. Consequential damages that follow from the primary loss.",
+  },
+  OBC: {
+    label: "OBC — O(b)creencia",
+    labelEn: "Observed Sequence (non-causal)",
+    color: "#f59e0b",
+    description: "Pro-sequences observed by the observer without imposing direct causation between events. Prevents confusing temporal sequence with legal causality. Example: second tower did not fall BECAUSE of the first — it was a separate CST event.",
+  },
+};
+
+// IF trigger types — how phenomena connect conditionally
+export const IF_TRIGGER_TYPES = {
+  siniestro_cst: {
+    label:       "CST Trigger → F2",
+    description: "A specific loss event (CST) triggers the creation of F2. F2 does not exist before this event.",
+    color:       "#f97316",
+    conditional: true,
+    eventual:    false,
+    arrowStyle:  "solid",
+  },
+  culpable_id: {
+    label:       "Culpable → F3",
+    description: "Identification of a liable third party triggers optional creation of F3. F3 does not always exist.",
+    color:       "#a855f7",
+    conditional: true,
+    eventual:    true,
+    arrowStyle:  "dashed",
+  },
+  manual: {
+    label:       "Manual IF",
+    description: "Standard manually-created inter-phenomenon link (existing behaviour).",
+    color:       "#8b949e",
+    conditional: false,
+    eventual:    false,
+    arrowStyle:  "solid",
+  },
+};
+
+// F1/F2/F3 phenomenon types per insurance product
+// Key: phenomenon type string stored in DB / used in CONTRACT_TEMPLATES
+// These are the NEW types for the v2 demo structure — existing types (SEGURO_VIDA etc.) are UNCHANGED
+export const INSURANCE_F1_F2_F3_TYPES = {
+  // Life insurance
+  SEGURO_VIDA_F1:    { policy: "SEGURO_VIDA",             phase: "F1", label: "Life — Coverage",         icon: "♡", color: "#3b82f6" },
+  SEGURO_VIDA_F2:    { policy: "SEGURO_VIDA",             phase: "F2", label: "Life — Claim",             icon: "⚡", color: "#f97316" },
+  SEGURO_VIDA_F3:    { policy: "SEGURO_VIDA",             phase: "F3", label: "Life — Recovery",          icon: "⬡", color: "#a855f7" },
+  // RC insurance
+  SEGURO_RC_F1:      { policy: "SEGURO_RC",               phase: "F1", label: "RC — Coverage",            icon: "◎", color: "#3b82f6" },
+  SEGURO_RC_F2:      { policy: "SEGURO_RC",               phase: "F2", label: "RC — Claim",               icon: "⚡", color: "#f97316" },
+  SEGURO_RC_F3:      { policy: "SEGURO_RC",               phase: "F3", label: "RC — Recovery",            icon: "⬡", color: "#a855f7" },
+  // Property damage insurance
+  SEGURO_DANOS_F1:   { policy: "SEGURO_DANOS",            phase: "F1", label: "Property — Coverage",      icon: "⊕", color: "#3b82f6" },
+  SEGURO_DANOS_F2:   { policy: "SEGURO_DANOS",            phase: "F2", label: "Property — Claim",         icon: "⚡", color: "#f97316" },
+  SEGURO_DANOS_F3:   { policy: "SEGURO_DANOS",            phase: "F3", label: "Property — Recovery",      icon: "⬡", color: "#a855f7" },
+  // Credit insurance
+  SEGURO_CREDITO_F1: { policy: "SEGURO_CREDITO_COMERCIAL", phase: "F1", label: "Credit — Coverage",       icon: "◑", color: "#3b82f6" },
+  SEGURO_CREDITO_F2: { policy: "SEGURO_CREDITO_COMERCIAL", phase: "F2", label: "Credit — Claim",          icon: "⚡", color: "#f97316" },
+  SEGURO_CREDITO_F3: { policy: "SEGURO_CREDITO_COMERCIAL", phase: "F3", label: "Credit — Recovery",       icon: "⬡", color: "#a855f7" },
+};
+
+// Negations enforced in F2 — what an insurance indemnification is NOT
+// Used by engine guards and displayed in the F2 detail panel
+export const F2_NEGACIONES = [
+  { id: "NOT_SOLVENTIO",             label: "NOT solventio (Art. 1158 CC)",     description: "The insurer does not pay another party's debt on their behalf." },
+  { id: "NOT_DEBT_PAYMENT",          label: "NOT payment of another's debt",    description: "Insurance indemnifies its own insured object — it does not step into the culpable party's debt." },
+  { id: "NOT_AUTO_SUBROGATION",      label: "NOT automatic subrogation",        description: "Recovery (F3) is a separate legal path that does not follow automatically from indemnification (F2)." },
+];
+
+// Legal basis references used in F2 and F3
+export const INSURANCE_LEGAL_BASIS = {
+  F2: "Art. 1089 CC (origin of obligations, applied to indemnification hypothesis)",
+  F3: "Art. 1902 CC (extra-contractual liability) · Art. 1089 CC",
+};
+
+// Helper: given a phenomenon type string, return its phase config or null
+export function getInsurancePhase(phenomenonType) {
+  const entry = INSURANCE_F1_F2_F3_TYPES[phenomenonType];
+  if (!entry) return null;
+  return { ...entry, ...PHENOMENON_PHASE_CFG[entry.phase] };
+}
+
+// Helper: given a base policy key, return its 3 F1/F2/F3 type keys
+export function getPolicyF1F2F3Keys(policyKey) {
+  return Object.entries(INSURANCE_F1_F2_F3_TYPES)
+    .filter(([, v]) => v.policy === policyKey)
+    .map(([k]) => k);
+}
