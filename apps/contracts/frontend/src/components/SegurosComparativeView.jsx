@@ -525,17 +525,36 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
             </button>
           )}
 
-          {/* Siniestro button (only when valid, no siniestro of any kind, not blocked) */}
+          {/* Siniestro button — only when valid, no siniestro of any kind, not blocked,
+              AND the coverage sub-contract is specifically ACTIVE (not NEEDS_REVIEW etc.) */}
           {isValid && !hasSin && !isBlocked && (() => {
             const cobertura = subs.find(s => s?.type?.startsWith("COBERTURA_"));
-            return cobertura ? (
-              <button
-                onClick={() => onSiniestro(cobertura.id, cobertura.type)}
-                style={{ padding:"8px 12px", fontFamily:font.ui, fontWeight:600, fontSize:11,
-                  background:`${C.orange}12`, color:"#92400E", border:`1px solid ${C.orange}50`, borderRadius:8, cursor:"pointer" }}>
-                ⚡ Declarar siniestro
-              </button>
-            ) : null;
+            if (!cobertura) return null;
+            if (cobertura.status === "ACTIVE") {
+              return (
+                <button
+                  onClick={() => onSiniestro(cobertura.id, cobertura.type)}
+                  style={{ padding:"8px 12px", fontFamily:font.ui, fontWeight:600, fontSize:11,
+                    background:`${C.orange}12`, color:"#92400E", border:`1px solid ${C.orange}50`, borderRadius:8, cursor:"pointer" }}>
+                  ⚡ Declarar siniestro
+                </button>
+              );
+            }
+            // Coverage exists but is not ACTIVE (e.g. NEEDS_REVIEW after cascade)
+            return (
+              <div style={{ padding:"8px 12px", borderRadius:8, background:"#FFF7ED",
+                border:`1px solid #FED7AA`, display:"flex", alignItems:"center", gap:7 }}>
+                <span style={{ fontSize:13 }}>⚠</span>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#92400E", fontFamily:font.ui }}>
+                    Cobertura en revisión
+                  </div>
+                  <div style={{ fontSize:9, color:"#78350F", fontFamily:font.ui }}>
+                    Estado: {cobertura.status} — regenera o completa la póliza antes de declarar siniestro
+                  </div>
+                </div>
+              </div>
+            );
           })()}
 
           {/* Resolved siniestro badges — shown instead of button when already processed */}
