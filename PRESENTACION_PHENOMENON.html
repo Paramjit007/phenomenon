@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHENOMENON — Presentación Completa</title>
+<style>
+  :root {
+    --navy: #1E2B45;
+    --navy-deep: #141E30;
+    --gold: #C9A84C;
+    --gold-light: #E8C470;
+    --white: #FFFFFF;
+    --off-white: #F8F9FA;
+    --text-muted: #8B9BB4;
+    --green: #059669;
+    --orange: #D97706;
+    --red: #DC2626;
+    --purple: #7C3AED;
+    --cyan: #0891B2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #E8EAF0;
+    color: var(--navy-deep);
+  }
+
+  /* ── SLIDE CONTAINER ── */
+  .slide {
+    width: 297mm;
+    min-height: 167mm;
+    background: white;
+    margin: 20px auto;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── PRINT / PDF EXPORT ── */
+  @media print {
+    body { background: white; }
+    .slide {
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      page-break-after: always;
+      box-shadow: none;
+      border: none;
+    }
+    .nav-hint { display: none; }
+    .slide:last-child { page-break-after: avoid; }
+  }
+
+  /* ── NAVIGATION HINT ── */
+  .nav-hint {
+    text-align: center;
+    padding: 12px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+  }
+
+  /* ── LAYOUT HELPERS ── */
+  .navy-bg    { background: var(--navy); }
+  .navy-deep-bg { background: var(--navy-deep); }
+  .gold-accent { color: var(--gold); }
+  .white-text  { color: var(--white); }
+  .muted-text  { color: var(--text-muted); }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    height: 6px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+    flex-shrink: 0;
+  }
+  .top-bar-navy {
+    height: 6px;
+    background: var(--navy);
+    flex-shrink: 0;
+  }
+
+  /* ── SLIDE TYPES ── */
+
+  /* Title slide */
+  .slide-title {
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 60%, #2D3F5A 100%);
+    color: white;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 48px;
+  }
+
+  /* Section header */
+  .slide-section {
+    background: var(--navy);
+    color: white;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 48px;
+  }
+
+  /* Content slide */
+  .slide-content {
+    background: white;
+    padding: 0;
+  }
+
+  /* ── TITLE SLIDE ELEMENTS ── */
+  .logo-phi {
+    width: 80px; height: 80px;
+    border: 3px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; color: var(--gold);
+    margin: 0 auto 24px;
+    border-radius: 8px;
+  }
+  .main-title {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .main-subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.8);
+    letter-spacing: 0.12em;
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+  .tagline {
+    font-size: 22px;
+    color: white;
+    font-style: italic;
+    font-weight: 300;
+    max-width: 600px;
+    line-height: 1.5;
+    border-top: 1px solid rgba(201,168,76,0.4);
+    padding-top: 24px;
+    margin-top: 8px;
+  }
+  .audience-badges {
+    display: flex; gap: 12px; justify-content: center; margin-top: 32px;
+  }
+  .badge {
+    padding: 6px 16px;
+    border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 20px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── CONTENT LAYOUT ── */
+  .content-header {
+    background: var(--navy);
+    padding: 20px 36px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .content-header h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .content-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+  .content-body {
+    padding: 28px 36px;
+    flex: 1;
+  }
+
+  /* ── CARDS ── */
+  .card-grid { display: grid; gap: 16px; }
+  .card-grid-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    padding: 18px 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--gold);
+    background: #F8F9FA;
+  }
+  .card-gold  { border-left-color: var(--gold);   background: #FDF7E9; }
+  .card-green { border-left-color: var(--green);  background: #ECFDF5; }
+  .card-red   { border-left-color: var(--red);    background: #FEF2F2; }
+  .card-navy  { border-left-color: var(--navy);   background: #EEF2F8; }
+  .card-purple{ border-left-color: var(--purple); background: #F5F3FF; }
+  .card-cyan  { border-left-color: var(--cyan);   background: #ECFEFF; }
+  .card-orange{ border-left-color: var(--orange); background: #FFFBEB; }
+
+  .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--navy-deep); }
+  .card p  { font-size: 12px; line-height: 1.6; color: #4B5563; }
+  .card .law { font-size: 10px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+
+  /* ── BIG NUMBER ── */
+  .big-number {
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .comparison {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .comparison th {
+    background: var(--navy);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .comparison td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #E5E7EB;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .comparison tr:nth-child(even) td { background: #F9FAFB; }
+  .comparison .check { color: var(--green); font-weight: 700; }
+  .comparison .cross { color: var(--red); font-weight: 700; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .flow-step {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--navy);
+    color: white;
+  }
+  .flow-arrow { font-size: 18px; color: var(--gold); }
+  .flow-step-gold   { background: var(--gold); color: #1a0a00; }
+  .flow-step-green  { background: var(--green); color: white; }
+  .flow-step-orange { background: var(--orange); color: white; }
+  .flow-step-purple { background: var(--purple); color: white; }
+
+  /* ── QUOTE BLOCK ── */
+  .quote-block {
+    background: var(--navy-deep);
+    color: white;
+    padding: 24px 32px;
+    border-radius: 8px;
+    margin: 16px 0;
+    border-left: 5px solid var(--gold);
+  }
+  .quote-block p {
+    font-size: 18px;
+    font-style: italic;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.95);
+  }
+  .quote-block cite {
+    display: block;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: normal;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── TWO COLUMN ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ── ICON POINT ── */
+  .icon-point {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .icon-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: var(--navy);
+    color: var(--gold);
+  }
+  .icon-point-text h4 { font-size: 13px; font-weight: 700; color: var(--navy-deep); margin-bottom: 4px; }
+  .icon-point-text p  { font-size: 11px; color: #6B7280; line-height: 1.5; }
+
+  /* ── TIMELINE ── */
+  .timeline { padding: 8px 0; }
+  .timeline-item {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .timeline-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-top: 3px;
+    flex-shrink: 0;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+  .timeline-item h4 { font-size: 13px; font-weight: 700; color: var(--navy-deep); margin-bottom: 3px; }
+  .timeline-item p  { font-size: 11px; color: #6B7280; line-height: 1.5; }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight {
+    background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+    color: white;
+    padding: 20px 24px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .highlight h3 { font-size: 20px; color: var(--gold); margin-bottom: 8px; }
+  .highlight p  { font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.6; }
+
+  /* ── SLIDE NUMBER ── */
+  .slide-number {
+    position: absolute;
+    bottom: 12px;
+    right: 18px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── SECTION SLIDE ── */
+  .section-number {
+    font-size: 80px;
+    font-weight: 900;
+    color: rgba(201,168,76,0.15);
+    position: absolute;
+    top: 20px;
+    right: 40px;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 38px;
+    font-weight: 800;
+    color: white;
+    line-height: 1.2;
+    max-width: 500px;
+  }
+  .section-desc {
+    font-size: 16px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 16px;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  /* ── SMALL TEXT ── */
+  .small { font-size: 11px; color: #9CA3AF; }
+  .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 12px;
+    color: #374151;
+    border-bottom: 1px solid #F3F4F6;
+    line-height: 1.4;
+  }
+  .checklist li .icon { flex-shrink: 0; margin-top: 1px; }
+  .check-yes { color: var(--green); font-weight: 700; }
+  .check-no  { color: var(--red);   font-weight: 700; }
+  .check-soon{ color: var(--orange);font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="nav-hint">
+  💡 Abrir en navegador → Archivo → Imprimir → Guardar como PDF &nbsp;|&nbsp; Ajustar escala al 100% · Sin márgenes · Orientación horizontal
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1: PORTADA -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-title">
+  <div class="logo-phi">Φ</div>
+  <div class="main-title">PHENOMENON</div>
+  <div class="main-subtitle">MOTOR DE INTELIGENCIA JURÍDICA CONTRACTUAL</div>
+  <div class="tagline">
+    "Los demás sistemas gestionan documentos.<br>
+    PHENOMENON gestiona la realidad jurídica que subyace a ellos."
+  </div>
+  <div class="audience-badges">
+    <span class="badge">Abogados Especialistas</span>
+    <span class="badge">Registradores de la Propiedad</span>
+    <span class="badge">Inversores y Socios</span>
+  </div>
+  <div style="margin-top:24px; font-size:11px; color:rgba(255,255,255,0.4); letter-spacing:0.1em;">
+    MAYO 2026 &nbsp;·&nbsp; VERSIÓN DEMO
+  </div>
+  <div class="slide-number">01</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2: EL PROBLEMA -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar-navy"></div>
+  <div class="content-header">
+    <h2>El Problema Que Ningún Software Legal Resuelve</h2>
+    <p>Por qué el software jurídico actual es insuficiente para la complejidad real</p>
+  </div>
+  <div class="content-body">
+    <div class="card-grid card-grid-2" style="margin-bottom:20px;">
+      <div class="card card-red">
+        <h3>❌ Lo que existe hoy</h3>
+        <p><strong>Gestores de documentos</strong> — almacenan, firman y organizan contratos. No entienden su contenido jurídico ni sus relaciones.</p>
+        <p style="margin-top:8px;"><strong>Herramientas de workflow</strong> — mueven documentos entre personas para aprobación. No detectan inconsistencias jurídicas.</p>
+        <p style="margin-top:8px;"><strong>Generadores de plantillas</strong> — producen documentos estándar. No adaptan la lógica jurídica al caso concreto.</p>
+      </div>
+      <div class="card card-navy">
+        <h3>⚠️ Los errores que generan litigios</h3>
+        <p>• Condición suspensiva redactada como obligación garantizada → responsabilidad del vendedor (Art. 1123 CC)</p>
+        <p style="margin-top:6px;">• Estructura financiera clasificada como préstamo cuando es servicio → consecuencias fiscales y concursales distintas</p>
+        <p style="margin-top:6px;">• Modificación en un contrato no propagada al resto del ecosistema → inconsistencia jurídica no detectada</p>
+        <p style="margin-top:6px;">• Plazo de confidencialidad NDA inferior al período de retención del DPA → incumplimiento RGPD</p>
+      </div>
+    </div>
+    <div class="quote-block">
+      <p>"Cuando un contrato cambia, ¿cuántos otros contratos vinculados deben revisarse? ¿Quién lo detecta? ¿Quién lo hace automáticamente?"</p>
+      <cite>La pregunta que PHENOMENON responde</cite>
+    </div>
+  </div>
+  <div class="slide-number">02</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: LA DIFERENCIA FUNDAMENTAL -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section">
+  <div class="section-number">03</div>
+  <div style="text-align:left; padding:0 48px; max-width:700px;">
+    <div class="section-label">La diferencia fundamental</div>
+    <div class="section-title">Un motor de realidad jurídica, no de documentos</div>
+    <div class="section-desc">
+      PHENOMENON modela el fenómeno jurídico que subyace al contrato — las partes, sus vínculos, las condiciones, los efectos —
+      y los propaga automáticamente cuando algo cambia.
+    </div>
+  </div>
+  <div class="slide-number">03</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4: LAS TRES CAPACIDADES ÚNICAS -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar"></div>
+  <div class="content-header">
+    <h2>Las Tres Capacidades Que Ningún Otro Sistema Tiene</h2>
+    <p>Lo que diferencia a PHENOMENON de cualquier software jurídico o CLM del mercado</p>
+  </div>
+  <div class="content-body">
+    <div class="three-col">
+      <div class="card card-gold" style="padding:20px;">
+        <div style="font-size:32px; margin-bottom:10px;">⇄</div>
+        <h3 style="font-size:15px; margin-bottom:10px;">1. Cascada IF Automática</h3>
+        <p>Cuando un campo cambia en cualquier contrato, el motor propaga automáticamente el cambio a todos los contratos vinculados jurídicamente.</p>
+        <p style="margin-top:8px;">Sin acción manual. Sin olvidar actualizaciones. Sin inconsistencias.</p>
+        <div class="law">Vínculos inter-contractuales modelados estructuralmente</div>
+      </div>
+      <div class="card card-navy" style="padding:20px;">
+        <div style="font-size:32px; margin-bottom:10px;">⚖️</div>
+        <h3 style="font-size:15px; margin-bottom:10px;">2. Distinción Jurídica Ontológica</h3>
+        <p>El motor distingue entre préstamo y servicio financiero, entre condición y obligación, entre diffusión registral y legitimidad.</p>
+        <p style="margin-top:8px;">No trata los contratos como formularios. Los trata como realidades jurídicas con estructura propia.</p>
+        <div class="law">Art. 1544 CC · Art. 1123 CC · Art. 1462 CC · Art. 32 LH</div>
+      </div>
+      <div class="card card-purple" style="padding:20px;">
+        <div style="font-size:32px; margin-bottom:10px;">◉</div>
+        <h3 style="font-size:15px; margin-bottom:10px;">3. Motor Universal Multi-Dominio</h3>
+        <p>El mismo motor que gestiona una compraventa de terreno gestiona un seguro de vida y una financiación hotelera de €100M.</p>
+        <p style="margin-top:8px;">No es software vertical. Es infraestructura jurídica universal.</p>
+        <div class="law">Inmobiliario · Seguros · Financiero · Corporativo</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">04</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: COMPARATIVA DE MERCADO -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar-navy"></div>
+  <div class="content-header">
+    <h2>PHENOMENON vs. El Mercado</h2>
+    <p>Comparativa honesta con las principales categorías de software jurídico</p>
+  </div>
+  <div class="content-body" style="padding-top:20px;">
+    <table class="comparison">
+      <tr>
+        <th>Capacidad</th>
+        <th>DocuSign / Adobe</th>
+        <th>Ironclad / Juro (CLM)</th>
+        <th>Luminance / Harvey (IA)</th>
+        <th style="background:#1a3a1a; color:#86efac;">PHENOMENON</th>
+      </tr>
+      <tr>
+        <td>Gestión de documentos</td>
+        <td class="check">✓ Sí</td>
+        <td class="check">✓ Sí</td>
+        <td class="cross">✗ No</td>
+        <td class="check">✓ Sí</td>
+      </tr>
+      <tr>
+        <td>Cascada automática entre contratos vinculados</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="check" style="color:var(--green); font-weight:700;">✓ SÍ — EN TIEMPO REAL</td>
+      </tr>
+      <tr>
+        <td>Distinción jurídica (préstamo vs. servicio)</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ Parcial</td>
+        <td class="check" style="color:var(--green); font-weight:700;">✓ SÍ — NATIVO EN EL MOTOR</td>
+      </tr>
+      <tr>
+        <td>Verificación de ecosistema contractual completo</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="check" style="color:var(--green); font-weight:700;">✓ SÍ — UN SOLO CLIC</td>
+      </tr>
+      <tr>
+        <td>Mismo motor para seguros, inmobiliario y financiero</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ No</td>
+        <td class="check" style="color:var(--green); font-weight:700;">✓ SÍ — ARQUITECTURA UNIVERSAL</td>
+      </tr>
+      <tr>
+        <td>Detección de riesgos jurídicos con referencia legal</td>
+        <td class="cross">✗ No</td>
+        <td class="cross">✗ Limitado</td>
+        <td class="cross">✗ Genérico</td>
+        <td class="check" style="color:var(--green); font-weight:700;">✓ SÍ — ART. POR ART.</td>
+      </tr>
+    </table>
+  </div>
+  <div class="slide-number">05</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: CASO 1 — SECCIÓN -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" style="background: linear-gradient(135deg, #1a3a2a 0%, #059669 100%);">
+  <div class="section-number">06</div>
+  <div style="text-align:left; padding:0 48px; max-width:700px;">
+    <div class="section-label" style="color:#86efac;">Caso 1 de 3</div>
+    <div class="section-title">Compraventa de Terreno con Condición Urbanística</div>
+    <div class="section-desc">
+      Una transacción aparentemente simple que esconde una de las distinciones jurídicas más importantes
+      y más frecuentemente malinterpretadas del derecho inmobiliario español.
+    </div>
+    <div style="margin-top:20px; display:flex; gap:16px; flex-wrap:wrap;">
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Art. 1123 CC</span>
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Art. 1462 CC</span>
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Art. 32 LH</span>
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Traditio · Oponibilidad</span>
+    </div>
+  </div>
+  <div class="slide-number">06</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: CASO 1 — ESTRUCTURA -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background: var(--green);"></div>
+  <div class="content-header" style="background:#065f46;">
+    <h2 style="color:#86efac;">El Supuesto: Compraventa con Precio Aplazado y Condición Urbanística</h2>
+    <p>La distinción que PHENOMENON detecta automáticamente y que ningún otro sistema modela</p>
+  </div>
+  <div class="content-body">
+    <div class="two-col">
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em;">El supuesto real</h3>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">🏗️</div>
+          <div class="icon-point-text">
+            <h4>Precio estructurado en dos partes</h4>
+            <p>1/5 al otorgamiento de escritura. 4/5 condicionados a la obtención de la clasificación urbanística como solar.</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">⏱️</div>
+          <div class="icon-point-text">
+            <h4>Límite temporal: 2 años</h4>
+            <p>Si en 2 años no se obtiene la clasificación, el contrato puede resolverse por desistimiento (Art. 1255 CC), no por incumplimiento (Art. 1124 CC).</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">📋</div>
+          <div class="icon-point-text">
+            <h4>Obligación accesoria del vendedor</h4>
+            <p>El vendedor paga las cuotas urbanísticas — pero NO garantiza que el terreno llegue a ser solar. Esta es la distinción crítica.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em;">Lo que PHENOMENON detecta</h3>
+        <div class="card card-red" style="margin-bottom:12px;">
+          <h3>❌ Error frecuente que genera litigios</h3>
+          <p>El abogado redacta: <em>"el vendedor se obliga a obtener la clasificación de solar."</em><br>
+          PHENOMENON detecta: esto no es una condición suspensiva (Art. 1123 CC). Es una obligación garantizada que crea responsabilidad por incumplimiento (Art. 1124 CC). <strong>La diferencia puede suponer millones en daños.</strong></p>
+        </div>
+        <div class="card card-green">
+          <h3>✅ Lo que el motor modela correctamente</h3>
+          <p>• Condición suspensiva ≠ obligación garantizada<br>
+          • Plazo (IF_temporal) ≠ condición lógica (IF_suspensiva)<br>
+          • Cuotas urbanísticas = prestación accesoria, no objeto vendido<br>
+          • Escritura ≠ traditio real (Art. 1462 CC)<br>
+          • Registro = difusión, no legitimidad (Art. 32 LH)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">07</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8: CASO 1 — LO QUE VE EL USUARIO -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background: var(--green);"></div>
+  <div class="content-header" style="background:#065f46;">
+    <h2 style="color:#86efac;">Compraventa — Demostración en Vivo</h2>
+    <p>Lo que ocurre cuando el usuario comete el error más frecuente</p>
+  </div>
+  <div class="content-body">
+    <div class="flow" style="margin-bottom:20px;">
+      <div class="flow-step">Crear proyecto<br><small>Compraventa Terreno</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Rellenar campos<br><small>Partes · Precio · Fechas</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-step-orange">Seleccionar tipo<br><small>condición urbanística</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-step-green">Motor detecta<br><small>análisis jurídico</small></div>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="card card-orange" style="margin-bottom:12px;">
+          <h3>🟡 Riesgo detectado automáticamente</h3>
+          <p>Al seleccionar <em>"Obligación garantizada del vendedor"</em>, el motor muestra inmediatamente:</p>
+          <br>
+          <p style="background:#FEF3C7; padding:8px; border-radius:4px; font-size:11px; font-style:italic;">
+            "La condición urbanística está marcada como obligación garantizada. Riesgo jurídico: el vendedor quedaría obligado a responder de incumplimiento aunque no dependa de él la clasificación. Art. 1123 CC — corrija al tipo condición suspensiva."
+          </p>
+        </div>
+        <div class="card card-navy">
+          <h3>⊙ Verificación del ecosistema</h3>
+          <p>Un solo clic verifica simultáneamente:</p>
+          <p style="margin-top:6px;">• Contrato principal (compraventa)<br>
+          • PAGO_APLAZADO (condiciones de pago)<br>
+          • CARGAS_URBANISTICAS (distribución de cargas)</p>
+          <p style="margin-top:6px;">Detecta inconsistencias entre los tres documentos que un abogado revisaría de forma separada.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card card-gold">
+          <h3>⊙ La distinción que impresiona a un Registrador</h3>
+          <p>El motor distingue tres estados de eficacia jurídica:</p>
+          <br>
+          <div class="flow" style="flex-direction:column; gap:6px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="width:12px; height:12px; border-radius:50%; background:#9CA3AF; flex-shrink:0;"></span>
+              <span style="font-size:11px;"><strong>Eficacia entre partes</strong> — contrato válido, pendiente verificación</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="width:12px; height:12px; border-radius:50%; background:var(--green); flex-shrink:0;"></span>
+              <span style="font-size:11px;"><strong>Plena eficacia inter partes</strong> — todos elementos verificados</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="width:12px; height:12px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
+              <span style="font-size:11px;"><strong>Oponible erga omnes</strong> — inscrito en Registro (Art. 32 LH)</span>
+            </div>
+          </div>
+          <div class="law" style="margin-top:10px;">El motor distingue entre diffusión registral y legitimidad real — distinción que ningún software jurídico modela.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">08</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9: CASO 2 — SECCIÓN -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" style="background: linear-gradient(135deg, #1E1B4B 0%, #7C3AED 100%);">
+  <div class="section-number">09</div>
+  <div style="text-align:left; padding:0 48px; max-width:700px;">
+    <div class="section-label" style="color:#C4B5FD;">Caso 2 de 3</div>
+    <div class="section-title">KPMG — Hotel Mediterráneo Valencia 5*<br>€100 Millones</div>
+    <div class="section-desc">
+      Una estructura de financiación hotelera que ningún software bancario, ningún ERP y ningún CLM
+      puede representar correctamente — porque confunden el préstamo con el servicio financiero.
+    </div>
+    <div style="margin-top:20px; display:flex; gap:16px; flex-wrap:wrap;">
+      <span class="badge" style="border-color:rgba(196,181,253,0.5); color:rgba(255,255,255,0.7);">Art. 1544 CC</span>
+      <span class="badge" style="border-color:rgba(196,181,253,0.5); color:rgba(255,255,255,0.7);">Art. 1740 CC</span>
+      <span class="badge" style="border-color:rgba(196,181,253,0.5); color:rgba(255,255,255,0.7);">Art. 110 LH</span>
+      <span class="badge" style="border-color:rgba(196,181,253,0.5); color:rgba(255,255,255,0.7);">Circum-contrato CA2</span>
+    </div>
+  </div>
+  <div class="slide-number">09</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10: CASO 2 — ESTRUCTURA -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background:var(--purple);"></div>
+  <div class="content-header" style="background:#3730a3;">
+    <h2 style="color:#C4B5FD;">Los 4 Contratos del Ecosistema KPMG</h2>
+    <p>Banco Mediterráneo de Inversiones S.A. · Promotora Hotel Mediterráneo Valencia S.L.</p>
+  </div>
+  <div class="content-body">
+    <div class="card-grid card-grid-2" style="margin-bottom:16px;">
+      <div class="card" style="border-left-color:var(--gold); background:#FDF7E9;">
+        <h3>⬡ F1 — Arrendamiento de Cosa Futura (Maestro)</h3>
+        <p>El hotel no existe aún. El arrendamiento se contrata sobre la futura edificación hotelera. <strong>La cosa futura es el objeto.</strong> El edificio es la condición de eficacia plena (Art. 1461 CC).</p>
+        <div class="law">Renta: €1.064.583/mes · Plazo: 20 años · Valencia</div>
+      </div>
+      <div class="card" style="border-left-color:var(--purple); background:#F5F3FF;">
+        <h3>⊛ F2 — Circum-Contrato de Servicios Financieros (CA2)</h3>
+        <p><strong>NO es un préstamo</strong> (Art. 1740 CC). Es un arrendamiento de servicios financieros (Art. 1544 CC). El banco no transfiere la propiedad del dinero: presta un servicio continuado de financiación. <strong>Distinción crucial para AJD, LCCI y tratamiento concursal.</strong></p>
+        <div class="law">€100M · 20 años · EURIBOR 12M + 2% · Sistema Francés</div>
+      </div>
+      <div class="card" style="border-left-color:#92400E; background:#FEF3C7;">
+        <h3>⊞ F3 — Hipoteca sobre Edificación Futura</h3>
+        <p>Hipoteca constituida sobre el solar <strong>y la edificación que se construirá</strong> sobre él (Art. 110 LH). La finca hipotecada aún no existe como tal. Eficacia plena solo tras inscripción registral → oponible erga omnes.</p>
+        <div class="law">€130M responsabilidad hipotecaria · AJD 1.5% · Reg. Prop. Valencia nº 5</div>
+      </div>
+      <div class="card" style="border-left-color:var(--cyan); background:#ECFEFF;">
+        <h3>⊟ F4 — Cesión de Crédito (Rentas + IVA)</h3>
+        <p>La promotora cede al banco las rentas futuras del hotel y las devoluciones de IVA de la construcción. Oponible frente al hotelero desde <strong>notificación fehaciente</strong> (Art. 1527 CC), no desde inscripción.</p>
+        <div class="law">Rentas cedidas: €1.064.583/mes · IVA: €8.400.000 estimado</div>
+      </div>
+    </div>
+    <div class="highlight">
+      <h3>La relación entre los 4 contratos es estructural, no documental</h3>
+      <p>Si el arrendamiento (F1) queda sin efecto, el circum-contrato (F2) también queda sin efecto. Si el EURIBOR sube, la cuota mensual cambia, la cobertura de la cesión cambia, tres contratos requieren revisión jurídica. PHENOMENON lo detecta y propaga en segundos.</p>
+    </div>
+  </div>
+  <div class="slide-number">10</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 11: CASO 2 — LA CASCADA EN VIVO -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background:var(--purple);"></div>
+  <div class="content-header" style="background:#3730a3;">
+    <h2 style="color:#C4B5FD;">La Cascada Financiera en Tiempo Real</h2>
+    <p>Lo que ocurre cuando el BCE sube los tipos de interés</p>
+  </div>
+  <div class="content-body">
+    <div class="two-col" style="margin-bottom:16px;">
+      <div>
+        <div style="background:#1E1B4B; padding:16px; border-radius:8px; margin-bottom:12px;">
+          <div class="label" style="color:#C4B5FD; margin-bottom:8px;">ESCENARIO BASE</div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">EURIBOR 12M</span>
+            <span style="color:white; font-weight:700;">3,50%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">Diferencial</span>
+            <span style="color:white; font-weight:700;">2,00%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">Tipo total</span>
+            <span style="color:#86efac; font-weight:700; font-size:16px;">5,50%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">Cuota mensual</span>
+            <span style="color:#86efac; font-weight:700; font-size:16px;">€687.222</span>
+          </div>
+        </div>
+        <div style="background:#431407; padding:16px; border-radius:8px;">
+          <div class="label" style="color:#FCA5A5; margin-bottom:8px;">CRISIS EURIBOR (+2%)</div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">EURIBOR 12M</span>
+            <span style="color:white; font-weight:700;">5,50%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">Tipo total</span>
+            <span style="color:#FCA5A5; font-weight:700; font-size:16px;">7,50%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:rgba(255,255,255,0.7); font-size:12px;">Cuota mensual</span>
+            <span style="color:#FCA5A5; font-weight:700; font-size:16px;">€850.000</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px;">Lo que PHENOMENON propaga en &lt;2 segundos</h3>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:var(--orange); color:white;">⚠</div>
+          <div class="icon-point-text">
+            <h4>3 contratos marcados para revisión</h4>
+            <p>FINANCIACION · HIPOTECA_GARANTIA · CESION_CREDITO — automáticamente, sin intervención manual.</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:var(--navy);">📊</div>
+          <div class="icon-point-text">
+            <h4>Análisis de cobertura actualizado</h4>
+            <p>Renta del hotel (€1.064.583/mes) ÷ Nueva cuota (€850.000/mes) = Cobertura 125%. Operación aún viable.</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:var(--red); color:white;">🔴</div>
+          <div class="icon-point-text">
+            <h4>Riesgo jurídico detectado</h4>
+            <p>"Tipo total CRÍTICO: 7,50%. Revisar cláusula de tipo máximo en el circum-contrato. Comprobar si la cesión cubre la nueva cuota."</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:var(--gold); color:#000;">⊙</div>
+          <div class="icon-point-text">
+            <h4>Un clic re-verifica todo el ecosistema</h4>
+            <p>4 contratos, revisión cruzada, análisis de consistencia jurídica. 8 segundos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">11</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 12: CASO 3 — SECCIÓN -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" style="background: linear-gradient(135deg, #1a3a1a 0%, #065f46 50%, #059669 100%);">
+  <div class="section-number">12</div>
+  <div style="text-align:left; padding:0 48px; max-width:700px;">
+    <div class="section-label" style="color:#86efac;">Caso 3 de 3 — El más estratégico</div>
+    <div class="section-title">Caso Seguros<br>4 Tipos, 1 Motor</div>
+    <div class="section-desc">
+      La demostración más poderosa de PHENOMENON: cuatro productos de seguro completamente distintos
+      — vida, responsabilidad civil, daños, crédito — ejecutándose simultáneamente
+      sobre el mismo motor. Prueba de universalidad.
+    </div>
+    <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Ley 50/1980 LCS</span>
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">EIOPA · Solvencia II</span>
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Exclusión posicional</span>
+      <span class="badge" style="border-color:rgba(134,239,172,0.5); color:rgba(255,255,255,0.7);">Fase siniestro</span>
+    </div>
+  </div>
+  <div class="slide-number">12</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 13: CASO 3 — LOS 4 SEGUROS -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background:var(--green);"></div>
+  <div class="content-header" style="background:#065f46;">
+    <h2 style="color:#86efac;">Mismo Motor, Cuatro Dominios Jurídicos Distintos</h2>
+    <p>La estructura profunda es idéntica. Las modulaciones son diferentes. Esto prueba la universalidad del motor.</p>
+  </div>
+  <div class="content-body">
+    <div class="card-grid card-grid-4" style="margin-bottom:16px;">
+      <div class="card" style="border-left-color:#DC2626; background:#FEF2F2;">
+        <h3 style="color:#DC2626;">❤️ Seguro de Vida</h3>
+        <p style="font-size:11px;"><strong>A1 central:</strong> Cobertura condicionada a fallecimiento o invalidez</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Condición:</strong> Validación médica previa obligatoria</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Exclusión:</strong> Preexistencia no declarada bloquea cobertura</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Fase:</strong> Activo → Siniestro → Indemnización | Rechazo</p>
+      </div>
+      <div class="card" style="border-left-color:#2563EB; background:#EFF6FF;">
+        <h3 style="color:#2563EB;">⚖️ Responsabilidad Civil</h3>
+        <p style="font-size:11px;"><strong>A1 central:</strong> Cobertura por daño causado a tercero</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Condición:</strong> Validación causal del daño</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Exclusión:</strong> Daño intencional bloquea cobertura</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Límite:</strong> Tope de responsabilidad por siniestro</p>
+      </div>
+      <div class="card" style="border-left-color:#D97706; background:#FFFBEB;">
+        <h3 style="color:#D97706;">🏠 Seguro de Daños</h3>
+        <p style="font-size:11px;"><strong>A1 central:</strong> Cobertura por daño material al bien asegurado</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Condición:</strong> Peritación y valoración del daño</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Exclusión:</strong> Mantenimiento deficiente excluye cobertura</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Activación:</strong> Informe pericial activa la indemnización</p>
+      </div>
+      <div class="card" style="border-left-color:#7C3AED; background:#F5F3FF;">
+        <h3 style="color:#7C3AED;">💼 Seguro de Crédito</h3>
+        <p style="font-size:11px;"><strong>A1 central:</strong> Cobertura por incumplimiento dinerario del deudor</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>BLOQUEADO:</strong> Hasta que validación financiera supere umbral</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Exclusión posicional:</strong> La cobertura no puede activarse (non operator)</p>
+        <p style="font-size:11px; margin-top:6px;"><strong>Tras desbloqueo:</strong> Activación condicional automática</p>
+      </div>
+    </div>
+    <div class="highlight">
+      <h3>El principio de combinatoria PHENOMENON</h3>
+      <p>Cuatro productos jurídicamente distintos. Misma estructura profunda: acción central (A1), acuerdos moduladores, condiciones de activación (IF), operadores de exclusión. El motor reutiliza la misma arquitectura. Esto demuestra que PHENOMENON no es software vertical — es infraestructura jurídica universal.</p>
+    </div>
+  </div>
+  <div class="slide-number">13</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 14: CASO 3 — EL BLOQUEO Y EL SINIESTRO -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background:var(--green);"></div>
+  <div class="content-header" style="background:#065f46;">
+    <h2 style="color:#86efac;">Dos Conceptos Únicos: Exclusión Posicional y Fase de Siniestro</h2>
+    <p>Lo que ningún software de seguros del mundo modela a nivel de motor jurídico</p>
+  </div>
+  <div class="content-body">
+    <div class="two-col">
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px;">⛔ Exclusión Posicional (Bloqueo)</h3>
+        <div class="card card-red" style="margin-bottom:12px;">
+          <h3>Lo que ocurre en el seguro de crédito</h3>
+          <p>La <strong>COBERTURA_CREDITO</strong> aparece en estado <strong>BLOQUEADO</strong>. No puede activarse hasta que la validación financiera del asegurado supere el umbral requerido.</p>
+          <br>
+          <p>Esto NO es un paso de workflow esperando aprobación manual. Es una <strong>condición jurídica de bloqueo</strong> estructurada en el motor (operador de exclusión posicional, Ley 50/1980 LCS).</p>
+        </div>
+        <div class="card card-green">
+          <h3>Tras el desbloqueo</h3>
+          <p>Cuando la validación financiera se completa, el motor elimina automáticamente la condición de bloqueo. La cobertura pasa a <strong>ACTIVO</strong>. El grafo lo refleja en tiempo real.</p>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px;">🚨 Fase de Siniestro</h3>
+        <div class="flow" style="flex-direction:column; gap:8px; margin-bottom:12px;">
+          <div class="flow-step flow-step-green" style="width:100%; text-align:center;">ACTIVO — Póliza en vigor</div>
+          <div style="text-align:center; color:var(--gold);">↓ Declaración de siniestro</div>
+          <div class="flow-step flow-step-orange" style="width:100%; text-align:center;">SINIESTRO_PENDIENTE — Fase de tramitación</div>
+          <div style="text-align:center; color:var(--gold);">↓ Resolución</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div class="flow-step flow-step-green" style="text-align:center; font-size:11px;">INDEMNIZACIÓN PAGADA</div>
+            <div class="flow-step" style="text-align:center; background:var(--red); font-size:11px;">RECHAZO</div>
+          </div>
+        </div>
+        <div class="card card-navy">
+          <h3>Lo que el motor verifica al siniestro</h3>
+          <p>Cuando se declara un siniestro en el seguro de vida, el motor verifica automáticamente si la validación médica inicial es consistente con el tipo de siniestro declarado. Si existe contradicción (preexistencia no declarada), lo detecta y avisa.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">14</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 15: ARQUITECTURA DEL MOTOR (para el socio técnico) -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+  <div class="section-number" style="color:rgba(201,168,76,0.08);">15</div>
+  <div style="text-align:left; padding:0 48px; max-width:700px;">
+    <div class="section-label" style="color:var(--gold);">Para el socio técnico</div>
+    <div class="section-title" style="font-size:32px;">La Arquitectura del Motor PHENOMENON</div>
+    <div class="section-desc">
+      El motor teórico (Bloques I-IX) y la capa de dominio contractual.
+      Cómo coexisten, cómo escalan, y qué hace único al enfoque.
+    </div>
+  </div>
+  <div class="slide-number">15</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 16: ARQUITECTURA TÉCNICA -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content" style="background:#0f172a;">
+  <div style="height:6px; background:linear-gradient(90deg,var(--gold),var(--purple));"></div>
+  <div class="content-header" style="background:#0f172a;">
+    <h2 style="color:var(--gold);">Dos Capas: Motor Teórico + Capa de Dominio</h2>
+    <p style="color:var(--text-muted);">La separación que permite al mismo motor operar en cualquier dominio jurídico</p>
+  </div>
+  <div class="content-body" style="background:#0f172a;">
+    <div class="two-col">
+      <div>
+        <div style="border:1px solid rgba(201,168,76,0.3); border-radius:8px; padding:16px; margin-bottom:12px;">
+          <div class="label" style="color:var(--gold); margin-bottom:10px;">Capa Teórica — Bloques I-IX</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.7); line-height:1.8;">
+            <span style="color:var(--gold);">I</span> Ontología Base (ESS/AG, ser-bien-cosa)<br>
+            <span style="color:var(--gold);">II</span> Estructura (5 propiedades vectoriales, superimposición IA)<br>
+            <span style="color:var(--gold);">III</span> Acción/Modulación (IST, suspensión, frecuencia)<br>
+            <span style="color:var(--gold);">IV</span> Dinámica (CONTINUE / INTERRUPT / DISTRIBUTE)<br>
+            <span style="color:var(--gold);">V</span> Geometría (Centro-Órbita-Periferia, Acetato)<br>
+            <span style="color:var(--gold);">VI</span> Lenguaje Estructural (unidades, composición)<br>
+            <span style="color:var(--gold);">VII</span> Motor Operacional (5 formas IA, bus de eventos)<br>
+            <span style="color:var(--gold);">VIII</span> Casos Base (Apropiación, Tentio, Usucapión, Delito)<br>
+            <span style="color:var(--gold);">IX</span> Especificación Computable (data model completo)
+          </div>
+        </div>
+        <div style="border:1px solid rgba(134,239,172,0.3); border-radius:8px; padding:16px;">
+          <div class="label" style="color:#86efac; margin-bottom:10px;">Capa de Dominio — Contratos</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.7); line-height:1.8;">
+            CascadeEngine (master → subs)<br>
+            SubCascadeEngine (sub → sibling)<br>
+            ReverseCascadeEngine (sub → master)<br>
+            EcosystemEngine (6 reglas cross-contrato)<br>
+            HomologationEngine (validación completa)<br>
+            OpusEngine (PARTIAL→COMPLETE→OPONIBLE)<br>
+            OponibilityEngine (erga omnes · Registro)
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="border:1px solid rgba(124,58,237,0.4); border-radius:8px; padding:16px; margin-bottom:12px; background:rgba(124,58,237,0.05);">
+          <div class="label" style="color:#C4B5FD; margin-bottom:8px;">Stack Técnico</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.7); line-height:2;">
+            <strong style="color:white;">Backend:</strong> Python · FastAPI · PostgreSQL + JSONB<br>
+            <strong style="color:white;">Engine:</strong> Python puro · pip-installable · sin HTTP<br>
+            <strong style="color:white;">Frontend:</strong> React 18 · Vite · Inline styles<br>
+            <strong style="color:white;">IA:</strong> Claude API (Anthropic) + fallback español<br>
+            <strong style="color:white;">Deploy:</strong> Docker Compose · Volume mounts · HMR
+          </div>
+        </div>
+        <div style="border:1px solid rgba(201,168,76,0.3); border-radius:8px; padding:16px; background:rgba(201,168,76,0.05);">
+          <div class="label" style="color:var(--gold); margin-bottom:8px;">Por qué este diseño es correcto</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.7); line-height:1.8;">
+            ✓ El motor teórico es agnóstico al dominio<br>
+            ✓ Añadir un nuevo dominio = nueva capa, mismo motor<br>
+            ✓ La homologación es formal: reglas explícitas con referencia legal<br>
+            ✓ El escalado es horizontal: más dominios, mismo núcleo<br>
+            ✓ El moat es teórico + técnico: requiere años replicarlo
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">16</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 17: ESTADO ACTUAL -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar"></div>
+  <div class="content-header">
+    <h2>Estado Actual — Lo que Funciona Hoy</h2>
+    <p>Lo que está construido, verificado y disponible para demostración en vivo</p>
+  </div>
+  <div class="content-body">
+    <div class="two-col">
+      <div>
+        <h3 style="font-size:13px; color:var(--navy-deep); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">✅ Funcional y demostrable</h3>
+        <ul class="checklist">
+          <li><span class="icon check-yes">✓</span>10 plantillas de contratos (inmobiliario, servicios, distribución, SaaS...)</li>
+          <li><span class="icon check-yes">✓</span>3 casos completos: Compraventa, KPMG Hotel, 4 tipos de seguros</li>
+          <li><span class="icon check-yes">✓</span>Cascada automática en tiempo real (master→sub, sub→sub, sub→master)</li>
+          <li><span class="icon check-yes">✓</span>Verificación de ecosistema completo en un solo clic</li>
+          <li><span class="icon check-yes">✓</span>6 reglas de consistencia cross-contrato</li>
+          <li><span class="icon check-yes">✓</span>Control financiero EURIBOR en vivo (calculadora PMT Sistema Francés)</li>
+          <li><span class="icon check-yes">✓</span>Detección automática de riesgos con referencia legal específica</li>
+          <li><span class="icon check-yes">✓</span>Grafo interactivo con partículas de flujo monetario (KPMG)</li>
+          <li><span class="icon check-yes">✓</span>Vista comparativa 4 seguros simultáneos</li>
+          <li><span class="icon check-yes">✓</span>Novación subjetiva (añadir 3ª parte propagada a todos los contratos)</li>
+          <li><span class="icon check-yes">✓</span>Ciclo de vida siniestro (ACTIVO → SINIESTRO → INDEMNIZACIÓN)</li>
+          <li><span class="icon check-yes">✓</span>Distinción Opus: Eficacia entre partes / Plena / Oponible erga omnes</li>
+          <li><span class="icon check-yes">✓</span>Generación de documento legal imprimible (formato notarial)</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size:13px; color:var(--navy-deep); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">🔜 En construcción / próxima fase</h3>
+        <ul class="checklist">
+          <li><span class="icon check-soon">→</span>Autenticación y gestión de usuarios</li>
+          <li><span class="icon check-soon">→</span>Multi-tenant (aislamiento por cliente)</li>
+          <li><span class="icon check-soon">→</span>Revisión legal certificada por abogado especialista</li>
+          <li><span class="icon check-soon">→</span>Conexión con API del Catastro (validación catastral)</li>
+          <li><span class="icon check-soon">→</span>Conexión con Registro de la Propiedad (tracto sucesivo)</li>
+          <li><span class="icon check-soon">→</span>Biblioteca de cláusulas revisadas por notario</li>
+          <li><span class="icon check-soon">→</span>Caso Libia (estructura internacional)</li>
+          <li><span class="icon check-soon">→</span>Caso EDCO (contratos de ingeniería/energía)</li>
+          <li><span class="icon check-soon">→</span>Arbitraje (app separada, scaffolding existe)</li>
+          <li><span class="icon check-soon">→</span>API pública para integración con sistemas externos</li>
+        </ul>
+        <div class="card card-gold" style="margin-top:12px;">
+          <h3>Lo que esto significa para el inversor</h3>
+          <p>El núcleo más difícil — el motor teórico y las conexiones jurídicas — está construido. Lo que queda es ingeniería de producto estándar sobre una base sólida y diferencial.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">17</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 18: DÓNDE PUEDE LLEGAR -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar"></div>
+  <div class="content-header">
+    <h2>Dónde Puede Llegar — La Visión a 3 Años</h2>
+    <p>De demostración a infraestructura jurídica para múltiples industrias</p>
+  </div>
+  <div class="content-body">
+    <div class="timeline" style="margin-bottom:16px;">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div>
+          <h4>Fase 0 — Ahora (Demo) ✅</h4>
+          <p>Motor construido. 3 casos demostrados. Inversores y socios jurídicos.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:var(--green);"></div>
+        <div>
+          <h4>Fase 1 — 3-6 meses: Primer cliente real</h4>
+          <p>Un dominio completo certificado por abogado. Autenticación básica. Base de datos segura. Primer cliente de pago (despacho de abogados o aseguradora).</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:var(--purple);"></div>
+        <div>
+          <h4>Fase 2 — 6-12 meses: Producto comercial</h4>
+          <p>Multi-tenant. 3 dominios certificados. API pública. 5-10 clientes de pago. Conexión Catastro/Registro. Revisión notarial de documentos generados.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:var(--gold);"></div>
+        <div>
+          <h4>Fase 3 — 12-24 meses: Plataforma / Infraestructura</h4>
+          <p>API jurídica que bancos, aseguradoras y despachos conectan a sus sistemas. 50+ clientes. Motor multi-jurisdicción. Arbitraje internacional.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-3">
+      <div class="card card-gold">
+        <h3>Mercado inmobiliario</h3>
+        <p>500.000 transacciones/año en España. 3.000 notarías. 1.000 Registros de la Propiedad. Cada transacción es un ecosistema de 3-6 documentos.</p>
+      </div>
+      <div class="card card-green">
+        <h3>Mercado asegurador</h3>
+        <p>€64B de primas en España. MapFre, Mutua Madrileña, Allianz. Cada póliza conecta con múltiples productos. Solvencia II requiere trazabilidad.</p>
+      </div>
+      <div class="card card-purple">
+        <h3>Banca y finanzas</h3>
+        <p>Project finance, estructuras complejas, compliance regulatorio. El circum-contrato CA2 es una ventaja diferencial inmediata para banca de inversión.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">18</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 19: POR QUÉ ES ÚNICO — EL MOAT -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar"></div>
+  <div class="content-header">
+    <h2>Por Qué PHENOMENON Es Irreplicable a Corto Plazo</h2>
+    <p>El moat no es tecnológico. Es ontológico, jurídico y arquitectural.</p>
+  </div>
+  <div class="content-body">
+    <div class="two-col" style="margin-bottom:16px;">
+      <div>
+        <div class="card card-navy" style="margin-bottom:12px;">
+          <h3>1. La teoría PHENOMENON es original</h3>
+          <p>El marco teórico (Bloques I-IX) es una creación original. Para replicarlo, un competidor necesitaría años de trabajo académico y filosófico antes de escribir una línea de código de producción. No es un marco estándar que se pueda copiar de un paper.</p>
+        </div>
+        <div class="card card-navy">
+          <h3>2. La distinción jurídica es precisa</h3>
+          <p>Las reglas del motor (préstamo vs. servicio, condición vs. obligación, diffusión vs. legitimidad) requieren profundo conocimiento de derecho español. Combinar expertise jurídico con arquitectura de software es extremadamente escaso.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card card-navy" style="margin-bottom:12px;">
+          <h3>3. Un motor universal es más difícil que uno vertical</h3>
+          <p>Cualquier empresa puede construir software de seguros o de real estate. Construir el mismo motor para ambos dominios — con distintas modulaciones sobre la misma arquitectura — requiere una abstracción que los CLMs convencionales nunca han intentado.</p>
+        </div>
+        <div class="card card-gold">
+          <h3>4. La certificación legal será el moat final</h3>
+          <p>Cuando las reglas del motor sean revisadas y certificadas por abogados especialistas, PHENOMENON se convierte en el único motor jurídico certificado para múltiples dominios. Eso es patentable, licenciable y muy difícil de replicar.</p>
+        </div>
+      </div>
+    </div>
+    <div class="quote-block">
+      <p>"PHENOMENON no es una legaltech mejor. Es una categoría nueva: infraestructura jurídica. Como SWIFT para pagos bancarios, pero para validez contractual."</p>
+    </div>
+  </div>
+  <div class="slide-number">19</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 20: PROPUESTA PARA REGISTRADORES -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar" style="background:var(--green);"></div>
+  <div class="content-header" style="background:#065f46;">
+    <h2 style="color:#86efac;">Para los Registradores de la Propiedad</h2>
+    <p>Lo que PHENOMENON puede significar específicamente para el Registro</p>
+  </div>
+  <div class="content-body">
+    <div class="two-col">
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px;">Lo que PHENOMENON hace hoy que beneficia al Registro</h3>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">✓</div>
+          <div class="icon-point-text">
+            <h4>Detecta errores antes de la calificación</h4>
+            <p>Documentos mejor preparados llegan al Registro. Menos suspensiones. Menos recursos.</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">✓</div>
+          <div class="icon-point-text">
+            <h4>Distingue traditio instrumental de real (Art. 1462 CC)</h4>
+            <p>El sistema sabe que la escritura puede no implicar traditio real. Detecta cuando el contrato excluye la traditio instrumental.</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">✓</div>
+          <div class="icon-point-text">
+            <h4>Modela el Registro como difusión, no como legitimidad</h4>
+            <p>El sistema entiende que la inscripción no crea derechos — los hace oponibles. Ningún otro software hace esta distinción.</p>
+          </div>
+        </div>
+        <div class="icon-point">
+          <div class="icon-circle" style="background:#065f46;">✓</div>
+          <div class="icon-point-text">
+            <h4>Hipoteca sobre edificación futura (Art. 110 LH)</h4>
+            <p>El motor modela correctamente hipotecas sobre bienes que aún no existen, distinguiendo el solar de la futura edificación.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px; color:var(--navy-deep); margin-bottom:12px;">Lo que viene: integración con el Registro</h3>
+        <div class="card card-gold" style="margin-bottom:12px;">
+          <h3>Verificación de tracto sucesivo</h3>
+          <p>Conexión con la API del Registro para verificar la cadena de titularidad antes de cualquier transacción. PHENOMENON detectaría problemas de tracto antes de que lleguen a calificación.</p>
+          <div class="law">Requiere acuerdo con CORPME · En planificación</div>
+        </div>
+        <div class="card card-navy">
+          <h3>Detección de cargas previas</h3>
+          <p>Al introducir una referencia catastral, PHENOMENON consultaría el Registro para mostrar hipotecas, embargos y anotaciones preventivas existentes. Calificación predictiva.</p>
+        </div>
+        <div class="card card-green" style="margin-top:12px;">
+          <h3>Nuestra posición ante el Registro</h3>
+          <p>PHENOMENON no sustituye la calificación. La prepara. Envía documentos jurídicamente más sólidos que tienen más probabilidad de pasar calificación a la primera.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">20</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 21: PRÓXIMOS PASOS -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-content">
+  <div class="top-bar"></div>
+  <div class="content-header">
+    <h2>Próximos Pasos</h2>
+    <p>Lo que necesitamos para pasar de demostración a primer producto comercial</p>
+  </div>
+  <div class="content-body">
+    <div class="card-grid card-grid-3" style="margin-bottom:20px;">
+      <div class="card card-gold">
+        <h3>Paso 1: Revisión jurídica certificada</h3>
+        <p>Un abogado especialista en derecho inmobiliario español revisa las reglas del motor para el caso Compraventa. Certificación de los riesgos detectados. Duración: 2-3 semanas.</p>
+        <div class="law">Coste estimado: €800-2.000</div>
+      </div>
+      <div class="card card-green">
+        <h3>Paso 2: Primer cliente piloto</h3>
+        <p>Un despacho de abogados o una aseguradora que pruebe el sistema en casos reales durante 3 meses. Feedback para mejorar. Contrato de piloto a tarifa reducida.</p>
+        <div class="law">Objetivo: Q3 2026</div>
+      </div>
+      <div class="card card-navy">
+        <h3>Paso 3: Inversión para desarrollo</h3>
+        <p>Autenticación, multi-tenant, integración Catastro, 2 desarrolladores adicionales, 1 abogado a tiempo parcial para revisión continua.</p>
+        <div class="law">Presupuesto estimado: €200.000-400.000 · 12 meses</div>
+      </div>
+    </div>
+    <div class="highlight">
+      <h3>El mensaje para socios e inversores</h3>
+      <p>El trabajo más difícil — construir el motor, definir la ontología, demostrar que funciona en tres dominios jurídicos reales — ya está hecho. Lo que queda es ingeniería de producto sobre una base sólida y diferencial. La oportunidad de entrar como socio inversor en esta fase es la mayor ventaja competitiva posible.</p>
+    </div>
+  </div>
+  <div class="slide-number">21</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 22: CIERRE -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-title" style="background:linear-gradient(135deg, #0f172a 0%, var(--navy-deep) 50%, var(--navy) 100%);">
+  <div class="logo-phi">Φ</div>
+  <div class="main-title" style="font-size:44px;">PHENOMENON</div>
+  <div class="main-subtitle">MOTOR DE INTELIGENCIA JURÍDICA CONTRACTUAL</div>
+  <div style="margin:28px auto; max-width:560px; text-align:center;">
+    <div style="font-size:17px; color:rgba(255,255,255,0.9); line-height:1.7; font-style:italic; border-top:1px solid rgba(201,168,76,0.3); border-bottom:1px solid rgba(201,168,76,0.3); padding:20px 0;">
+      "Estructuramos fenómenos jurídicos complejos que ningún otro sistema puede representar.<br>
+      Lo demostramos en vivo con casos reales.<br>
+      El motor está construido. El potencial es ilimitado."
+    </div>
+  </div>
+  <div class="audience-badges" style="flex-direction:column; gap:8px; align-items:center;">
+    <div style="font-size:12px; color:var(--text-muted); letter-spacing:0.12em;">DISPONIBLE PARA DEMOSTRACIÓN EN VIVO · http://localhost:5173</div>
+    <div style="font-size:11px; color:rgba(255,255,255,0.3);">Contacto: paramjit.de@gmail.com</div>
+  </div>
+  <div class="slide-number" style="color:rgba(255,255,255,0.2);">22</div>
+</div>
+
+<div class="nav-hint" style="margin-top:8px; margin-bottom:32px;">
+  💾 Para guardar como PDF: Ctrl+P (o Cmd+P) → Destino: "Guardar como PDF" → Diseño: Horizontal · Sin márgenes · Escala: 100%
+</div>
+
+</body>
+</html>

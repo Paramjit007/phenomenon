@@ -1,0 +1,622 @@
+PHENOMENON_Integrated_Bl# PHENOMENON — Detailed Structural Mapping
+
+## 1. APROPIACIÓN
+
+### Structural Nature
+
+Apropiación is NOT merely “acquiring ownership”.
+
+It is:
+
+> **a structured Ess-Ag phenomenon where multiple IA and vectors converge to stabilize a relation between a subject and a being through operative control, projection and homologable persistence.**
+
+---
+
+# Core Structure
+
+```text
+Subject → IA → Being
+```
+
+But this is only the superficial layer.
+
+Real structure:
+
+```text
+Tentio
+   ↓
+Usatio
+   ↓
+Capio
+   ↓
+Stabilization
+   ↓
+Possible Usucapión
+```
+
+---
+
+# Main IA involved
+
+| IA             | Function                                 |
+| -------------- | ---------------------------------------- |
+| ad-actio       | directional projection toward the being  |
+| de-actio       | separation from previous relation        |
+| ob-actio       | operative surrounding / obligation layer |
+| co-implication | simultaneous coexistence of vectors      |
+| non            | exclusion of incompatible relation       |
+| IF             | transition between F                     |
+| stabilization  | persistence of vector pattern            |
+
+---
+
+# Vector Dynamics
+
+## 1. ad-actio
+
+The vector moves toward the object.
+
+```text
+Subject ───→ Being
+```
+
+This is not ownership yet.
+
+It is:
+
+> directional operative projection.
+
+---
+
+## 2. Tentio
+
+The subject maintains operative holding.
+
+This creates:
+
+* continuity
+* persistence
+* possible stabilization
+
+---
+
+## 3. co-implication
+
+The subject and the operational use coexist.
+
+Example:
+
+```text
+use + control + exclusion
+```
+
+operate simultaneously.
+
+---
+
+# Fractalization
+
+Apropiación is fractal.
+
+Inside it may coexist:
+
+* use
+* protection
+* transfer
+* projection
+* exclusion
+* stabilization
+
+Each one may contain its own IA structure.
+
+---
+
+# Final Rule
+
+> Apropiación is not a static right but a stabilized vectorial-operational relation.
+
+---
+
+---
+
+# 2. TENTIO
+
+## Structural Nature
+
+Tentio is NOT possession.
+
+It is:
+
+> **operative maintenance of vector continuity over a being.**
+
+---
+
+# Structure
+
+```text
+Subject ───→ Being
+      (persistent vector)
+```
+
+---
+
+# Key Characteristic
+
+Tentio does NOT require:
+
+* ownership
+* legitimacy
+* homologation
+
+Only:
+
+> operative continuity.
+
+---
+
+# Main IA
+
+| IA             | Role                              |
+| -------------- | --------------------------------- |
+| ad-actio       | vector toward being               |
+| stabilization  | persistence                       |
+| non            | exclusion of incompatible vectors |
+| IF             | possible transition               |
+| co-implication | coexistence with other operations |
+
+---
+
+# Types
+
+## Simple Tentio
+
+Only operative holding.
+
+---
+
+## Complex Tentio
+
+Tentio combined with:
+
+* use
+* transfer
+* commercialization
+* projection
+
+---
+
+# Example
+
+Restaurant takeaway example:
+
+```text
+service + sale
+```
+
+coexist through co-implication.
+
+---
+
+# Final Rule
+
+> Tentio is persistence of operative vector continuity, not ownership.
+
+---
+
+---
+
+# 3. USUCAPIÓN
+
+## Structural Nature
+
+Usucapión is NOT “time creating ownership”.
+
+It is:
+
+> **stabilized homologation of persistent vector continuity after iterative IST persistence.**
+
+---
+
+# Real Structure
+
+```text
+Tentio
+   ↓
+Persistence
+   ↓
+Stabilization
+   ↓
+Homologation
+```
+
+---
+
+# Critical Rule
+
+Time does NOT create the result.
+
+IST only measures persistence of vector stability.
+
+---
+
+# Main IA
+
+| IA             | Function                                      |
+| -------------- | --------------------------------------------- |
+| ad-actio       | operative continuity                          |
+| stabilization  | persistence                                   |
+| IF             | transition to new homologated F               |
+| non            | exclusion of incompatible relation            |
+| co-implication | coexistence of vectors                        |
+| de-actio       | separation from previous homologated relation |
+
+---
+
+# IST Role
+
+Duration and perduration matter because:
+
+> the vector remains structurally persistent.
+
+---
+
+# Why usucapión emerges
+
+Because:
+
+* vectors persist
+* incompatible vectors disappear or fail
+* stabilization consolidates
+* homologation becomes possible
+
+---
+
+# Final Rule
+
+> Usucapión is homologated stabilization of persistent operative vectors.
+
+---
+
+---
+
+# 4. DELITO
+
+## Structural Nature
+
+Delito is NOT an isolated action.
+
+It is:
+
+> **an IA-based destabilizing phenomenon producing vectorial conflict inside or across F.**
+
+---
+
+# Critical Rule
+
+The delito itself is:
+
+> an interaction (IA), not merely an action.
+
+---
+
+# Structure
+
+```text
+Subject A
+     ↓
+IA conflictive
+     ↓
+Subject B / System / Structure
+```
+
+---
+
+# Why this matters
+
+Traditional systems analyze:
+
+```text
+action → consequence
+```
+
+PHENOMENON analyzes:
+
+```text
+interaction → vector conflict → destabilization
+```
+
+---
+
+# Main IA
+
+| IA              | Role                             |
+| --------------- | -------------------------------- |
+| ad-actio        | projection toward target         |
+| de-actio        | destructive separation           |
+| non             | exclusion / negation             |
+| co-implication  | coexistence of operative vectors |
+| IF              | transition between F             |
+| obstruction IA  | blocking                         |
+| destabilization | pattern disruption               |
+
+---
+
+# Example — Theft
+
+Not:
+
+```text
+taking object
+```
+
+But:
+
+```text
+conflictive vector replacing operative relation
+```
+
+---
+
+# Example — Homicide
+
+Not merely:
+
+```text
+kill
+```
+
+But:
+
+```text
+vectorial interruption of operative continuity
+```
+
+---
+
+# Final Rule
+
+> Delito is vectorial destabilization generated through conflictive IA structures.
+
+---
+
+# 5. CONFIRMED IA MAPPING
+
+## Canonical Mapping
+
+| IA             | Structural Meaning                   |
+| -------------- | ------------------------------------ |
+| ad-actio       | DIRECTION                            |
+| de-actio       | RETROACTION / SEPARATIVE RETURN      |
+| non            | POSITION (block/exclusion threshold) |
+| co-implication | PLICATION                            |
+
+---
+
+# Detailed Interpretation
+
+## ad-actio = DIRECTION
+
+The vector moves toward.
+
+```text
+A ───→ B
+```
+
+Pure directional projection.
+
+---
+
+## de-actio = RETROACTION
+
+The vector separates or returns away from prior structure.
+
+```text
+A ←─── B
+```
+
+Not merely “below”.
+
+It is:
+
+> operative distancing or reverse separation.
+
+---
+
+## non = POSITION
+
+Critical discovery.
+
+non is NOT pure negation.
+
+It acts as:
+
+> positional exclusion threshold.
+
+Meaning:
+
+```text
+vector cannot pass here
+```
+
+---
+
+## co-implication = PLICATION
+
+Perfectly coherent.
+
+co-implication produces:
+
+> simultaneous folding of vectors into one operational structure.
+
+Example:
+
+```text
+service + sale
+```
+
+inside same operative phenomenon.
+
+---
+
+# Final Global Rule
+
+> IA are not words or labels.
+> They are geometric-vectorial operators governing how information, operation and stabilization circulate inside PHENOMENON.
+ocks_I_IX
+
+-------------
+yes and here are the things you asked before you start building
+Confirm the PHENOMENON IA mapping applies to legal arguments (ad-actio=claim, non=objection, etc.) : YES
+│ 2-3 real anonymised SIAC cases (or case summaries)  : From WEB ?
+  │ SIAC Rules 2022 key provisions to encode as CA2 circumactions    : From WEB ? 
+ Confirm the disclaimer language is legally sound for your jurisdiction    : YES
+ Priority language: English first (SIAC), or Spanish too?        : Both                                    
+
+keep it 2 separate apps
+can you 
+I have 4 word documents of cases which are of very much interest to solve with our Engine and application. can you read and anlisis them and give your feedback how an if they can be integerated as cases in our application
+Caso_KPMG
+Caso_Libia
+Caso_EDCO
+Caso_Compraventa_Terreno
+-------------------------
+-------------------------
+  1. Selection screen — click "▶ Abrir Demo KPMG" → backend seeds the complete pre-filled case in seconds → graph appears with 4 connected contracts, gold/cyan particles flowing along   the money routes
+  2. ⭐ Demo KPMG tab — EURIBOR slider moves → 1.2 seconds later → 3 contracts turn orange in the graph → monthly payment recalculates live → amortization table updates
+  3. Crisis button → EURIBOR jumps 2% → dramatic cascade → investor sees the risk exposure calculated automatically
+  4. Register Hipoteca → node opus badge changes from PARCIAL to OPONIBLE
+  5. Ecosystem homologation → single click → everything verified → health score shows
+
+  Why it's a generalizable template, not just a one-off demo:
+
+  Every parameter is a slider or editable field:
+  - Change the hotel to offices → same structure
+  - Change Valencia to Madrid → jurisdiction cascades
+  - Change €100M to €250M → amortization recalculates everywhere
+  - Change EURIBOR regime → all financial contracts update
+  - Add a guarantor bank mid-lifecycle → novación subjetiva propagates
+  - Add SEGURO_CREDITO → new IF connections established
+  - Change construction deadline → risk engine re-evaluates
+
+-------------
+-------------
+  Here's exactly what now happens at every interaction:
+  When you start typing in any field:
+  - The node in the graph immediately turns yellow with a "✎ editando…" badge — no delay, fires on the first keystroke
+  - After 3 seconds without typing, the yellow clears
+
+  700ms after you stop typing (debounce fires, save completes):
+  - The API saves the field
+  - Cascade auto-fires (ESS change → all sub-contracts, or term change → sibling IF-connected contracts)
+  - The affected nodes flash orange in the graph
+  - A notification slides in from the bottom-right showing:
+    - Which field changed and old → new value
+    - Which contracts are now NEEDS_REVIEW (each one clickable → takes you directly to that contract)
+    - Risks detected by the engine (with full detail on click)
+    - A specific recommendation per risk ("Register the hipoteca in Registro de la Propiedad", "Send burofax notification under Art. 1527 CC", etc.)
+    - "⊙ Homologar Ecosistema" button — runs verification on everything from the notification
+    - "Ver análisis completo" button → switches to the ⚠ Risk tab for the contract
+
+  The notification auto-dismisses after 12 seconds with a progress bar, but pauses if you hover over it.
+PHENOMENON_Caso_Seguros_Completo
+PHENOMENON_Caso_KPMG_Completo
+PHENOMENON_Compraventa_Terreno_Completo
+
+-------------------
+------------------- 3 cases 
+ PHENOMENON_Compraventa_Terreno_Completo
+  What the document adds vs. what's already built:
+
+  The current COMPRAVENTA_SOLAR template handles the suspended condition mechanism well. This document adds three deeper philosophical layers:
+
+  1. Traditio vs. escritura pública (Art. 1462 CC) — the document insists that the escritura is not real traditio. Our current implementation has no distinction between the two — a
+  field for "Forma de entrega" but no engine logic validating whether real traditio has occurred separate from the escritura.
+  2. Ser / Bien / Cosa distinction — the Registro diffuses the "bien" (property right), not the "ser" (ontological being) or the "cosa" (physical object). The engine doesn't currently   model this — it treats the Registro as a simple oponibilidad toggle.
+  3. Condición urbanística ≠ prestación del contrato — the condition is a logical IF in the prosecución, not a guaranteed obligation. Currently we model it as a binary CONDICION_SOLAR   status, which collapses this distinction.
+
+  What would need to be built:
+  - New homologation checks distinguishing: traditio_real (has actual delivery happened?) from traditio_instrumental (escritura signed)
+  - Engine logic for IF_logica vs. IF_temporal — currently all IFs are just cascade triggers, not typed
+  - New field: condicionType: "prosecución lógica" | "prestación garantizada" to avoid confusing the seller's urban quota payments with a delivery guarantee
+  - A "Resolución vía 1255 CC vs. 1124 CC" field that the risk engine uses to show the difference
+
+  Feasibility: High — it's mostly adding depth to existing structure. 3-4 days of work.
+
+  ---
+  PHENOMENON_Caso_KPMG_Completo
+
+  What the document reveals vs. what's already built:
+
+  The current KPMG demo implements the financial layer (arrendamiento de cosa futura + circumcontrato CA2 + hipoteca + cesión). This document is about a completely different layer:
+  corporate structural validation — the modular audit/compliance/governance structure.
+
+  The document's A1 central is "Validación estructural corporativa" — not a financial transaction but a corporate approval workflow. It describes:
+  - SA = internal agreements, preliminary validations, documentary conformities
+  - CA = delivery of documents, review, approval, audit, signature, verification
+  - IF = "if no compliance approval → next node cannot activate" — a logic gate
+
+  This is fundamentally different from what we built. Our KPMG demo shows a bank financing a hotel. This document describes KPMG's internal validation/audit/compliance processes —
+  using PHENOMENON to structure who approves what, in what order, with what conditions.
+
+  What would need to be built:
+  - New template type CORPORATE_VALIDATION or KPMG_CORPORATE
+  - New contract types: COMPLIANCE_REPORT, AUDIT_APPROVAL, REGULATORY_SIGN_OFF
+  - New IF type: IF_logic_gate — a blocking condition (node B cannot activate until node A is VALID)
+  - A DAG (directed acyclic graph) visualization showing approval chains — different from the current radial graph
+  - The "Pantalla 6: Informe estructural final" = what the engine currently calls the Ecosystem panel, but extended with compliance/audit specific fields
+
+  Feasibility: Medium-high. The most valuable new feature is the logic gate IF — this is genuinely new to the engine. 1 week of work to do it properly.
+
+  ---
+  PHENOMENON_Caso_Seguros_Completo
+
+  Why this is the most strategically important of the three:
+
+  The document's core insight is brilliant: show 4 insurance types simultaneously that share the same deep PHENOMENON structure but with different modulaciones. This demonstrates
+  combinatoria and reusability better than any single case.
+
+  ┌───────────┬──────────────────────────────┬────────────────────────────────────────┬─────────────────────────────────────────────────┬──────────────────────┐
+  │ Insurance │              A1              │                 Key CA                 │                     Key IF                      │    Unique element    │
+  ├───────────┼──────────────────────────────┼────────────────────────────────────────┼─────────────────────────────────────────────────┼──────────────────────┤
+  │ Vida      │ Cobertura por fallecimiento  │ Pago prima, validación médica          │ IF_lógica: sin validación médica → no cobertura │ Risk = personal risk │
+  ├───────────┼──────────────────────────────┼────────────────────────────────────────┼─────────────────────────────────────────────────┼──────────────────────┤
+  │ RC        │ Cobertura por daño a tercero │ Peritación, validación causal          │ IF_oposición: límite de cobertura               │ Risk = liability     │
+  ├───────────┼──────────────────────────────┼────────────────────────────────────────┼─────────────────────────────────────────────────┼──────────────────────┤
+  │ Daños     │ Cobertura material           │ Inspección, peritación                 │ IF_exclusión: daño intencional bloqueado        │ Risk = property      │
+  ├───────────┼──────────────────────────────┼────────────────────────────────────────┼─────────────────────────────────────────────────┼──────────────────────┤
+  │ Crédito   │ Cobertura por incumplimiento │ Validación financiera, análisis riesgo │ IF_condicionada: umbral de insolvencia          │ Risk = business      │
+  └───────────┴──────────────────────────────┴────────────────────────────────────────┴─────────────────────────────────────────────────┴──────────────────────┘
+
+  What's genuinely new vs. what the engine already has:
+
+  Currently the engine has no concept of:
+  1. Riesgo como fenómeno — risk is not just a label but a quantifiable vector with a probability, a severity, and an activation threshold. This needs a new RiskVector model in the
+  engine.
+  2. Exclusión como IF_oposición — exclusions are conditions that BLOCK activation. Currently IFs only cascade NEEDS_REVIEW; they don't BLOCK a phenomenon from activating.
+  3. Sinestro como evento de transformación — a claim (siniestro) transforms the policy from "active coverage" to "claim processing" to "paid/rejected". This is a phase transition
+  (F1→F2→F3) that needs the PhaseEngine to be wired into the frontend.
+  4. Comparative view — showing 4 insurance types side-by-side is a new UI paradigm. The current graph is single-ecosystem; the document calls for a multi-ecosystem comparison view.
+
+  What would need to be built:
+  - 4 new templates: SEGURO_VIDA, SEGURO_RC, SEGURO_DANOS, SEGURO_CREDITO
+  - Each generates sub-contracts: COBERTURA (the activated coverage), EXCLUSIONES (the blocking IFs), SINIESTRO (the claim event)
+  - New IF_exclusion type in the engine that BLOCKS (not just flags) activation
+  - New phase: ACTIVE_COVERAGE → SINIESTRO_PENDIENTE → INDEMNIZACION_PAGADA | RECHAZO
+  - The "Pantalla 3: Mapa acetatial comparado" = a new 4-column comparative dashboard showing the 4 insurances side-by-side with shared structure highlighted
+
+  Feasibility: High, but requires the most new engine work. 2 weeks for a proper demo.
+
+  ---
+  My Recommendation
+
+  ┌───────────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │       Case        │ Priority │                                                                     Reason                                                                     │
+  ├───────────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Seguros           │ 🥇 First │ Never built, maximum visual impact, 4 simultaneous cases = best demonstration of PHENOMENON's combinatoria. Perfect for investor pitches and   │
+  │                   │          │ regulator demos.                                                                                                                               │
+  ├───────────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ KPMG Corporate    │ 🥈       │ Completes the KPMG story — the financial layer is done, adding the governance layer makes it a full enterprise demonstration. Target: KPMG,    │
+  │                   │ Second   │ auditors, compliance officers.                                                                                                                 │
+  ├───────────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Compraventa       │ 🥉 Third │ Already 80% done. Mainly needs philosophical refinement. Target: Registradores. Lower new technical work.                                      │
+  │ Terreno           │          │                                                                                                                                                │

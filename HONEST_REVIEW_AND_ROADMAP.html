@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PHENOMENON — Honest Review, Diagnosis & Roadmap</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #141823;
+    --panel2: #1b2030;
+    --ink: #e8ecf3;
+    --ink-dim: #aab3c5;
+    --line: #2a3144;
+    --accent: #7cd0ff;
+    --good: #58e6a0;
+    --warn: #ffc266;
+    --bad: #ff6b81;
+    --info: #a78bfa;
+    --gold: #ffd166;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+  nav.toc {
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    padding: 24px 18px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc h2 { font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim); margin: 0 0 16px; }
+  nav.toc a { display: block; color: var(--ink); text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 13.5px; }
+  nav.toc a:hover { background: var(--panel2); color: var(--accent); }
+  nav.toc a.section { font-weight: 600; margin-top: 8px; }
+  nav.toc a.sub { padding-left: 22px; font-size: 12.5px; color: var(--ink-dim); }
+  main { padding: 36px 56px; max-width: 1100px; }
+  header.hero {
+    border-left: 4px solid var(--accent);
+    padding: 18px 24px;
+    background: linear-gradient(135deg, rgba(124,208,255,0.08), rgba(167,139,250,0.05));
+    border-radius: 6px;
+    margin-bottom: 32px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 28px; }
+  header.hero .verdict { font-size: 16px; color: var(--ink-dim); }
+  header.hero .stamp { font-size: 12px; color: var(--ink-dim); margin-top: 10px; }
+  h2.section { font-size: 22px; margin: 48px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 17px; margin: 24px 0 8px; color: var(--accent); }
+  h4 { font-size: 14px; margin: 16px 0 6px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 1px; }
+  p, li { font-size: 14.5px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 22px; margin: 14px 0; }
+  .card.good { border-left: 4px solid var(--good); }
+  .card.warn { border-left: 4px solid var(--warn); }
+  .card.bad { border-left: 4px solid var(--bad); }
+  .card.info { border-left: 4px solid var(--info); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--panel2); color: var(--ink-dim); font-weight: 600; text-transform: uppercase; font-size: 11.5px; letter-spacing: 0.8px; }
+  td.tag { font-family: ui-monospace, "Cascadia Code", monospace; font-size: 12.5px; color: var(--accent); }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .pill.good { background: rgba(88,230,160,0.18); color: var(--good); }
+  .pill.warn { background: rgba(255,194,102,0.18); color: var(--warn); }
+  .pill.bad { background: rgba(255,107,129,0.18); color: var(--bad); }
+  .pill.info { background: rgba(167,139,250,0.18); color: var(--info); }
+  .pill.gold { background: rgba(255,209,102,0.18); color: var(--gold); }
+  code { font-family: ui-monospace, "Cascadia Code", monospace; background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--gold); font-size: 13px; }
+  pre { background: var(--panel2); padding: 14px 18px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; border: 1px solid var(--line); }
+  pre code { background: none; padding: 0; color: var(--ink); }
+  ul.checklist { list-style: none; padding-left: 0; }
+  ul.checklist li { padding: 5px 0 5px 28px; position: relative; }
+  ul.checklist li:before { content: "\2610"; position: absolute; left: 0; color: var(--ink-dim); font-size: 18px; line-height: 1; }
+  ul.checklist li.done:before { content: "\2611"; color: var(--good); }
+  ul.checklist li.partial:before { content: "\25D1"; color: var(--warn); }
+  ul.checklist li.blocked:before { content: "\2612"; color: var(--bad); }
+  blockquote { margin: 14px 0; padding: 12px 18px; background: var(--panel2); border-left: 4px solid var(--info); border-radius: 4px; font-style: italic; color: var(--ink-dim); }
+  .timeline { border-left: 2px solid var(--line); padding-left: 22px; margin: 14px 0 24px 8px; }
+  .timeline .item { position: relative; margin-bottom: 22px; }
+  .timeline .item:before { content: ""; position: absolute; left: -29px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg); }
+  .timeline .item .when { font-size: 12px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .timeline .item h4 { margin: 4px 0 6px; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 16px; }
+  .verdict-line { font-size: 18px; font-weight: 600; padding: 14px 20px; border-radius: 6px; margin: 12px 0; }
+  .verdict-line.good { background: rgba(88,230,160,0.10); color: var(--good); border: 1px solid rgba(88,230,160,0.3); }
+  .verdict-line.warn { background: rgba(255,194,102,0.10); color: var(--warn); border: 1px solid rgba(255,194,102,0.3); }
+  .verdict-line.bad { background: rgba(255,107,129,0.10); color: var(--bad); border: 1px solid rgba(255,107,129,0.3); }
+  .kv { display: grid; grid-template-columns: 200px 1fr; gap: 8px; margin: 6px 0; font-size: 13.5px; }
+  .kv .k { color: var(--ink-dim); }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-dim); }
+  @media print {
+    nav.toc { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    body { background: white; color: #111; }
+    .card { background: #f7f8fa; border-color: #ddd; }
+    pre, code, th { background: #f0f2f5; color: #333; }
+    .verdict-line { background: #fff5e6; color: #333; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc">
+  <h2>Contents</h2>
+  <a href="#summary" class="section">0. Executive Verdict</a>
+  <a href="#engine" class="section">1. The Engine</a>
+  <a href="#engine-what" class="sub">1.1 What it is</a>
+  <a href="#engine-can" class="sub">1.2 What it can do</a>
+  <a href="#engine-done" class="sub">1.3 What we built</a>
+  <a href="#engine-apps" class="sub">1.4 Real-world uses</a>
+  <a href="#engine-missing" class="sub">1.5 What is missing</a>
+  <a href="#engine-unique" class="sub">1.6 Is it unique?</a>
+  <a href="#app" class="section">2. The Application</a>
+  <a href="#app-fe" class="sub">2.1 Frontend</a>
+  <a href="#app-be" class="sub">2.2 Backend</a>
+  <a href="#app-db" class="sub">2.3 Database</a>
+  <a href="#app-ai" class="sub">2.4 AI layer</a>
+  <a href="#app-bugs" class="sub">2.5 Known bugs</a>
+  <a href="#lawyers" class="section">3. For Lawyers & Registrars</a>
+  <a href="#roadmap" class="section">4. Roadmap & Timeline</a>
+  <a href="#testing" class="section">5. Testing Strategy</a>
+  <a href="#claude-dash" class="section">6. Claude Performance Dashboard</a>
+  <a href="#next" class="section">7. What Happens Next</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <h1>PHENOMENON — Honest Review, Diagnosis & Strategic Roadmap</h1>
+  <div class="verdict">A no-marketing assessment of the engine, the application, what is genuinely unique, what is missing, and how to move from "demo" to "product lawyers and registrars can actually use."</div>
+  <div class="stamp">Document built: 2026-05-20 · Audience: project owner · Status: pre-build, alignment document</div>
+</header>
+
+<!-- ============ 0. SUMMARY ============ -->
+<section id="summary">
+<h2 class="section">0. Executive Verdict (read this first)</h2>
+
+<div class="verdict-line good"><strong>What is genuinely strong:</strong> the cascade + ecosystem homologation. No mainstream contract product does network-level validation. That is the real product.</div>
+
+<div class="verdict-line warn"><strong>What is impressive but not yet defensible:</strong> the philosophical framework (ESS / AG / IA / IF / Opus). Lawyers will not buy ontology; they will buy "the system tells me when changing clause X breaks contract Y." Sell the cascade, keep the ontology as the internal model.</div>
+
+<div class="verdict-line bad"><strong>What is honestly missing:</strong> no authentication, no audit trail with user identity, no .docx export, no real Catastro/Registro integration, no error boundaries (one bug = blank page), no engine unit tests, no migration system. None of this is hard; none of it is built.</div>
+
+<div class="card info">
+  <h4>The one-paragraph honest pitch</h4>
+  <p>PHENOMENON is a contract intelligence system where contracts are not isolated documents but a network. Change a date on the master, and every sub-contract updates and is re-validated automatically. Change an exclusion on a credit insurance, and the dependent coverage activates. We have 66/66 E2E tests passing, three working demo cases (KPMG €100M financing, multi-policy insurance, sale of land), and an interactive graph with live financial flows. We do not yet have: real lawyer-grade .docx export, authentication, integration with the Registro de la Propiedad, or unit tests on the engine itself. The cascade is the moat. Everything else needs four weeks of unglamorous work.</p>
+</div>
+</section>
+
+<!-- ============ 1. ENGINE ============ -->
+<section id="engine">
+<h2 class="section">1. The PHENOMENON Engine — Complete Diagnosis</h2>
+
+<h3 id="engine-what">1.1 What it is (in plain language)</h3>
+<p>An ontological framework that models any entity as a <em>phenomenon</em> with five dimensions:</p>
+<table>
+<tr><th>Concept</th><th>Plain meaning</th><th>In a contract</th></tr>
+<tr><td class="tag">ESS</td><td>Stable identity — what makes the thing itself.</td><td>Parties, jurisdiction, effective date, expiry date.</td></tr>
+<tr><td class="tag">AG</td><td>Operational content — what the thing does, the actions and obligations.</td><td>Clauses, payment terms, deliverables, prices.</td></tr>
+<tr><td class="tag">IA</td><td>Operators — active/passive/prohibition/reciprocal vectors that classify obligations.</td><td>"Active obligation" (1088 CC), "Prohibition" (non operator), etc.</td></tr>
+<tr><td class="tag">IF</td><td>Inter-phenomenic connections between entities.</td><td>Master→sub, sub→sibling, exclusion blocking another coverage.</td></tr>
+<tr><td class="tag">Opus</td><td>Degree of effect/perfection.</td><td>Eficacia entre partes → Plena → Oponible erga omnes (Art. 32 LH).</td></tr>
+</table>
+<p>Crucially, the framework is <strong>domain-agnostic</strong>. We applied it to contracts, but the same engine could model corporate governance chains, supply-chain SLAs, or healthcare consent networks.</p>
+
+<h3 id="engine-can">1.2 What it can do (theoretical capacity)</h3>
+<p>Any system where these five conditions hold can be modeled:</p>
+<ol>
+<li>Entities have stable identities that should not silently mutate.</li>
+<li>Entities have operational state that does change.</li>
+<li>Entities relate to other entities via typed links.</li>
+<li>A change to one should propagate to its neighbours, and the propagation rules are knowable.</li>
+<li>Validity of the whole is not just the sum of validity of the parts — coherence across the network matters.</li>
+</ol>
+
+<h3 id="engine-done">1.3 What we have actually built (today)</h3>
+<div class="grid2">
+<div class="card good">
+  <h4>Engine-level (Python, packages/engine/)</h4>
+  <ul class="checklist">
+    <li class="done">CASCADE_MAP — master ESS change → propagates to all sub-types</li>
+    <li class="done">SUB_CASCADE_MAP — sub change → propagates to siblings (typed rules)</li>
+    <li class="done">REVERSE_CASCADE_MAP — sub change → flags master for review</li>
+    <li class="done">EcosystemEngine — 6 cross-contract consistency rules</li>
+    <li class="done">Coverage checker — required sub-types per master template</li>
+    <li class="done">Opus 3-level homologation</li>
+    <li class="done">Phase lifecycle (ACTIVE → SINIESTRO_PENDIENTE → INDEMNIZACION_PAGADA / RECHAZO)</li>
+    <li class="done">BLOCKED status via IF_exclusion (non operator) for insurance</li>
+  </ul>
+</div>
+<div class="card good">
+  <h4>API surface (FastAPI, backend/app/)</h4>
+  <ul class="checklist">
+    <li class="done">/phenomena CRUD + terminate</li>
+    <li class="done">/cascade/trigger, /cascade/sub-trigger, /cascade/reverse-trigger</li>
+    <li class="done">/ecosystem/{id}/homologate, /add-party, /add-contract</li>
+    <li class="done">/demo/kpmg/seed, /demo/seguros/seed</li>
+    <li class="done">/demo/seguros/siniestro, /demo/seguros/unblock-coverage</li>
+    <li class="done">/demo/kpmg/update-euribor, /demo/amortization</li>
+  </ul>
+</div>
+</div>
+
+<h3 id="engine-apps">1.4 Real-world applications (what this engine could power)</h3>
+<table>
+<tr><th>Domain</th><th>Use case</th><th>Why the engine fits</th><th>Effort to adapt</th></tr>
+<tr><td>Legal (current)</td><td>Contract networks, master+sub validation</td><td>Cascade + homologation directly applicable</td><td><span class="pill good">Done</span></td></tr>
+<tr><td>Real estate</td><td>Compraventa + hipoteca + cargas + seguros all-in-one</td><td>Inter-phenomenic links between Registro acts</td><td><span class="pill good">Low</span></td></tr>
+<tr><td>Insurance</td><td>Multi-policy underwriting with shared insured</td><td>BLOCKED via IF_exclusion already proven</td><td><span class="pill good">Done</span></td></tr>
+<tr><td>Corporate governance</td><td>Board approvals → policy → compliance → audit</td><td>Master→sub mirrors corporate hierarchy</td><td><span class="pill warn">Medium</span></td></tr>
+<tr><td>Supply chain</td><td>Master MSA + SLAs + DPAs + payment terms</td><td>This is literally what NDA/SLA/PAYMENT/DPA already do</td><td><span class="pill good">Low</span></td></tr>
+<tr><td>Healthcare consent</td><td>One revocation cascades to all derived data uses</td><td>Reverse cascade matches GDPR right to erasure</td><td><span class="pill warn">Medium</span></td></tr>
+<tr><td>M&A due diligence</td><td>R&W chains, indemnity baskets, disclosure schedules</td><td>Coverage checker + ecosystem rules apply directly</td><td><span class="pill warn">Medium</span></td></tr>
+<tr><td>IP licensing</td><td>Sublicensing chains, royalty propagation, exclusivity</td><td>IF + Opus level mirror sublicensing depth</td><td><span class="pill warn">Medium</span></td></tr>
+<tr><td>Regulatory compliance</td><td>Multi-jurisdiction consent / disclosure / retention</td><td>Ecosystem rules generalize to any consistency check</td><td><span class="pill bad">High</span></td></tr>
+<tr><td>Smart contracts</td><td>Pre-deployment validation of dependency networks</td><td>Export to Solidity post-validation</td><td><span class="pill bad">High</span></td></tr>
+</table>
+
+<h3 id="engine-missing">1.5 What is genuinely missing from the engine</h3>
+<div class="grid2">
+<div class="card bad">
+  <h4>Functional gaps</h4>
+  <ul class="checklist">
+    <li>Edge conditions not persisted (in-memory only)</li>
+    <li>No async cascade — large networks will block the request</li>
+    <li>No transactional cascade rollback if one step fails</li>
+    <li>No cascade history log (who triggered what when)</li>
+    <li>No custom rule definition (rules are hardcoded Python)</li>
+    <li>No rule versioning — changing a rule breaks history</li>
+    <li>No conflict resolution policy when two cascades target the same field</li>
+    <li>No prioritization or weighting of risks</li>
+  </ul>
+</div>
+<div class="card bad">
+  <h4>Engineering gaps</h4>
+  <ul class="checklist">
+    <li>No unit tests on the engine itself (only E2E through UI)</li>
+    <li>No property-based tests (cascade exhaustiveness)</li>
+    <li>No type hints / mypy enforcement on engine modules</li>
+    <li>No formal data model documentation (only code is canonical)</li>
+    <li>No engine API for non-FastAPI consumers</li>
+    <li>No SDK / client library</li>
+  </ul>
+</div>
+</div>
+
+<blockquote>If unit tests existed on the engine, the "CASCADE_MAP missing KPMG types" bug would have been caught on the day FINANCIACION was added. We only caught it when an E2E test for the UI failed downstream. <strong>This is the single highest-leverage thing missing from the engine.</strong></blockquote>
+
+<h3 id="engine-unique">1.6 Is it really unique vs competitors? (Honest comparison)</h3>
+<table>
+<tr><th>Competitor</th><th>What they do</th><th>What they don't do</th><th>Do we beat them?</th></tr>
+<tr><td>DocuSign CLM / Ironclad / Icertis</td><td>Workflow + e-signature + storage</td><td>No structural cross-contract validation</td><td><span class="pill good">Yes (validation)</span></td></tr>
+<tr><td>Spotdraft / Lexion / Evisort</td><td>AI extraction from existing PDFs</td><td>They observe; they don't generate or validate networks</td><td><span class="pill good">Yes (generation)</span></td></tr>
+<tr><td>Harvey AI / CoCounsel</td><td>Chatbot legal assistant</td><td>No structured engine, no cascade</td><td><span class="pill good">Yes (structure)</span></td></tr>
+<tr><td>Kira / LegalSifter</td><td>Pre-signature AI review</td><td>Single-contract scope, no network</td><td><span class="pill good">Yes (network)</span></td></tr>
+<tr><td>Juro / PandaDoc</td><td>Template + sign + simple workflow</td><td>No engine, no homologation</td><td><span class="pill good">Yes</span></td></tr>
+<tr><td>Notarius / Lleida.net / Signaturit (ES)</td><td>Spanish e-signature, certified delivery</td><td>They are signing layers, not engines</td><td><span class="pill warn">Different category</span></td></tr>
+<tr><td>SAP Ariba / Coupa contract modules</td><td>Procurement contracts inside ERP</td><td>Limited to procurement; not multi-domain</td><td><span class="pill warn">Different niche</span></td></tr>
+</table>
+
+<div class="verdict-line good"><strong>Honest conclusion:</strong> The cascade + ecosystem homologation is the genuine moat. Nobody mainstream does it. The ontological framing is intellectually impressive but commercially neutral — it justifies the structure internally but should not be the pitch.</div>
+</section>
+
+<!-- ============ 2. APP ============ -->
+<section id="app">
+<h2 class="section">2. The Current Application — End-to-End Diagnosis</h2>
+
+<h3 id="app-fe">2.1 Frontend (React + Vite, port 5173)</h3>
+<div class="card">
+<div class="kv"><div class="k">Stack</div><div>React 18, Vite, vanilla JS (not TypeScript), no state library</div></div>
+<div class="kv"><div class="k">Strengths</div><div>HMR works, components are demo-ready, graph is genuinely impressive (zoom/pan/particles)</div></div>
+<div class="kv"><div class="k">Weaknesses</div><div>App.jsx + ContractGraph.jsx are 1000+ lines; no error boundaries; no TypeScript; prop drilling; no analytics; no feature flags</div></div>
+<div class="kv"><div class="k">Lawyer-blocking gaps</div><div>No .docx export; no track-changes / redline; no BOE article hyperlinks; print CSS exists but not Spanish-legal-document format</div></div>
+</div>
+
+<h3 id="app-be">2.2 Backend (FastAPI + Python, port 8000)</h3>
+<div class="card">
+<div class="kv"><div class="k">Stack</div><div>FastAPI, SQLAlchemy, Pydantic, Anthropic SDK for Claude calls</div></div>
+<div class="kv"><div class="k">Strengths</div><div>Routes are well-domain-separated; --reload works for both backend and engine</div></div>
+<div class="kv"><div class="k">Weaknesses</div><div>No authentication; no rate limiting; no background queue (cascade runs sync); no caching; no API versioning; no Alembic migrations; partial input validation</div></div>
+<div class="kv"><div class="k">Production-blocking gaps</div><div>Cannot deploy publicly — anyone can read/write all contracts</div></div>
+</div>
+
+<h3 id="app-db">2.3 Database (PostgreSQL 16)</h3>
+<div class="card">
+<div class="kv"><div class="k">Schema</div><div>Single table <code>PhenomenonRecord</code> with JSON ess_json + ag_json columns. Pragmatic for a demo, limiting for query patterns.</div></div>
+<div class="kv"><div class="k">Missing</div><div>Alembic migrations; backup automation; multi-tenancy isolation; indexes on JSON paths (slow at scale); read replicas</div></div>
+</div>
+
+<h3 id="app-ai">2.4 AI Layer (Claude API)</h3>
+<div class="card">
+<div class="kv"><div class="k">What works</div><div>Clause generation in Spanish; deterministic fallback when API key absent</div></div>
+<div class="kv"><div class="k">Missing</div><div>Retry / circuit breaker; cost tracking per session; prompt versioning; content moderation; no caching of generated clauses; no eval suite measuring clause quality</div></div>
+</div>
+
+<h3 id="app-bugs">2.5 Known bugs & open issues (full honest list)</h3>
+<table>
+<tr><th>Severity</th><th>Issue</th><th>File / area</th><th>Status</th></tr>
+<tr><td><span class="pill warn">Med</span></td><td>Edge conditions set in graph EdgePanel are lost on refresh</td><td>ContractGraph.jsx + missing backend route</td><td>Open</td></tr>
+<tr><td><span class="pill warn">Med</span></td><td>No global error boundary — one render error → blank page</td><td>App.jsx</td><td>Open</td></tr>
+<tr><td><span class="pill warn">Med</span></td><td>Cascade is synchronous — slow with many contracts</td><td>cascade_engine.py</td><td>Open</td></tr>
+<tr><td><span class="pill info">Low</span></td><td>RiskEngine Fast Refresh warning (cosmetic)</td><td>RiskEngine.jsx</td><td>Open</td></tr>
+<tr><td><span class="pill info">Low</span></td><td>addLog signature inconsistency potential in new components</td><td>Multiple</td><td>Mitigated</td></tr>
+<tr><td><span class="pill info">Low</span></td><td>No graceful degradation if Claude API is down/over quota</td><td>routes_clauses</td><td>Open</td></tr>
+<tr><td><span class="pill bad">High</span></td><td>No authentication — production deploy blocked</td><td>All routes</td><td>Open</td></tr>
+<tr><td><span class="pill bad">High</span></td><td>No audit trail with user identity</td><td>All write routes</td><td>Open</td></tr>
+<tr><td><span class="pill bad">High</span></td><td>No .docx export — lawyers cannot use it in daily workflow</td><td>Documento tab</td><td>Open</td></tr>
+</table>
+</section>
+
+<!-- ============ 3. LAWYERS / REGISTRARS ============ -->
+<section id="lawyers">
+<h2 class="section">3. What to Add for Lawyers & Registrars</h2>
+
+<h3>3.1 What lawyers actually need (priority order)</h3>
+<ol>
+<li><strong>Export to .docx</strong> with full styles — they live in Word; PDF-only is a dealbreaker.</li>
+<li><strong>Article hyperlinks to BOE</strong> — every <code>Art. 1261 CC</code> becomes a link to BOE.es.</li>
+<li><strong>Track changes / redline</strong> view between two contract versions.</li>
+<li><strong>Audit trail panel</strong> — who changed what, when, why.</li>
+<li><strong>Print to PDF matching Spanish legal format</strong> (margins, headers, numbering, footer with hash).</li>
+<li><strong>Digital signature placeholder</strong> — visible signature blocks for FNMT/Adobe Sign integration.</li>
+<li><strong>Precedent / jurisprudence lookup</strong> — pull cases relevant to clauses (CENDOJ API).</li>
+<li><strong>Multi-version comparison</strong> — diff two states of the same contract network.</li>
+</ol>
+
+<h3>3.2 What registrars (Registro de la Propiedad) actually need</h3>
+<ol>
+<li><strong>Cadastral reference validator</strong> — real-time check against Catastro API (free, public).</li>
+<li><strong>AJD/ITP tax calculator</strong> per CCAA — even mocked, looks credible.</li>
+<li><strong>FLOTI / SIR format export</strong> — even a credible mock impresses.</li>
+<li><strong>BORME / Mercantil verification</strong> for company parties.</li>
+<li><strong>DNI / NIE validators</strong> with checksum.</li>
+<li><strong>Standard inscription document templates</strong> — Spanish formal layout.</li>
+<li><strong>Anti-money laundering checks</strong> placeholder (PEP screening).</li>
+<li><strong>Verifiable Credential / digital seal</strong> on finalized inscriptions.</li>
+</ol>
+
+<h3>3.3 Recommended order to maximize demo impact</h3>
+<div class="grid3">
+<div class="card good"><h4>Week 1</h4>
+<ol><li>.docx export</li><li>BOE hyperlinks</li><li>Audit log panel</li><li>Error boundaries</li></ol></div>
+<div class="card warn"><h4>Week 2</h4>
+<ol><li>Spanish-legal PDF format</li><li>Catastro API mock</li><li>DNI/NIE validators</li><li>AJD calculator</li></ol></div>
+<div class="card info"><h4>Week 3</h4>
+<ol><li>Track changes view</li><li>FLOTI export mock</li><li>Signature placeholders</li><li>BORME mock</li></ol></div>
+</div>
+</section>
+
+<!-- ============ 4. ROADMAP ============ -->
+<section id="roadmap">
+<h2 class="section">4. Roadmap & Timeline (12 weeks to credible product)</h2>
+
+<div class="timeline">
+  <div class="item">
+    <div class="when">Weeks 1–2 · Polish for lawyer demo</div>
+    <h4>Make the existing demo bulletproof</h4>
+    <ul class="checklist">
+      <li>Error boundaries on every panel (no more blank page)</li>
+      <li>.docx export with python-docx</li>
+      <li>BOE.es hyperlinks on every article citation</li>
+      <li>Audit log panel + write user/timestamp on every mutation</li>
+      <li>Engine unit tests (pytest) — first 30 cases</li>
+      <li>Alembic migration system</li>
+    </ul>
+  </div>
+  <div class="item">
+    <div class="when">Weeks 3–4 · Polish for registrar demo</div>
+    <h4>Add real public-API integrations</h4>
+    <ul class="checklist">
+      <li>Catastro API real call (it is free + public)</li>
+      <li>AJD / ITP per-CCAA calculator</li>
+      <li>FLOTI-format JSON export with valid schema</li>
+      <li>DNI / NIE validators (checksum) + visual feedback</li>
+      <li>Spanish legal PDF format (margins, headers, hash footer)</li>
+      <li>Digital signature placeholder blocks</li>
+    </ul>
+  </div>
+  <div class="item">
+    <div class="when">Weeks 5–8 · Production readiness</div>
+    <h4>Make it deployable to a paying customer</h4>
+    <ul class="checklist">
+      <li>Authentication (Clerk or Auth0)</li>
+      <li>Multi-tenant data isolation</li>
+      <li>Rate limiting + Claude cost tracking</li>
+      <li>Background job queue for cascade (Celery or RQ)</li>
+      <li>Backup automation (pg_dump cron)</li>
+      <li>Stripe billing + license keys</li>
+      <li>Telemetry (PostHog or self-hosted Plausible)</li>
+      <li>TypeScript migration (incremental, file-by-file)</li>
+    </ul>
+  </div>
+  <div class="item">
+    <div class="when">Weeks 9–12 · Differentiation</div>
+    <h4>Move from "credible" to "category leader"</h4>
+    <ul class="checklist">
+      <li>Real digital signature integration (FNMT or Adobe Sign)</li>
+      <li>Real SIR / FLOTI integration (requires partnership with a registry)</li>
+      <li>BORME real integration</li>
+      <li>Mobile / tablet responsive</li>
+      <li>Multi-language (English first)</li>
+      <li>Custom rule editor UI (let users define ecosystem rules)</li>
+      <li>Public engine SDK (Python + JS)</li>
+      <li>Engine API for non-legal verticals</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ============ 5. TESTING ============ -->
+<section id="testing">
+<h2 class="section">5. End-to-End Testing Strategy</h2>
+
+<h3>5.1 Testing layers we need (current vs target)</h3>
+<table>
+<tr><th>Layer</th><th>Tool</th><th>Current</th><th>Target</th></tr>
+<tr><td>Engine unit tests</td><td>pytest</td><td><span class="pill bad">0 tests</span></td><td>200+ tests covering every CASCADE_MAP entry</td></tr>
+<tr><td>API integration tests</td><td>pytest + httpx</td><td><span class="pill bad">0 tests</span></td><td>50+ tests per route</td></tr>
+<tr><td>UI E2E tests</td><td>Playwright</td><td><span class="pill good">66/66 passing</span></td><td>200+ tests, full demo flows</td></tr>
+<tr><td>Visual regression</td><td>Playwright screenshots</td><td><span class="pill bad">0</span></td><td>Per-component snapshots</td></tr>
+<tr><td>Performance / load</td><td>locust or k6</td><td><span class="pill bad">0</span></td><td>1000 contracts, &lt;2s cascade</td></tr>
+<tr><td>Property-based</td><td>hypothesis</td><td><span class="pill bad">0</span></td><td>Cascade exhaustiveness</td></tr>
+</table>
+
+<h3>5.2 Daily manual test script (15 min routine)</h3>
+<pre><code># 1. Clean restart
+docker compose down -v
+docker compose up -d
+
+# 2. Health
+curl http://localhost:8000/health
+
+# 3. Smoke tests (30s)
+cd phenomenon/e2e && npm run test:smoke
+
+# 4. Browser walkthrough (manual)
+#    - Load KPMG demo
+#    - Slide EURIBOR to 6%
+#    - Confirm graph flashes orange
+#    - Open every right-panel tab
+#    - Click every button without crashing
+#    - Run Verificar Todos
+#    - Print to PDF
+#    - Add a 3rd party
+#    - Terminate one sub-contract
+#    - Confirm graph updates
+
+# 5. Repeat for Seguros demo
+#    - Declarar Siniestro on every policy
+#    - Desbloquear Cobertura on the credit policy
+#    - Confirm no blank page
+
+# 6. Repeat for Compraventa
+#    - Fill ESS, generate subs, homologate
+
+# 7. Full E2E (5 min)
+npm test
+
+# 8. Log anything that broke into ERROR_DASHBOARD.md
+</code></pre>
+
+<h3>5.3 Self-healing test loop (proposed)</h3>
+<div class="card info">
+<p>A script that on test failure:</p>
+<ol>
+<li>Captures the failing test name + screenshot + console errors.</li>
+<li>Categorizes the failure (network / locator / assertion / cascade / render).</li>
+<li>Looks up the category in a known-fix table (ERROR_DASHBOARD pattern table).</li>
+<li>Either auto-applies the fix (for known patterns) or files an entry in <code>BUG_QUEUE.md</code>.</li>
+<li>Re-runs only the failing test.</li>
+<li>Updates <code>ERROR_DASHBOARD.md</code> with current pass rate.</li>
+</ol>
+<p>This is a half-day of bash + node scripting. It is the right answer to "how do I find bugs without me telling you."</p>
+</div>
+
+<h3>5.4 Engine-logic tests that <em>must</em> exist (priority list)</h3>
+<ol>
+<li>Every sub-type in <code>_ALL_SUB_TYPES</code> receives every ESS field cascade. (Catches CASCADE_MAP gaps.)</li>
+<li>Every <code>SUB_CASCADE_MAP</code> entry propagates without infinite loop.</li>
+<li>Every <code>REVERSE_CASCADE_MAP</code> entry sets master NEEDS_REVIEW.</li>
+<li>Every <code>CONSISTENCY_RULE</code> fires when violated; does not fire when satisfied.</li>
+<li>Every required-coverage rule flags missing types.</li>
+<li>Terminate cascades NEEDS_REVIEW to siblings and master.</li>
+<li>Add-party propagates to every contract in ecosystem.</li>
+<li>Homologation is idempotent (run twice = same result).</li>
+<li>Phase transitions only allow valid next states.</li>
+<li>BLOCKED status cannot become ACTIVE without explicit unblock.</li>
+</ol>
+</section>
+
+<!-- ============ 6. CLAUDE DASHBOARD ============ -->
+<section id="claude-dash">
+<h2 class="section">6. Claude Performance Dashboard (honest self-audit)</h2>
+
+<blockquote>You said it directly: I am reactive, not proactive — I only catch errors when you point them out. That is a real failure mode and worth designing around.</blockquote>
+
+<h3>6.1 My known failure modes (honest list)</h3>
+<table>
+<tr><th>Failure mode</th><th>How it shows up</th><th>How to detect</th><th>How to prevent</th></tr>
+<tr><td>Reactive only</td><td>I fix bugs only after you point them out</td><td>Compare bugs-I-found vs bugs-you-found ratio</td><td>Mandatory pre-task hunt: run full test suite + console scan before claiming done</td></tr>
+<tr><td>Declare "done" without verifying</td><td>I say "fixed" without browser-testing</td><td>Did I actually open the browser? Did I actually run tests?</td><td>"Done" requires: tests pass + browser screenshot + SYSTEM_STATUS updated</td></tr>
+<tr><td>Skip the test suite</td><td>I edit code, never run npm test</td><td>Check if a test run was logged this session</td><td>Hook: every code change triggers an automatic test run</td></tr>
+<tr><td>Forget to update docs</td><td>SYSTEM_STATUS or CHANGES not updated</td><td>git diff on those files after a feature</td><td>Pre-commit hook that fails if those files weren't touched</td></tr>
+<tr><td>Lose context after compaction</td><td>I re-ask, re-discover, re-explain</td><td>Memory file dated &lt; today + relevant</td><td>Memory + index files (already partly built)</td></tr>
+<tr><td>Use outdated patterns</td><td>Old hook patterns, old API styles</td><td>Compare against a "current best-practice" reference</td><td>Reference doc per language + framework, refreshed monthly</td></tr>
+<tr><td>Write code that "compiles" but is broken</td><td>Type-correct but logic-wrong</td><td>Behavior tests, not just unit</td><td>Mandatory E2E walkthrough of the change</td></tr>
+<tr><td>Skip reading related files</td><td>I edit X without checking who calls X</td><td>grep for callers after each change</td><td>Mandatory grep before edit on shared modules</td></tr>
+<tr><td>Use placeholder data</td><td>"TODO" or "Example Co." left behind</td><td>grep for "TODO", "Example", "Lorem"</td><td>Pre-commit grep blocker</td></tr>
+</table>
+
+<h3>6.2 Proposed performance dashboard (CLAUDE_PERFORMANCE.md, to build)</h3>
+<div class="card info">
+<p>One markdown file tracked across sessions with:</p>
+<ul>
+<li><strong>Per-session score</strong> (0–100): tests run? docs updated? browser verified? proactive bugs found?</li>
+<li><strong>Bug ownership ledger</strong>: bugs-I-caught vs bugs-you-caught. Goal: &gt; 70% me.</li>
+<li><strong>Time-to-fix</strong>: average minutes from bug-shown to bug-resolved.</li>
+<li><strong>Regression rate</strong>: how often a fix breaks something else.</li>
+<li><strong>"Done" reliability</strong>: how often "done" actually means done on first browser check.</li>
+<li><strong>Doc drift</strong>: SYSTEM_STATUS lag behind code.</li>
+</ul>
+<p>It is updated at end of every session. You read it. If the metrics drift, you can call it out concretely.</p>
+</div>
+
+<h3>6.3 Enforcement mechanisms (the actual control loop)</h3>
+<ol>
+<li><strong>Pre-task checklist</strong> (in CLAUDE.md): every task starts with "read these 3 files, run smoke tests, list affected modules."</li>
+<li><strong>Pre-done checklist</strong>: "tests run? browser opened? SYSTEM_STATUS updated? CHANGES appended? screenshot saved?"</li>
+<li><strong>Hooks</strong>: file-watch hook that runs <code>npm run test:smoke</code> on save, and writes the result to a known location I must consult.</li>
+<li><strong>Activity log</strong>: a JSON file written at every "I am done" claim with the artifacts I produced. You can audit it.</li>
+<li><strong>Bug ledger</strong>: <code>BUG_QUEUE.md</code> auto-populated with anything failed in last test run. Empty queue is the only "green" state.</li>
+</ol>
+</section>
+
+<!-- ============ 7. NEXT ============ -->
+<section id="next">
+<h2 class="section">7. What Happens Next (your call)</h2>
+
+<p>This document is intentionally pre-build. Nothing has been coded since you asked for this review. Below are the discrete next actions, each is independent — pick the order.</p>
+
+<table>
+<tr><th>Action</th><th>Effort</th><th>Impact</th><th>Unblocks</th></tr>
+<tr><td>Build engine unit tests (first 30)</td><td>3 h</td><td><span class="pill good">High</span></td><td>Confidence in cascades, catches CASCADE_MAP gaps</td></tr>
+<tr><td>Add global error boundaries</td><td>1 h</td><td><span class="pill good">High</span></td><td>No more blank pages on render errors</td></tr>
+<tr><td>.docx export</td><td>4 h</td><td><span class="pill good">High</span></td><td>Lawyers can use it daily</td></tr>
+<tr><td>BOE.es hyperlinks on articles</td><td>2 h</td><td><span class="pill warn">Medium</span></td><td>Credibility with lawyers</td></tr>
+<tr><td>Audit log panel + user identity</td><td>5 h</td><td><span class="pill good">High</span></td><td>Required for any real-world use</td></tr>
+<tr><td>CLAUDE_PERFORMANCE.md + enforcement hooks</td><td>2 h</td><td><span class="pill good">High</span></td><td>Solves the reactive-vs-proactive problem</td></tr>
+<tr><td>Catastro API real integration</td><td>3 h</td><td><span class="pill good">High</span></td><td>Wow factor for registrars</td></tr>
+<tr><td>Alembic migrations</td><td>2 h</td><td><span class="pill warn">Medium</span></td><td>Schema changes stop being scary</td></tr>
+<tr><td>Compraventa de Terreno refinement (Session 1)</td><td>2 h</td><td><span class="pill warn">Medium</span></td><td>Completes the 3-case demo set</td></tr>
+<tr><td>Spanish legal PDF format</td><td>3 h</td><td><span class="pill warn">Medium</span></td><td>Print output looks professional</td></tr>
+</table>
+
+<div class="verdict-line good"><strong>My recommendation:</strong> start with engine unit tests + error boundaries + CLAUDE_PERFORMANCE.md. Those three together turn "demo that mostly works" into "system I can defend in a hostile meeting" — and they fix the reactive-only failure mode you raised. They are also the cheapest 6 hours of work in the table.</div>
+
+<div class="footer">
+PHENOMENON — Honest Review · 2026-05-20 · file: HONEST_REVIEW_AND_ROADMAP.html · open in browser, print to PDF for partner distribution.
+</div>
+
+</section>
+
+</main>
+</div>
+</body>
+</html>

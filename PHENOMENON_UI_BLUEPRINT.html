@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHENOMENON — UI Blueprint (Version Control)</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #EEF1F6;
+  color: #1C2B45;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ══════════════════════════════════════════════════════════
+   VERSION CONTROL BAR
+══════════════════════════════════════════════════════════ */
+#vcbar {
+  flex-shrink: 0;
+  background: #0D1926;
+  border-bottom: 2px solid #C9A84C;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  user-select: none;
+  z-index: 200;
+}
+.vc-logo { font-size: 15px; font-weight: 800; color: #C9A84C; letter-spacing: 2px; flex-shrink: 0; }
+.vc-logo span { color: #4FC3F7; font-size: 11px; font-weight: 400; margin-left: 6px; letter-spacing: 0; }
+
+/* timeline track */
+.vc-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.vc-line {
+  position: absolute;
+  left: 16px; right: 16px;
+  top: 50%;
+  height: 2px;
+  background: #2A3F5F;
+  z-index: 0;
+}
+.vc-line-fill {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, #C9A84C, #4FC3F7);
+  z-index: 1;
+  transition: width 0.3s ease;
+}
+.vc-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.15s;
+}
+.vc-node:hover { transform: translateY(-1px); }
+.vc-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #1C2B45;
+  border: 2.5px solid #2A3F5F;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  color: #546E7A;
+  transition: all 0.2s;
+  box-shadow: 0 0 0 0 transparent;
+}
+.vc-node.current .vc-dot {
+  background: #C9A84C;
+  border-color: #E8C96A;
+  color: #1C2B45;
+  box-shadow: 0 0 0 4px #C9A84C33;
+}
+.vc-node.visited .vc-dot {
+  background: #2A3F5F;
+  border-color: #4FC3F7;
+  color: #4FC3F7;
+}
+.vc-node.new-version .vc-dot {
+  background: #9C27B022;
+  border-color: #CE93D8;
+  border-style: dashed;
+  color: #CE93D8;
+}
+.vc-label {
+  font-size: 9px;
+  color: #546E7A;
+  margin-top: 3px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  text-align: center;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vc-node.current .vc-label { color: #E8C96A; font-weight: 700; }
+.vc-node.visited .vc-label { color: #4FC3F7; }
+
+/* nav buttons */
+.vc-nav {
+  background: #1C2B45;
+  border: 1px solid #2A3F5F;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #B0BEC5;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.vc-nav:hover:not(:disabled) { background: #2A3F5F; color: #E8F4FD; }
+.vc-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.vc-save-btn {
+  background: #C9A84C22;
+  border: 1.5px solid #C9A84C;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #C9A84C;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.vc-save-btn:hover { background: #C9A84C44; }
+
+.vc-badge {
+  background: #1C2B45;
+  border: 1px solid #2A3F5F;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 10px;
+  color: #78909C;
+  flex-shrink: 0;
+}
+.vc-badge b { color: #C9A84C; }
+
+/* ══════════════════════════════════════════════════════════
+   VERSION DETAIL STRIP (below vc bar, collapsible)
+══════════════════════════════════════════════════════════ */
+#vdetail {
+  flex-shrink: 0;
+  background: #141E30;
+  border-bottom: 1px solid #2A3F5F;
+  padding: 8px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  overflow: hidden;
+  transition: max-height 0.25s ease, padding 0.25s ease;
+  max-height: 80px;
+}
+#vdetail.collapsed { max-height: 0; padding: 0 20px; }
+.vd-version { font-size: 22px; font-weight: 900; color: #2A3F5F; flex-shrink: 0; }
+.vd-info { flex: 1; min-width: 0; }
+.vd-title { font-size: 13px; font-weight: 800; color: #E8F4FD; }
+.vd-date { font-size: 10px; color: #546E7A; margin-top: 1px; }
+.vd-changes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.vd-change {
+  background: #1C2B45;
+  border: 1px solid #2A3F5F;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 10px;
+  color: #B0BEC5;
+}
+.vd-change.added { border-color: #4CAF5044; color: #4CAF50; background: #4CAF5011; }
+.vd-change.changed { border-color: #FF980044; color: #FF9800; background: #FF980011; }
+.vd-change.removed { border-color: #F4433644; color: #F44336; background: #F4433611; text-decoration: line-through; }
+.vd-toggle {
+  background: transparent;
+  border: none;
+  color: #546E7A;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  padding: 4px;
+}
+.vd-toggle:hover { color: #B0BEC5; }
+
+/* ══════════════════════════════════════════════════════════
+   APP SHELL (the actual workspace preview)
+══════════════════════════════════════════════════════════ */
+#appshell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+}
+#appshell.transitioning { opacity: 0; }
+
+/* HEADER */
+.app-header {
+  flex-shrink: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  box-shadow: 0 2px 6px #0002;
+  z-index: 100;
+}
+.theme-dark .app-header { background: #1C2B45; }
+.theme-light .app-header { background: #1C2B45; }
+
+.app-logo { font-size: 18px; font-weight: 800; color: #C9A84C; letter-spacing: 2px; }
+.app-logo sub { font-size: 10px; color: #90A4AE; font-weight: 400; margin-left: 5px; letter-spacing: 0; }
+.hchip {
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  background: #ffffff18;
+  border: 1px solid #ffffff22;
+  color: #B0BEC5;
+}
+.hchip b { color: #E8C96A; }
+.spacer { flex: 1; }
+.hbtn {
+  border-radius: 7px;
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid;
+}
+.hbtn-verify { background: #4FC3F722; border-color: #4FC3F7; color: #4FC3F7; }
+.hbtn-demo   { background: #C9A84C;   border-color: #C9A84C; color: #1C2B45; }
+
+/* WORKSPACE */
+.workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* PANE BASE */
+.pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 160px;
+  transition: background 0.3s;
+}
+.theme-light .pane { background: #F7F9FC; }
+.theme-dark  .pane { background: #141E30; }
+
+/* left rail */
+.pane-rail  { flex-shrink: 0; border-right: 1px solid var(--border); }
+/* main campos */
+.pane-campos { flex: 1; border-right: 1px solid var(--border); background: #fff; }
+/* stage */
+.pane-stage { flex-shrink: 0; }
+.theme-dark .pane-stage { background: #111927; }
+.theme-light .pane-stage { background: #fff; }
+
+/* DRAG SPLITTER */
+.splitter {
+  width: 5px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  transition: background 0.15s;
+}
+.theme-light .splitter { background: #DDE3EC; }
+.theme-dark  .splitter { background: #2A3F5F; }
+.splitter:hover, .splitter.dragging { background: #C9A84C !important; }
+.splitter::after {
+  content: '⋮';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: #90A4AE;
+  pointer-events: none;
+}
+
+/* ──────────────── CSS VARIABLES PER THEME ──────────────── */
+.theme-light {
+  --bg:       #EEF1F6;
+  --surface:  #fff;
+  --surface2: #F7F9FC;
+  --border:   #DDE3EC;
+  --text:     #1C2B45;
+  --text2:    #546E7A;
+  --text3:    #90A4AE;
+  --input-bg: #fff;
+  --input-border: #DDE3EC;
+  --section-hdr:  #EEF2F8;
+  --log-bg:   #1C2B45;
+  --graph-bg: #F0F4F8;
+}
+.theme-dark {
+  --bg:       #0A1220;
+  --surface:  #1C2B45;
+  --surface2: #141E30;
+  --border:   #2A3F5F;
+  --text:     #E8F4FD;
+  --text2:    #B0BEC5;
+  --text3:    #78909C;
+  --input-bg: #1C2B45;
+  --input-border: #2A3F5F;
+  --section-hdr:  #1C2B45;
+  --log-bg:   #070E19;
+  --graph-bg: #0D1926;
+}
+
+/* ────────────────  GRAPH RAIL  ────────────────── */
+.rail-graph { flex: 1; overflow: hidden; position: relative; background: var(--graph-bg); }
+.rail-graph svg { width: 100%; height: 100%; }
+.gc-btns { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+.gc-btn {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+}
+.gc-btn.active { background: #1C2B45; color: #E8C96A; border-color: #1C2B45; }
+
+.rail-log {
+  flex-shrink: 0;
+  height: 128px;
+  border-top: 1px solid var(--border);
+  background: var(--log-bg);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.log-hdr { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+.ldot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ldot-run { background: #FF9800; animation: pulse-dot 1s infinite; }
+.ldot-idle{ background: #4CAF50; }
+@keyframes pulse-dot { 0%,100%{opacity:1}50%{opacity:.3} }
+.log-title { font-size: 9px; letter-spacing: 1.5px; color: #78909C; font-weight: 700; text-transform: uppercase; }
+.log-count { margin-left: auto; font-size: 9px; color: #4FC3F7; font-weight: 700; }
+.log-entries { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.le { font-size: 10px; color: #78909C; padding: 1px 0; font-family: 'Consolas', monospace; white-space: nowrap; }
+.le .ts  { color: #4FC3F733; }
+.le .t-cascade { color: #FF9800; font-weight: 700; }
+.le .t-opus    { color: #4CAF50; font-weight: 700; }
+.le .t-ai      { color: #CE93D8; font-weight: 700; }
+.le .t-engine  { color: #90CAF9; font-weight: 700; }
+
+/* ────────────────  STAGE (PLAYGROUND TOOLS)  ──── */
+.stage-nav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.snav {
+  padding: 5px 13px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  color: var(--text2);
+  transition: all .15s;
+}
+.snav:hover { background: var(--surface); }
+.snav.active { background: #1C2B45; color: #E8C96A; border-color: #1C2B45; }
+.stage-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+/* cascade panel */
+.cp-head h2 { font-size: 13px; font-weight: 800; color: var(--text); }
+.cp-head p  { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.field-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.fchip {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--text2);
+  cursor: pointer;
+  font-weight: 600;
+}
+.fchip.sel { background: #1C2B451A; border-color: #1C2B45; color: #1C2B45; }
+.theme-dark .fchip.sel { background: #C9A84C22; border-color: #C9A84C; color: #E8C96A; }
+.slider-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.slider-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.slider-field-name { font-size: 10px; color: var(--text2); font-weight: 600; }
+.slider-val { font-size: 20px; font-weight: 800; color: var(--text); }
+.slider-old { font-size: 10px; color: var(--text3); text-decoration: line-through; margin-left: 5px; }
+.slider-track { height: 7px; background: var(--border); border-radius: 4px; position: relative; margin-bottom: 4px; }
+.slider-fill { position: absolute; left: 0; top: 0; width: 72%; height: 100%; background: linear-gradient(90deg, #4FC3F7, #C9A84C); border-radius: 4px; }
+.slider-thumb { position: absolute; left: 72%; top: 50%; transform: translate(-50%,-50%); width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid #C9A84C; box-shadow: 0 2px 6px #C9A84C44; }
+.slider-range { display: flex; justify-content: space-between; font-size: 9px; color: var(--text3); }
+.impact-card { background: #FFF8F0; border: 1.5px solid #FF980055; border-radius: 10px; padding: 10px 12px; }
+.theme-dark .impact-card { background: #FF980011; }
+.impact-title { font-size: 10px; font-weight: 800; color: #E65100; letter-spacing: .5px; margin-bottom: 8px; }
+.theme-dark .impact-title { color: #FF9800; }
+.impact-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #FF980022; font-size: 11px; }
+.impact-row:last-child { border-bottom: none; }
+.ir-dot { width: 7px; height: 7px; border-radius: 50%; background: #FF9800; flex-shrink: 0; }
+.ir-name { color: var(--text); font-weight: 600; flex: 1; }
+.ir-delta { color: #E65100; font-weight: 700; font-size: 10px; }
+.theme-dark .ir-delta { color: #FF9800; }
+.ir-badge { background: #FF980022; border: 1px solid #FF980066; color: #E65100; border-radius: 4px; padding: 1px 5px; font-size: 9px; font-weight: 800; }
+.risk-alert { background: #FFEBEE; border: 1px solid #EF9A9A; border-radius: 5px; padding: 5px 8px; font-size: 10px; color: #C62828; margin-top: 6px; }
+.theme-dark .risk-alert { background: #F4433611; border-color: #F4433644; color: #EF5350; }
+.btn-exec { flex: 1; background: #1C2B45; color: #E8C96A; border: none; border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.theme-dark .btn-exec { background: #C9A84C; color: #1C2B45; }
+.btn-cancel { background: var(--surface); color: var(--text2); border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 11px; cursor: pointer; }
+.live-feed { background: #1C2B45; border-radius: 8px; padding: 9px 11px; }
+.lf-title { font-size: 9px; color: #4FC3F7; letter-spacing: 2px; font-weight: 700; margin-bottom: 6px; }
+.lf-row { font-size: 10px; color: #90A4AE; padding: 2px 0; font-family: 'Consolas', monospace; }
+.lf-row .ts { color: #4FC3F733; margin-right: 4px; }
+.lf-row .ev-cascade { color: #FF9800; font-weight: 700; }
+.lf-row .ev-opus    { color: #4CAF50;  font-weight: 700; }
+.lf-row .ev-ai      { color: #CE93D8;  font-weight: 700; }
+.lf-row .ev-engine  { color: #90CAF9;  font-weight: 700; }
+.cursor { display: inline-block; width: 6px; height: 11px; background: #C9A84C; vertical-align: text-bottom; animation: blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+.homologate-btn { width: 100%; background: #E8F5E9; color: #2E7D32; border: 1.5px solid #A5D6A7; border-radius: 8px; padding: 9px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.theme-dark .homologate-btn { background: #4CAF5022; border-color: #4CAF50; color: #4CAF50; }
+
+/* ────────────────  CAMPOS (CENTRE PANE)  ──────── */
+.campos-header { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.campos-contract { font-size: 13px; font-weight: 800; color: var(--text); }
+.campos-sub      { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.opus-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #E8F5E9; border: 1px solid #A5D6A7; border-radius: 20px;
+  padding: 2px 9px; font-size: 10px; font-weight: 800; color: #2E7D32;
+}
+.theme-dark .opus-pill { background: #4CAF5022; border-color: #4CAF5066; color: #4CAF50; }
+.opus-dot { width: 6px; height: 6px; border-radius: 50%; background: #4CAF50; }
+.expand-btn {
+  margin-left: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: var(--text2);
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.campos-tabs { flex-shrink: 0; display: flex; overflow-x: auto; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 10px; scrollbar-width: none; }
+.campos-tabs::-webkit-scrollbar { display: none; }
+.ctab { padding: 7px 11px; font-size: 11px; color: var(--text3); cursor: pointer; border-bottom: 2.5px solid transparent; font-weight: 600; white-space: nowrap; }
+.ctab:hover { color: var(--text); }
+.ctab.active { color: var(--text); border-bottom-color: #C9A84C; }
+
+/* CAMPOS SCROLL BODY */
+.campos-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+/* two-col layout for v3 */
+.campos-body.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+/* one-col layout for v2 */
+.campos-body.one-col { display: flex; flex-direction: column; gap: 8px; }
+
+.fg-section { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.fg-section.span-2 { grid-column: 1 / -1; }
+.fg-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--section-hdr);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.fg-hdr:hover { filter: brightness(0.97); }
+.fg-title { font-size: 10px; font-weight: 800; letter-spacing: .8px; color: var(--text2); text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+.fg-badge {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 9px;
+  color: var(--text3);
+  border: 1px solid var(--border);
+}
+.fg-icon { font-size: 10px; color: var(--text3); }
+.fg-fields { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.fg-fields.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.fg-fields.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-item { display: flex; flex-direction: column; gap: 3px; }
+.field-item.span-all { grid-column: 1 / -1; }
+.field-lbl { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: .3px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+.req { color: #EF5350; }
+.updated-tag { background: #FFF3E0; border: 1px solid #FFCC80; color: #E65100; border-radius: 4px; padding: 0 5px; font-size: 9px; font-weight: 700; }
+.theme-dark .updated-tag { background: #FF980022; border-color: #FF980066; color: #FF9800; }
+.field-input {
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--text);
+  font-family: inherit;
+  width: 100%;
+  transition: border-color .15s;
+  resize: none;
+}
+.field-input:focus { outline: none; border-color: #C9A84C; box-shadow: 0 0 0 3px #C9A84C22; }
+.field-input.updated { border-color: #FF9800; background: #FFF8F0; color: #E65100; }
+.theme-dark .field-input.updated { background: #FF980011; color: #FF9800; }
+.field-hint { font-size: 9px; color: var(--text3); }
+.ess-note { font-size: 10px; color: var(--text3); background: var(--surface); border-radius: 5px; padding: 5px 8px; border: 1px solid var(--border); }
+.sub-status-list { display: flex; flex-direction: column; gap: 4px; }
+.ssr { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+.ssr:hover { border-color: #C9A84C; }
+.ssr-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ssr-name { font-size: 11px; font-weight: 600; color: var(--text); flex: 1; }
+.ssr-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+.ssr-complete { background: #E8F5E9; color: #2E7D32; }
+.ssr-review   { background: #FFF3E0; color: #E65100; }
+.theme-dark .ssr-complete { background: #4CAF5022; color: #4CAF50; }
+.theme-dark .ssr-review   { background: #FF980022; color: #FF9800; }
+.ssr-arrow { font-size: 11px; color: var(--text3); }
+.ai-clause-btn { background: #F3E5F5; color: #6A1B9A; border: 1.5px solid #CE93D8; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; }
+.theme-dark .ai-clause-btn { background: #9C27B022; border-color: #CE93D8; color: #CE93D8; }
+
+.campos-footer { flex-shrink: 0; padding: 9px 12px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 8px; }
+.cf-save { flex: 1; background: #1C2B45; color: #E8C96A; border: none; border-radius: 7px; padding: 9px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.cf-homologate { background: #E8F5E9; color: #2E7D32; border: 1.5px solid #A5D6A7; border-radius: 7px; padding: 8px 13px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.theme-dark .cf-homologate { background: #4CAF5022; border-color: #4CAF5066; color: #4CAF50; }
+
+/* ────────────────  CAMPOS DRAWER OVERLAY  ──────── */
+.drawer-overlay { position: fixed; inset: 0; background: #00000077; z-index: 500; display: none; align-items: center; justify-content: flex-end; }
+.drawer-overlay.open { display: flex; }
+.drawer-panel {
+  width: 720px; height: 100%;
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  box-shadow: -12px 0 40px #0003;
+  animation: slideIn .22s ease-out;
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.drawer-hdr { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.drawer-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.drawer-close { margin-left: auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--text2); font-weight: 600; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-content: start; }
+.drawer-section { grid-column: 1 / -1; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--text3); text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-top: 4px; }
+.drawer-field { display: flex; flex-direction: column; gap: 4px; }
+.drawer-field.full { grid-column: 1 / -1; }
+.drawer-field label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; }
+.drawer-field input, .drawer-field textarea, .drawer-field select {
+  background: var(--input-bg); border: 1.5px solid var(--input-border);
+  border-radius: 7px; padding: 9px 12px;
+  font-size: 13px; color: var(--text); font-family: inherit; width: 100%;
+  transition: border-color .15s;
+}
+.drawer-field input:focus, .drawer-field textarea:focus { outline: none; border-color: #C9A84C; box-shadow: 0 0 0 3px #C9A84C22; background: var(--surface); }
+.drawer-field textarea { resize: vertical; min-height: 80px; }
+.drawer-footer { flex-shrink: 0; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface2); display: flex; gap: 8px; }
+.df-save { flex: 1; background: #1C2B45; color: #E8C96A; border: none; border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.df-cancel { background: transparent; color: var(--text3); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 11px; cursor: pointer; }
+
+/* ────────────────  SAVE VERSION MODAL  ────────── */
+.modal-overlay { position: fixed; inset: 0; background: #00000077; z-index: 600; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #0D1926; border: 1px solid #2A3F5F; border-radius: 12px; padding: 24px; width: 420px; }
+.modal-title { font-size: 15px; font-weight: 800; color: #C9A84C; margin-bottom: 4px; }
+.modal-sub { font-size: 11px; color: #78909C; margin-bottom: 16px; }
+.modal-label { font-size: 10px; font-weight: 700; color: #78909C; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.modal-input {
+  width: 100%; background: #141E30; border: 1.5px solid #2A3F5F;
+  border-radius: 7px; padding: 9px 12px; font-size: 13px; color: #E8F4FD;
+  font-family: inherit; margin-bottom: 12px;
+}
+.modal-input:focus { outline: none; border-color: #C9A84C; }
+.modal-textarea { width: 100%; background: #141E30; border: 1.5px solid #2A3F5F; border-radius: 7px; padding: 9px 12px; font-size: 12px; color: #E8F4FD; font-family: inherit; resize: none; height: 70px; margin-bottom: 16px; }
+.modal-textarea:focus { outline: none; border-color: #C9A84C; }
+.modal-btns { display: flex; gap: 8px; }
+.modal-save { flex: 1; background: #C9A84C; color: #1C2B45; border: none; border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.modal-cancel { background: transparent; color: #78909C; border: 1.5px solid #2A3F5F; border-radius: 8px; padding: 10px 14px; font-size: 11px; cursor: pointer; }
+.modal-changes-preview { background: #141E30; border: 1px solid #2A3F5F; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; max-height: 80px; overflow-y: auto; }
+.modal-change-item { font-size: 10px; color: #90A4AE; padding: 2px 0; display: flex; gap: 6px; align-items: center; }
+.modal-change-item::before { content: '+'; color: #4CAF50; font-weight: 700; }
+
+/* ────────────────  TOAST NOTIFICATIONS  ─────── */
+.toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 700; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+  background: #1C2B45;
+  border: 1px solid #2A3F5F;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: #E8F4FD;
+  box-shadow: 0 4px 16px #0004;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastIn .25s ease-out, toastOut .25s ease-in 2.5s forwards;
+}
+@keyframes toastIn  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes toastOut { to   { opacity:0; transform:translateY(10px); } }
+.toast-icon { font-size: 15px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     VERSION CONTROL BAR
+══════════════════════════════════════════════════════════ -->
+<div id="vcbar">
+  <div class="vc-logo">Φ<span>VERSION HISTORY</span></div>
+  <button class="vc-nav" id="btnPrev" onclick="navigateVersion(-1)" title="Previous version">← Prev</button>
+  <div class="vc-track" id="vctrack">
+    <div class="vc-line"></div>
+    <div class="vc-line-fill" id="vcLineFill"></div>
+    <!-- nodes injected by JS -->
+  </div>
+  <button class="vc-nav" id="btnNext" onclick="navigateVersion(+1)" title="Next version">Next →</button>
+  <button class="vc-save-btn" onclick="openSaveModal()">+ Save version</button>
+  <div class="vc-badge" id="vcBadge"><b id="vcCurrent">v1</b> of <span id="vcTotal">3</span></div>
+  <button class="vd-toggle" onclick="toggleDetail()" title="Show/hide version details">▼</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     VERSION DETAIL STRIP
+══════════════════════════════════════════════════════════ -->
+<div id="vdetail">
+  <div class="vd-version" id="vdNum">v1</div>
+  <div class="vd-info">
+    <div class="vd-title" id="vdTitle"></div>
+    <div class="vd-date" id="vdDate"></div>
+    <div class="vd-changes" id="vdChanges"></div>
+  </div>
+  <button class="vd-toggle" onclick="toggleDetail()">▲ collapse</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════════════════════ -->
+<div id="appshell">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="app-logo">Φ PHENOMENON <sub>Contract Intelligence</sub></div>
+    <div class="hchip"><b>16</b> contratos</div>
+    <div class="hchip"><b>12</b> activos · <b>4</b> masters</div>
+    <div class="hchip">KPMG Valencia 5★</div>
+    <div class="spacer"></div>
+    <button class="hbtn hbtn-verify">◉ Verificar todos</button>
+    <button class="hbtn hbtn-demo">✦ Demo Mode</button>
+  </div>
+
+  <!-- WORKSPACE (3 resizable panes) -->
+  <div class="workspace" id="workspace">
+
+    <!-- LEFT RAIL -->
+    <div class="pane pane-rail" id="paneRail" style="width:220px;">
+      <div class="rail-graph" id="railGraph">
+        <div class="gc-btns">
+          <button class="gc-btn active">Radial</button>
+          <button class="gc-btn">Full</button>
+        </div>
+        <svg viewBox="0 0 220 450">
+          <circle cx="110" cy="170" r="50" fill="#C9A84C" opacity="0.05"/>
+          <ellipse cx="110" cy="208" rx="28" ry="5" fill="#1C2B45" opacity="0.06"/>
+          <!-- edges -->
+          <line x1="110" y1="170" x2="50" y2="290" stroke="#1C2B45" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.2"/>
+          <line x1="110" y1="170" x2="170" y2="290" stroke="#1C2B45" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.2"/>
+          <line x1="110" y1="170" x2="110" y2="310" stroke="#1C2B45" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.2"/>
+          <line x1="110" y1="170" x2="42" y2="375" stroke="#1C2B45" stroke-width="1" stroke-dasharray="4,5" opacity="0.12"/>
+          <!-- pulse dots -->
+          <circle r="4" fill="#FF9800" opacity="0.85"><animateMotion dur="1.6s" repeatCount="indefinite" path="M110,170 L50,290"/></circle>
+          <circle r="4" fill="#FF9800" opacity="0.85"><animateMotion dur="2s" repeatCount="indefinite" begin="0.4s" path="M110,170 L170,290"/></circle>
+          <circle r="4" fill="#FF9800" opacity="0.85"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.8s" path="M110,170 L110,310"/></circle>
+          <!-- master node -->
+          <circle cx="110" cy="170" r="34" fill="white" stroke="#1C2B45" stroke-width="2.5"/>
+          <circle cx="110" cy="170" r="39" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.7"/>
+          <text x="110" y="165" text-anchor="middle" fill="#1C2B45" font-size="10" font-weight="800">KPMG</text>
+          <text x="110" y="177" text-anchor="middle" fill="#1C2B45" font-size="8">MASTER</text>
+          <rect x="88" y="185" width="44" height="11" rx="5.5" fill="#C9A84C"/>
+          <text x="110" y="193" text-anchor="middle" fill="#1C2B45" font-size="7.5" font-weight="800">OPONIBLE</text>
+          <!-- sub nodes -->
+          <circle cx="50" cy="305" r="22" fill="white" stroke="#FF9800" stroke-width="2"><animate attributeName="stroke-opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/></circle>
+          <text x="50" y="301" text-anchor="middle" fill="#E65100" font-size="8" font-weight="700">FIN</text>
+          <text x="50" y="311" text-anchor="middle" fill="#E65100" font-size="7">REVIEW</text>
+          <circle cx="170" cy="305" r="22" fill="white" stroke="#FF9800" stroke-width="2"><animate attributeName="stroke-opacity" values="1;0.2;1" dur="1.3s" repeatCount="indefinite"/></circle>
+          <text x="170" y="301" text-anchor="middle" fill="#E65100" font-size="8" font-weight="700">HIP</text>
+          <text x="170" y="311" text-anchor="middle" fill="#E65100" font-size="7">REVIEW</text>
+          <circle cx="110" cy="328" r="22" fill="white" stroke="#FF9800" stroke-width="2"><animate attributeName="stroke-opacity" values="1;0.2;1" dur="1.6s" repeatCount="indefinite"/></circle>
+          <text x="110" y="324" text-anchor="middle" fill="#E65100" font-size="7.5" font-weight="700">CESION</text>
+          <text x="110" y="334" text-anchor="middle" fill="#E65100" font-size="7">REVIEW</text>
+          <circle cx="42" cy="388" r="17" fill="#F7F9FC" stroke="#DDE3EC" stroke-width="1.5"/>
+          <text x="42" y="391" text-anchor="middle" fill="#78909C" font-size="7">GOB</text>
+          <!-- legend -->
+          <rect x="0" y="425" width="220" height="22" fill="#EEF1F6"/>
+          <circle cx="12" cy="436" r="5" fill="#C9A84C"/>
+          <text x="20" y="440" fill="#546E7A" font-size="8" font-weight="700">OPONIBLE</text>
+          <circle cx="70" cy="436" r="5" fill="white" stroke="#FF9800" stroke-width="2"/>
+          <text x="78" y="440" fill="#546E7A" font-size="8" font-weight="700">NEEDS_REVIEW</text>
+          <line x1="145" y1="436" x2="158" y2="436" stroke="#1C2B45" stroke-dasharray="3,3" stroke-width="1.5"/>
+          <text x="162" y="440" fill="#546E7A" font-size="8" font-weight="700">IF</text>
+        </svg>
+      </div>
+      <div class="rail-log">
+        <div class="log-hdr">
+          <div class="ldot ldot-run"></div>
+          <span class="log-title">Motor · En vivo</span>
+          <span class="log-count">6</span>
+        </div>
+        <div class="log-entries">
+          <div class="le"><span class="ts">14:23:01 </span><span class="t-cascade">cascade </span>EURIBOR 3.50→5.50%</div>
+          <div class="le"><span class="ts">14:23:01 </span><span class="t-engine">engine  </span>Propagando 3 IF…</div>
+          <div class="le"><span class="ts">14:23:02 </span><span class="t-opus">opus    </span>FINANCIACION→REVIEW</div>
+          <div class="le"><span class="ts">14:23:02 </span><span class="t-opus">opus    </span>CESION→REVIEW</div>
+          <div class="le"><span class="ts">14:23:03 </span><span class="t-ai">ai      </span>Análisis completado</div>
+          <div class="le"><span class="ts">14:23:03 </span><span class="t-cascade">cascade </span>¿Homologar?<span class="cursor" style="margin-left:3px;"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPLITTER 1 -->
+    <div class="splitter" id="splitter1"></div>
+
+    <!-- CENTRE — CAMPOS (main working pane) -->
+    <div class="pane pane-campos" id="paneCampos">
+      <div class="campos-header">
+        <div>
+          <div class="campos-contract">Arrendamiento KPMG Valencia</div>
+          <div class="campos-sub">Master · 4 sub-contratos vinculados</div>
+        </div>
+        <div class="opus-pill"><div class="opus-dot"></div>OPONIBLE</div>
+        <button class="expand-btn" onclick="openDrawer()">⤢ Expandir todos los campos</button>
+      </div>
+      <div class="campos-tabs">
+        <div class="ctab active">Campos</div>
+        <div class="ctab">Ecosistema</div>
+        <div class="ctab">Riesgo</div>
+        <div class="ctab">Red IF</div>
+        <div class="ctab">Verificar</div>
+        <div class="ctab">IA</div>
+        <div class="ctab">Documento</div>
+      </div>
+      <div class="campos-body two-col" id="camposBody">
+
+        <!-- ESS — spans both columns -->
+        <div class="fg-section span-2">
+          <div class="fg-hdr" onclick="toggleFg(this)">
+            <div class="fg-title">🔒 ESS — Identidad Estable<span class="fg-badge">5 campos · todos ✓</span></div>
+            <span class="fg-icon">▲</span>
+          </div>
+          <div class="fg-fields grid-3">
+            <div class="field-item">
+              <div class="field-lbl">Parte A <span class="req">*</span></div>
+              <input class="field-input" value="KPMG España S.L."/>
+              <span class="field-hint">Arrendatario</span>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Parte B <span class="req">*</span></div>
+              <input class="field-input" value="Inmuebles Valencia S.A."/>
+              <span class="field-hint">Arrendador</span>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Jurisdicción <span class="req">*</span></div>
+              <input class="field-input" value="Madrid · Derecho español"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Fecha inicio <span class="req">*</span></div>
+              <input class="field-input" type="date" value="2024-01-01"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Fecha vencimiento <span class="req">*</span></div>
+              <input class="field-input" type="date" value="2029-06-30"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Oficina registral</div>
+              <input class="field-input" placeholder="Nº finca, tomo, folio…"/>
+              <span class="field-hint">Al rellenar → OPONIBLE</span>
+            </div>
+            <div class="field-item span-all">
+              <div class="ess-note">🔒 Cambiar un campo ESS propaga automáticamente una <b>cascada</b> a los 4 sub-contratos vinculados. Use el panel derecho para previsualizar el impacto antes de guardar.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AG — left column -->
+        <div class="fg-section">
+          <div class="fg-hdr" onclick="toggleFg(this)">
+            <div class="fg-title">⚙️ AG — Campos Operativos<span class="fg-badge">8 campos</span></div>
+            <span class="fg-icon">▲</span>
+          </div>
+          <div class="fg-fields">
+            <div class="field-item">
+              <div class="field-lbl">EURIBOR 12M <span class="updated-tag">⚡ ACTUALIZADO</span></div>
+              <input class="field-input updated" value="5.50% ↑ (era 3.50%)"/>
+              <span class="field-hint">Afecta a FINANCIACION, CESION, HIPOTECA</span>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Renta mensual base (€)</div>
+              <input class="field-input" value="38.500"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Cuota financiación (€/mes) <span class="updated-tag">⚡</span></div>
+              <input class="field-input updated" value="57.200 ↑ (era 38.750)"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Cap coste financiero (%)</div>
+              <input class="field-input" value="7.0"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Área arrendada (m²)</div>
+              <input class="field-input" value="4.850"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Depósito de garantía (€)</div>
+              <input class="field-input" value="115.500"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Penalización incumplimiento (€)</div>
+              <input class="field-input" value="250.000"/>
+            </div>
+            <div class="field-item">
+              <div class="field-lbl">Ley aplicable</div>
+              <input class="field-input" value="LAU 1994 · Art. 1554 CC"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Cláusulas + Sub-contratos + Registro -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+
+          <div class="fg-section">
+            <div class="fg-hdr" onclick="toggleFg(this)">
+              <div class="fg-title">📄 Cláusulas<span class="fg-badge">2</span></div>
+              <span class="fg-icon">▲</span>
+            </div>
+            <div class="fg-fields">
+              <div class="field-item">
+                <div class="field-lbl">Revisión EURIBOR</div>
+                <textarea class="field-input" rows="2">Ajuste trimestral según EURIBOR 12M publicado por el BCE.</textarea>
+              </div>
+              <div class="field-item">
+                <div class="field-lbl">Rescisión anticipada</div>
+                <textarea class="field-input" rows="2">Penalización por rescisión anticipada: 6 meses de renta.</textarea>
+              </div>
+              <button class="ai-clause-btn">✦ Generar cláusula con IA →</button>
+            </div>
+          </div>
+
+          <div class="fg-section">
+            <div class="fg-hdr" onclick="toggleFg(this)">
+              <div class="fg-title">🔗 Sub-contratos IF<span class="fg-badge">4 vinculados</span></div>
+              <span class="fg-icon">▲</span>
+            </div>
+            <div class="fg-fields">
+              <div class="sub-status-list">
+                <div class="ssr"><div class="ssr-dot" style="background:#FF9800;"></div><span class="ssr-name">FINANCIACION</span><span class="ssr-badge ssr-review">NEEDS_REVIEW</span><span class="ssr-arrow">›</span></div>
+                <div class="ssr"><div class="ssr-dot" style="background:#FF9800;"></div><span class="ssr-name">CESION_CREDITO</span><span class="ssr-badge ssr-review">NEEDS_REVIEW</span><span class="ssr-arrow">›</span></div>
+                <div class="ssr"><div class="ssr-dot" style="background:#FF9800;"></div><span class="ssr-name">HIPOTECA_GARANTIA</span><span class="ssr-badge ssr-review">NEEDS_REVIEW</span><span class="ssr-arrow">›</span></div>
+                <div class="ssr"><div class="ssr-dot" style="background:#4CAF50;"></div><span class="ssr-name">GOBERNANZA</span><span class="ssr-badge ssr-complete">COMPLETE</span><span class="ssr-arrow">›</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg-section">
+            <div class="fg-hdr" onclick="toggleFg(this)">
+              <div class="fg-title">🏛️ Registro Propiedad<span class="fg-badge" style="background:#FFF8E1;color:#E65100;border-color:#FFCC80;">Pendiente</span></div>
+              <span class="fg-icon">▲</span>
+            </div>
+            <div class="fg-fields">
+              <div class="field-item">
+                <div class="field-lbl">Oficina registral</div>
+                <input class="field-input" placeholder="Nº finca, tomo, folio, libro…"/>
+                <span class="field-hint">Rellenar → nivel OPONIBLE</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- campos-body -->
+      <div class="campos-footer">
+        <button class="cf-save">💾 Guardar cambios</button>
+        <button class="cf-homologate">✓ Homologar ecosistema</button>
+      </div>
+    </div><!-- paneCampos -->
+
+    <!-- SPLITTER 2 -->
+    <div class="splitter" id="splitter2"></div>
+
+    <!-- RIGHT — PLAYGROUND TOOLS -->
+    <div class="pane pane-stage" id="paneStage" style="width:400px;">
+      <div class="stage-nav">
+        <button class="snav active">⚡ Cascada</button>
+        <button class="snav">✦ Forja IA</button>
+        <button class="snav">◎ Opus</button>
+        <button class="snav">◈ Red</button>
+      </div>
+      <div class="stage-body">
+        <div class="cp-head">
+          <h2>⚡ CASCADA EN VIVO</h2>
+          <p>KPMG Valencia 5★ · 4 sub-contratos · campo activo: EURIBOR 12M</p>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Campo ESS a modificar</div>
+          <div class="field-chips">
+            <div class="fchip sel">EURIBOR 12M</div>
+            <div class="fchip">jurisdiction</div>
+            <div class="fchip">expiryDate</div>
+            <div class="fchip">partyA</div>
+          </div>
+        </div>
+        <div class="slider-card">
+          <div class="slider-top">
+            <span class="slider-field-name">EURIBOR 12M</span>
+            <div><span class="slider-val">5.50%</span><span class="slider-old">era 3.50%</span></div>
+          </div>
+          <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div></div>
+          <div class="slider-range"><span>0%</span><span>2%</span><span>4%</span><span>6%</span><span>8%</span></div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-title">⚠ IMPACTO PREVISTO — 3 CONTRATOS</div>
+          <div class="impact-row"><div class="ir-dot"></div><span class="ir-name">FINANCIACION</span><span class="ir-delta">cuota +€18.450/mes</span><span class="ir-badge">REVIEW</span></div>
+          <div class="impact-row"><div class="ir-dot"></div><span class="ir-name">CESION_CREDITO</span><span class="ir-delta">rentas recalculadas</span><span class="ir-badge">REVIEW</span></div>
+          <div class="impact-row"><div class="ir-dot"></div><span class="ir-name">HIPOTECA_GARANTIA</span><span class="ir-delta">coste +€4.4M</span><span class="ir-badge">REVIEW</span></div>
+          <div class="risk-alert">⛔ Riesgo alto: coste 7.1% &gt; cap 7.0%</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-exec">⚡ Ejecutar cascada</button>
+          <button class="btn-cancel">Cancelar</button>
+        </div>
+        <div class="live-feed">
+          <div class="lf-title">── MOTOR EN VIVO ──</div>
+          <div class="lf-row"><span class="ts">14:23:01 </span><span class="ev-cascade">cascade</span> EURIBOR: 3.50% → 5.50%</div>
+          <div class="lf-row"><span class="ts">14:23:01 </span><span class="ev-engine">engine </span> Propagando a 3 IF…</div>
+          <div class="lf-row"><span class="ts">14:23:02 </span><span class="ev-opus">opus   </span> FINANCIACION → REVIEW</div>
+          <div class="lf-row"><span class="ts">14:23:03 </span><span class="ev-ai">ai     </span> Análisis completado</div>
+          <div class="lf-row"><span class="ts">14:23:03 </span><span class="ev-cascade">cascade</span> Completa. ¿Homologar?<span class="cursor"></span></div>
+        </div>
+        <button class="homologate-btn">✓ Homologar ecosistema completo</button>
+      </div>
+    </div>
+
+  </div><!-- workspace -->
+</div><!-- appshell -->
+
+<!-- CAMPOS DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="handleOverlayClick(event)">
+  <div class="drawer-panel" onclick="event.stopPropagation()">
+    <div class="drawer-hdr">
+      <div><div class="drawer-title">📋 Arrendamiento KPMG Valencia — Vista expandida</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">Todos los campos · 2 columnas · Scroll por sección</div></div>
+      <button class="drawer-close" onclick="closeDrawer()">✕ Cerrar</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">🔒 ESS — IDENTIDAD ESTABLE</div>
+      <div class="drawer-field"><label>Parte A *</label><input type="text" value="KPMG España S.L."></div>
+      <div class="drawer-field"><label>Parte B *</label><input type="text" value="Inmuebles Valencia S.A."></div>
+      <div class="drawer-field"><label>Jurisdicción *</label><select><option>Madrid · Derecho español</option><option>Barcelona · Derecho español</option></select></div>
+      <div class="drawer-field"><label>Fecha inicio *</label><input type="date" value="2024-01-01"></div>
+      <div class="drawer-field"><label>Fecha vencimiento *</label><input type="date" value="2029-06-30"></div>
+      <div class="drawer-field"><label>Oficina registral</label><input type="text" placeholder="Nº finca, tomo, folio…"></div>
+      <div class="drawer-section">⚙️ AG — CAMPOS OPERATIVOS</div>
+      <div class="drawer-field"><label>EURIBOR 12M (%) ⚡</label><input type="number" value="5.50" step="0.01" style="border-color:#FF9800;background:#FFF8F0;color:#E65100;"></div>
+      <div class="drawer-field"><label>Renta mensual base (€)</label><input type="number" value="38500"></div>
+      <div class="drawer-field"><label>Cuota financiación (€/mes) ⚡</label><input type="number" value="57200" style="border-color:#FF9800;background:#FFF8F0;color:#E65100;"></div>
+      <div class="drawer-field"><label>Cap coste financiero (%)</label><input type="number" value="7.0" step="0.1"></div>
+      <div class="drawer-field"><label>Área arrendada (m²)</label><input type="number" value="4850"></div>
+      <div class="drawer-field"><label>Depósito de garantía (€)</label><input type="number" value="115500"></div>
+      <div class="drawer-field"><label>Penalización incumplimiento (€)</label><input type="number" value="250000"></div>
+      <div class="drawer-field"><label>Ley aplicable</label><input type="text" value="LAU 1994 · Art. 1554 CC"></div>
+      <div class="drawer-section">📄 CLÁUSULAS</div>
+      <div class="drawer-field full"><label>Revisión EURIBOR</label><textarea>Ajuste trimestral según EURIBOR 12M publicado por el BCE.</textarea></div>
+      <div class="drawer-field full"><label>Rescisión anticipada</label><textarea>Penalización: 6 meses de renta mensual base.</textarea></div>
+      <div class="drawer-field full"><label>Confidencialidad</label><textarea placeholder="Sin cláusula todavía. Pulsa «Generar con IA»."></textarea></div>
+    </div>
+    <div class="drawer-footer">
+      <button class="df-save">💾 Guardar todos los cambios</button>
+      <button class="df-cancel" onclick="closeDrawer()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE VERSION MODAL -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box">
+    <div class="modal-title">+ Guardar nueva versión</div>
+    <div class="modal-sub">Crea un snapshot del diseño actual. Podrás volver en cualquier momento.</div>
+    <div class="modal-label">Nombre de la versión</div>
+    <input class="modal-input" id="versionNameInput" placeholder="ej. Campos expandidos, tema azul…" maxlength="60"/>
+    <div class="modal-label">Cambios introducidos</div>
+    <textarea class="modal-textarea" id="versionChangesInput" placeholder="Describe qué cambiaste respecto a la versión anterior…"></textarea>
+    <div class="modal-label">Cambios detectados automáticamente</div>
+    <div class="modal-changes-preview" id="autoChanges"></div>
+    <div class="modal-btns">
+      <button class="modal-save" onclick="saveVersion()">Guardar versión</button>
+      <button class="modal-cancel" onclick="closeSaveModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   VERSION DATA STORE
+══════════════════════════════════════════════════════════ */
+const VERSIONS = [
+  {
+    id: 1,
+    label: 'Dark Theme · 2-pane original',
+    date: '2026-05-21',
+    changes: [
+      { text: 'Dark navy colour scheme',  type: 'added' },
+      { text: '2-pane layout: graph + right detail', type: 'added' },
+      { text: 'Fields panel on the right', type: 'added' },
+      { text: 'No playground surfaces', type: 'added' },
+    ],
+    config: {
+      theme: 'dark',
+      camposLayout: 'one-col',
+      paneOrder: 'rail-stage-campos',   // stage=old right-detail, campos=hidden concept
+      stageWidth: 480,
+      railWidth: 240,
+    }
+  },
+  {
+    id: 2,
+    label: 'Light Theme · 3-pane resizable',
+    date: '2026-05-21',
+    changes: [
+      { text: 'Light colour scheme', type: 'added' },
+      { text: '3-pane resizable layout', type: 'added' },
+      { text: 'Playground tools in centre pane', type: 'added' },
+      { text: 'Campos (fields) on the right', type: 'added' },
+      { text: 'Drag splitters between panes', type: 'added' },
+      { text: 'Dark theme removed', type: 'removed' },
+    ],
+    config: {
+      theme: 'light',
+      camposLayout: 'one-col',
+      paneOrder: 'rail-stage-campos',
+      stageWidth: 560,
+      railWidth: 240,
+    }
+  },
+  {
+    id: 3,
+    label: 'Campos Centre · Main pane',
+    date: '2026-05-21',
+    changes: [
+      { text: 'Campos moved to centre (main pane)', type: 'changed' },
+      { text: 'Playground tools moved to right', type: 'changed' },
+      { text: '2-column field grid in Campos', type: 'added' },
+      { text: 'ESS section spans full width', type: 'added' },
+      { text: 'Expand drawer (full-width)', type: 'added' },
+    ],
+    config: {
+      theme: 'light',
+      camposLayout: 'two-col',
+      paneOrder: 'rail-campos-stage',
+      stageWidth: 400,
+      railWidth: 220,
+    }
+  }
+];
+
+let currentVersionIdx = 2; // start on v3
+
+/* ══════════════════════════════════════════════════════════
+   VERSION CONTROL RENDERING
+══════════════════════════════════════════════════════════ */
+function renderVersionBar() {
+  const track = document.getElementById('vctrack');
+  // remove old nodes (keep line divs)
+  track.querySelectorAll('.vc-node').forEach(n => n.remove());
+
+  VERSIONS.forEach((v, i) => {
+    const node = document.createElement('div');
+    node.className = 'vc-node' + (i === currentVersionIdx ? ' current' : (i < currentVersionIdx ? ' visited' : ''));
+    node.innerHTML = `<div class="vc-dot">${v.id}</div><div class="vc-label">${v.label}</div>`;
+    node.onclick = () => applyVersion(i);
+    node.title = `v${v.id}: ${v.label}`;
+    track.appendChild(node);
+  });
+
+  // fill line
+  const pct = VERSIONS.length > 1 ? (currentVersionIdx / (VERSIONS.length - 1)) * 100 : 0;
+  document.getElementById('vcLineFill').style.width = `calc(${pct}% - ${pct < 100 ? 16 : 0}px)`;
+
+  document.getElementById('vcCurrent').textContent = 'v' + VERSIONS[currentVersionIdx].id;
+  document.getElementById('vcTotal').textContent   = VERSIONS.length;
+  document.getElementById('btnPrev').disabled = currentVersionIdx === 0;
+  document.getElementById('btnNext').disabled = currentVersionIdx === VERSIONS.length - 1;
+
+  renderVersionDetail();
+}
+
+function renderVersionDetail() {
+  const v = VERSIONS[currentVersionIdx];
+  document.getElementById('vdNum').textContent   = 'v' + v.id;
+  document.getElementById('vdTitle').textContent = v.label;
+  document.getElementById('vdDate').textContent  = v.date;
+  const ch = document.getElementById('vdChanges');
+  ch.innerHTML = '';
+  v.changes.forEach(c => {
+    const span = document.createElement('span');
+    span.className = 'vd-change ' + (c.type || '');
+    span.textContent = (c.type === 'added' ? '+ ' : c.type === 'removed' ? '− ' : '~ ') + c.text;
+    ch.appendChild(span);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   APPLY VERSION CONFIG
+══════════════════════════════════════════════════════════ */
+function applyVersion(idx) {
+  if (idx < 0 || idx >= VERSIONS.length) return;
+  currentVersionIdx = idx;
+  const v = VERSIONS[idx];
+  const cfg = v.config;
+  const shell = document.getElementById('appshell');
+
+  // fade transition
+  shell.classList.add('transitioning');
+  setTimeout(() => {
+    // theme
+    shell.className = shell.className.replace(/theme-\w+/, '');
+    shell.classList.remove('theme-dark', 'theme-light');
+    shell.classList.add('theme-' + cfg.theme);
+
+    // campos layout (1 or 2 col)
+    const cb = document.getElementById('camposBody');
+    cb.className = 'campos-body ' + (cfg.camposLayout === 'two-col' ? 'two-col' : 'one-col');
+
+    // pane order
+    const rail   = document.getElementById('paneRail');
+    const campos = document.getElementById('paneCampos');
+    const stage  = document.getElementById('paneStage');
+    const sp1    = document.getElementById('splitter1');
+    const sp2    = document.getElementById('splitter2');
+    const ws     = document.getElementById('workspace');
+
+    if (cfg.paneOrder === 'rail-campos-stage') {
+      // current v3 layout: rail | campos | stage
+      ws.innerHTML = '';
+      ws.appendChild(rail);
+      ws.appendChild(sp1);
+      ws.appendChild(campos);
+      ws.appendChild(sp2);
+      ws.appendChild(stage);
+      campos.style.flex = '1';
+      stage.style.width = cfg.stageWidth + 'px';
+      stage.style.flex  = 'none';
+    } else {
+      // v1/v2 layout: rail | stage | campos
+      ws.innerHTML = '';
+      ws.appendChild(rail);
+      ws.appendChild(sp1);
+      ws.appendChild(stage);
+      ws.appendChild(sp2);
+      ws.appendChild(campos);
+      stage.style.flex  = '1';
+      stage.style.width = '';
+      campos.style.flex = 'none';
+      campos.style.width = cfg.stageWidth + 'px';
+    }
+
+    rail.style.width = cfg.railWidth + 'px';
+
+    // re-init splitters after DOM change
+    initSplitters();
+
+    shell.classList.remove('transitioning');
+    renderVersionBar();
+    showToast('⬡', `Versión ${v.id} cargada: ${v.label}`);
+  }, 180);
+}
+
+function navigateVersion(dir) {
+  applyVersion(currentVersionIdx + dir);
+}
+
+/* ══════════════════════════════════════════════════════════
+   SAVE NEW VERSION
+══════════════════════════════════════════════════════════ */
+function openSaveModal() {
+  const v = VERSIONS[currentVersionIdx];
+  document.getElementById('versionNameInput').value = '';
+  document.getElementById('versionChangesInput').value = '';
+  // auto-detect: compare config with previous version
+  const ac = document.getElementById('autoChanges');
+  ac.innerHTML = '';
+  const autoList = [
+    'Theme: ' + v.config.theme,
+    'Layout: ' + v.config.paneOrder,
+    'Campos columns: ' + v.config.camposLayout,
+    'Stage width: ' + v.config.stageWidth + 'px',
+  ];
+  autoList.forEach(t => {
+    const d = document.createElement('div');
+    d.className = 'modal-change-item';
+    d.textContent = t;
+    ac.appendChild(d);
+  });
+  document.getElementById('saveModal').classList.add('open');
+  setTimeout(() => document.getElementById('versionNameInput').focus(), 50);
+}
+
+function closeSaveModal() {
+  document.getElementById('saveModal').classList.remove('open');
+}
+
+function saveVersion() {
+  const name = document.getElementById('versionNameInput').value.trim();
+  if (!name) { document.getElementById('versionNameInput').focus(); return; }
+  const changesText = document.getElementById('versionChangesInput').value.trim();
+  const newV = {
+    id: VERSIONS.length + 1,
+    label: name,
+    date: new Date().toISOString().slice(0, 10),
+    changes: changesText
+      ? changesText.split('\n').filter(Boolean).map(t => ({ text: t, type: 'added' }))
+      : [{ text: 'Guardado desde v' + VERSIONS[currentVersionIdx].id, type: 'changed' }],
+    config: JSON.parse(JSON.stringify(VERSIONS[currentVersionIdx].config)),
+  };
+  VERSIONS.push(newV);
+  currentVersionIdx = VERSIONS.length - 1;
+  closeSaveModal();
+  renderVersionBar();
+  showToast('✓', `v${newV.id} guardada: "${name}"`);
+}
+
+/* ══════════════════════════════════════════════════════════
+   DRAG SPLITTERS
+══════════════════════════════════════════════════════════ */
+function initSplitters() {
+  // re-bind after DOM restructure
+  setupSplitter('splitter1');
+  setupSplitter('splitter2');
+}
+
+function setupSplitter(id) {
+  const sp = document.getElementById(id);
+  if (!sp) return;
+  // clone to remove old listeners
+  const fresh = sp.cloneNode(true);
+  sp.parentNode.replaceChild(fresh, sp);
+  let dragging = false, startX = 0;
+
+  fresh.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX;
+    fresh.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const prev = fresh.previousElementSibling;
+    const next = fresh.nextElementSibling;
+    if (!prev || !next) return;
+    const dx = e.clientX - startX;
+    startX = e.clientX;
+    const prevW = prev.offsetWidth + dx;
+    const nextW = next.offsetWidth - dx;
+    if (prevW > 120 && nextW > 120) {
+      prev.style.width = prevW + 'px';
+      prev.style.flex  = 'none';
+      next.style.width = nextW + 'px';
+      next.style.flex  = 'none';
+    }
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    fresh.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   MISC UI
+══════════════════════════════════════════════════════════ */
+function toggleDetail() {
+  document.getElementById('vdetail').classList.toggle('collapsed');
+}
+
+function toggleFg(hdr) {
+  const body = hdr.nextElementSibling;
+  const icon = hdr.querySelector('.fg-icon');
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+  icon.textContent = body.style.display === 'none' ? '▼' : '▲';
+}
+
+function openDrawer()  { document.getElementById('drawerOverlay').classList.add('open'); }
+function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target.id === 'drawerOverlay') closeDrawer(); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDrawer(); closeSaveModal(); }
+  if (e.key === 'ArrowLeft'  && !e.target.matches('input,textarea')) navigateVersion(-1);
+  if (e.key === 'ArrowRight' && !e.target.matches('input,textarea')) navigateVersion(+1);
+});
+
+/* TOAST */
+function showToast(icon, msg) {
+  const w = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span class="toast-icon">${icon}</span>${msg}`;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+/* ── INIT ─────────────────────────────────────────────── */
+document.getElementById('appshell').classList.add('theme-light');
+initSplitters();
+renderVersionBar();
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "project": "PHENOMENON Contract Intelligence System",
+  "started": "2026-05-20",
+  "last_updated": "2026-05-20",
+  "notes": "Source of truth for Claude's performance metrics on this project. Edit this file, then run scripts/rebuild_performance.py to regenerate performance.html. Specification: PROJECT_DIAGNOSIS.md sect 9.",
+
+  "metric_targets": {
+    "proactive_detection_rate_pct": 70,
+    "regression_rate_pct_max": 5,
+    "engine_coverage_pct_min": 80,
+    "backend_coverage_pct_min": 80
+  },
+
+  "current_state": {
+    "engine_coverage_pct": null,
+    "backend_coverage_pct": null,
+    "engine_tests_passing": 0,
+    "engine_tests_total": 0,
+    "backend_tests_passing": 0,
+    "backend_tests_total": 0,
+    "e2e_tests_passing": null,
+    "e2e_tests_total": 8,
+    "notes": "Coverage is null because no Python tests exist yet — task #3 will create them. e2e suite exists but is smoke-only."
+  },
+
+  "sessions": [
+    {
+      "id": "2026-05-20-01",
+      "date": "2026-05-20",
+      "summary": "Honest end-to-end diagnosis written (PROJECT_DIAGNOSIS.md + .html). Task list created (12 tasks across two horizons). Rename pass on Property Registry action labels (decision #4). Self-correction of STUB-vs-PARTIAL mislabeling caught proactively.",
+      "tasks_attempted": ["#6", "#1", "#2"],
+      "tasks_completed": ["#6", "#1"],
+      "bugs_found_by_claude": 1,
+      "bugs_found_by_user": 0,
+      "tests_added": 0,
+      "regressions": 0,
+      "commits": 0,
+      "files_modified": [
+        "CLAUDE.md",
+        "PROJECT_DIAGNOSIS.md",
+        "PROJECT_DIAGNOSIS.html",
+        "SYSTEM_STATUS.md",
+        "phenomenon/CHANGES.md",
+        "phenomenon/apps/contracts/frontend/src/components/ContractDetailPanel.jsx",
+        "phenomenon/apps/contracts/frontend/src/components/KPMGDemoPanel.jsx"
+      ]
+    }
+  ],
+
+  "proactive_detections": [
+    {
+      "date": "2026-05-20",
+      "session": "2026-05-20-01",
+      "what": "PROJECT_DIAGNOSIS.md initial draft misclassified Block VIII (base_cases.py) and Block IX (validate_structure) as STUB with no real content. Ground truth: base_cases.py defines 4 full BaseCaseFlow entries with IA tables, input/process/output and legal references; theory_registry.py marks them PARTIAL. The 'theoretical layers active' metric was also wrong (4/9 → corrected to 6/12 PARTIAL-or-better).",
+      "how_caught": "While starting task #6 (verify stubs documented as pending), read the actual files in packages/engine/ instead of trusting recall from the diagnosis draft.",
+      "fix": "PROJECT_DIAGNOSIS.md and SYSTEM_STATUS.md updated; corrections log section added.",
+      "cost_if_missed": "Would have repeated the mislabeling in subsequent docs, demos, and user-facing presentations. A reviewer who looked at base_cases.py would have concluded the diagnosis itself was unreliable."
+    }
+  ],
+
+  "user_flagged_issues": [],
+
+  "pending_promises": [
+    {"task_id": "2", "promise": "Build Claude Performance Dashboard skeleton", "added": "2026-05-20", "status": "in_progress"},
+    {"task_id": "3", "promise": "Engine unit tests suite (>=80% coverage)", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "4", "promise": "API integration tests", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "5", "promise": "Persist IF conditions + audit log + SHA-256 integrity hash", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "7", "promise": "New case: Land Purchase with prior charges", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "8", "promise": "TSA time-stamp + Catastro API + XML export", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "9", "promise": "Expose PhaseEngine in UI + Qualification mode", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "10", "promise": "20 real-estate consistency rules + 15 insurance risk rules", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "11", "promise": "i18n Spanish + English", "added": "2026-05-20", "status": "pending"},
+    {"task_id": "12", "promise": "Keep PROJECT_DIAGNOSIS.md alive", "added": "2026-05-20", "status": "pending"}
+  ],
+
+  "failure_categories": [
+    {"id": "trust-recall-over-code", "title": "Trusted recall/memory over reading the actual code", "count": 1, "last_seen": "2026-05-20", "mitigation": "Always read the file before claiming what it contains. Tagged in PROJECT_DIAGNOSIS.md corrections log."},
+    {"id": "constants-import-order", "title": "Frontend imports from constants.js before it is defined", "count": 0, "last_seen": null, "mitigation": "Known historical pattern from prior sessions. Verify imports first."},
+    {"id": "parent-id-confusion", "title": "parent_id vs parentId casing confusion in Python", "count": 0, "last_seen": null, "mitigation": "Domain model uses camelCase (parentId), DB uses snake_case (parent_id). Repo handles mapping."},
+    {"id": "skip-system-status-update", "title": "Forgot to update SYSTEM_STATUS.md after feature work", "count": 0, "last_seen": null, "mitigation": "Mandatory per CLAUDE.md. Update before marking a task complete."},
+    {"id": "skip-browser-test", "title": "Marked feature done without testing in the browser", "count": 0, "last_seen": null, "mitigation": "For UI work, open the running app and verify before marking complete."}
+  ]
+}

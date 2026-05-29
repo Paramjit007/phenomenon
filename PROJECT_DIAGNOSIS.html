@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PHENOMENON — Honest & Complete Project Diagnosis</title>
+<style>
+  @page { size: A4; margin: 18mm 14mm; }
+  :root {
+    --ink: #1a1a1a; --muted: #555; --line: #d0d0d0; --soft: #f6f6f4;
+    --green: #1f7a3a; --amber: #b87900; --red: #b21f1f; --blue: #1a4d7a;
+    --mono: 'Consolas', 'Monaco', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', -apple-system, Tahoma, sans-serif;
+    color: var(--ink); max-width: 1100px; margin: 0 auto;
+    padding: 30px 40px; line-height: 1.55; font-size: 11.5pt;
+    background: #fff;
+  }
+  h1 {
+    font-size: 26pt; margin: 0 0 4px 0; letter-spacing: -0.5px;
+    border-bottom: 3px solid var(--ink); padding-bottom: 10px;
+  }
+  h1 .sub { display: block; font-size: 12pt; font-weight: 400; color: var(--muted); margin-top: 4px; }
+  h2 {
+    font-size: 18pt; margin: 38px 0 12px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--ink); page-break-after: avoid;
+  }
+  h3 { font-size: 13.5pt; margin: 22px 0 8px; color: var(--blue); page-break-after: avoid; }
+  h4 { font-size: 11.5pt; margin: 14px 0 4px; }
+  p, li { font-size: 11pt; }
+  code { font-family: var(--mono); background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size: 10pt; }
+  pre {
+    font-family: var(--mono); background: #1a1a1a; color: #e8e8e8;
+    padding: 12px 16px; border-radius: 4px; overflow-x: auto; font-size: 9.5pt;
+    line-height: 1.45; page-break-inside: avoid;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 10.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--soft); font-weight: 600; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 9pt; font-weight: 600; }
+  .ok { background: #d8f0db; color: var(--green); }
+  .partial { background: #fde9c5; color: var(--amber); }
+  .miss { background: #f8d4d4; color: var(--red); }
+  .info { background: #d4e5f5; color: var(--blue); }
+  .callout {
+    border-left: 4px solid var(--ink); background: var(--soft);
+    padding: 12px 16px; margin: 14px 0; page-break-inside: avoid;
+  }
+  .callout.warn { border-color: var(--amber); }
+  .callout.crit { border-color: var(--red); }
+  .callout.good { border-color: var(--green); }
+  .toc { background: var(--soft); padding: 14px 20px 14px 36px; border-radius: 4px; }
+  .toc li { margin: 3px 0; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .metric {
+    border: 1px solid var(--line); padding: 12px; border-radius: 4px;
+    text-align: center; background: #fff;
+  }
+  .metric .n { font-size: 22pt; font-weight: 700; display: block; }
+  .metric .l { font-size: 9.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .checklist li { list-style: none; margin: 4px 0; padding-left: 22px; position: relative; }
+  .checklist li::before {
+    content: "☐"; position: absolute; left: 0; font-size: 13pt; color: var(--muted);
+  }
+  .checklist li.done::before { content: "☑"; color: var(--green); }
+  hr { border: none; border-top: 1px solid var(--line); margin: 24px 0; }
+  .meta { color: var(--muted); font-size: 10pt; }
+  .priority-1 { background: #fef0f0; }
+  .priority-2 { background: #fef7ec; }
+  .priority-3 { background: #f4fbf6; }
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none; }
+  }
+  .printbtn {
+    position: fixed; top: 14px; right: 14px; padding: 8px 18px;
+    background: #1a1a1a; color: #fff; border: none; cursor: pointer;
+    font-size: 11pt; border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<button class="printbtn no-print" onclick="window.print()">Print / Save as PDF</button>
+
+<h1>PHENOMENON — Honest &amp; Complete Project Diagnosis
+  <span class="sub">Engine · Application · Gaps · Action Plan · Testing Framework · Performance Dashboard · 2026-05-20</span>
+</h1>
+
+<p class="meta">
+  This document answers, in order, the questions raised: what the engine is, what it does and does not do,
+  what has been built, whether it is really unique, what is missing for lawyers and Property Registrars,
+  a plan with calendar and checklist, an end-to-end testing strategy with automatic detection and repair
+  of errors, and a control panel to audit the performance of the assistant (Claude) and reduce repeated
+  failures. <strong>No code has been written yet.</strong> Read it, mark it, and only then we authorize
+  implementation of the pieces we decide together. A Markdown mirror at <code>PROJECT_DIAGNOSIS.md</code>
+  serves as the persistent source-of-truth that Claude can reload in future sessions.
+</p>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li>Executive summary in one page</li>
+    <li>The PHENOMENON engine · what it is, active layers, pending layers</li>
+    <li>Real-world applications that can be built on top of the engine</li>
+    <li>Is it really unique? Honest competitive analysis</li>
+    <li>The current application · end-to-end diagnosis</li>
+    <li>Concrete gaps vs. lawyers and Registrars</li>
+    <li>Build plan with timeline and checklist</li>
+    <li>End-to-end test framework with auto-repair</li>
+    <li>Claude Performance Dashboard</li>
+    <li>Decisions needed before any code is written</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>1 · Executive summary</h2>
+
+<div class="grid3">
+  <div class="metric"><span class="n">~17,000</span><span class="l">lines of code</span></div>
+  <div class="metric"><span class="n">6 / 12</span><span class="l">layers PARTIAL or better</span></div>
+  <div class="metric"><span class="n">29</span><span class="l">REST endpoints</span></div>
+  <div class="metric"><span class="n">24</span><span class="l">React components</span></div>
+  <div class="metric"><span class="n">8</span><span class="l">Playwright e2e specs</span></div>
+  <div class="metric"><span class="n">0</span><span class="l">Python unit tests</span></div>
+</div>
+
+<div class="callout">
+  <strong>Verdict in one sentence.</strong>
+  The PHENOMENON engine is <em>conceptually original</em> and the contracts application
+  is <em>functionally advanced for a demo</em>, but it is <em>not ready</em> to be shown
+  today to the College of Property Registrars or to a law firm as a production tool.
+  It needs three concrete things: engine test coverage, persistence of IF conditions,
+  and a verifiable bridge to the real Registry (or a formal simulator that represents
+  inscription).
+</div>
+
+<h4>What works today</h4>
+<ul>
+  <li>Three loadable cases: <strong>KPMG Hotel Mediterráneo</strong>, <strong>Insurance (4 types)</strong>, <strong>Land Purchase</strong>.</li>
+  <li>Automatic and traceable master→sub, sub→sibling and sub→master cascades.</li>
+  <li>Per-contract and ecosystem-wide homologation with 6 consistency rules.</li>
+  <li>Printable Spanish legal document (Reunidos / Exponen / Estipulan / Anexos / Firmas).</li>
+  <li>Opus levels PARTIAL → COMPLETE → OPONIBLE with a registry simulation.</li>
+</ul>
+
+<h4>What does <em>not</em> work or is missing</h4>
+<ul>
+  <li>IF conditions are stored in the browser, not in the database.</li>
+  <li>Phase transitions (PhaseEngine F1→F2→F3) exist in Python but never reach the UI.</li>
+  <li>No unit tests on the engine; the 8 e2e specs are smoke, they do not cover cascade logic.</li>
+  <li>Theoretical Blocks VIII (Appropriation/Tentio/Usucapion/Crime) and IX (computable specification) are <em>PARTIAL</em> — substantive content exists but they are not exhibited in the UI; Block VIII needs deeper Enus-layer integration once that documentation arrives.</li>
+  <li>No real integration with the Property Registry — the <code>register</code> button is a symbolic stamp that flips a field.</li>
+  <li>No electronic signature, no time-stamping, no XAdES/CAdES export, no integrity hash.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2>2 · The PHENOMENON engine</h2>
+
+<h3>2.1 What it is, in honest terms</h3>
+<p>
+The engine is an <strong>ontological model of contracts as phenomena</strong> (not as documents).
+Each contract has two parts: <strong>ESS</strong> (stable identity that cannot change without breaking
+identity: parties, jurisdiction, dates) and <strong>AG</strong> (operation: clauses and terms that can
+change). Contracts connect through <strong>IF</strong> (inter-phenomenic) links that propagate changes
+automatically. The <strong>IA operators</strong> (ad-actio, de-actio, non, co-implication) modulate direction,
+retroaction, exclusion and plication of the contractual vector.
+</p>
+
+<p>
+What a lawyer needs to understand: <em>when something changes in one contract of the ecosystem,
+the engine knows who else is affected and why, by formal rules — not by a human reviewing the
+whole file manually.</em>
+</p>
+
+<h3>2.2 Technical anatomy of the engine</h3>
+
+<table>
+  <thead><tr><th>Layer</th><th>Modules</th><th>Lines</th><th>Status</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Domain · Contracts</td><td>cascade_engine, ecosystem_engine, homologation_engine, ia_engine, opus_engine, oponibility_engine, vector_engine, phase_engine</td><td>~1,300</td><td><span class="tag ok">ACTIVE</span></td><td>The logic powering the current app.</td></tr>
+    <tr><td>Theoretical · Blocks I-III</td><td>bloque_i, bloque_ii, bloque_iii</td><td>~545</td><td><span class="tag ok">ACTIVE</span></td><td>Ontological axioms, IA, suspension/plication.</td></tr>
+    <tr><td>Theoretical · Blocks IV-VII</td><td>operation_engine, ia_modulation_engine, circumaction_engine, event_engine, geometry_model, language_engine</td><td>~1,280</td><td><span class="tag partial">PARTIAL</span></td><td>CONTINUE/INTERRUPT/DISTRIBUTE operations, 5 IA forms, events. Wired to bridge but not exposed in UI.</td></tr>
+    <tr><td>Theoretical · Block VIII</td><td>base_cases (Appropriation, Tentio, Usucapion, Crime)</td><td>~470</td><td><span class="tag partial">PARTIAL</span></td><td>4 fully defined <code>BaseCaseFlow</code> entries with IA tables, input/process/output and legal references. Missing only deeper Enus-layer integration (blocked by Layer-0 documentation).</td></tr>
+    <tr><td>Theoretical · Block IX</td><td>theory_registry, validate_structure</td><td>~265</td><td><span class="tag partial">PARTIAL</span></td><td>Opus, Oponibility, Operations, Events implemented. Missing: pattern recognition, automation, prediction.</td></tr>
+    <tr><td>Bridge &amp; config</td><td>bridge, config, domain_adapter, theoretical_models</td><td>~620</td><td><span class="tag ok">ACTIVE</span></td><td>How the domain layer talks to theory.</td></tr>
+  </tbody>
+</table>
+
+<p class="meta">Total engine: 4,774 lines across 27 Python modules. Declared version: 2.2.</p>
+
+<h3>2.3 What the engine can do (verifiable capabilities)</h3>
+<ol>
+  <li><strong>Validate an individual contract</strong> (homologation) against ESS, AG, IA, type-specific rules and vector superimposition.</li>
+  <li><strong>Validate a whole ecosystem</strong> as a unit: 6 cross-contract consistency rules + coverage analysis.</li>
+  <li><strong>Propagate changes</strong> in three directions: master → subs, sub → sibling, sub → master.</li>
+  <li><strong>Block flows</strong> with IF_exclusion (the <code>non</code> operator) — implemented in Insurance and KPMG Governance.</li>
+  <li><strong>Opus levels</strong>: PARTIAL → COMPLETE → OPONIBLE (with or without registry).</li>
+  <li><strong>Emit events</strong>: ON_CREATE, ON_UPDATE, ON_INTERRUPT, ON_DISTRIBUTE, ON_TERMINATE (present in code, not listened to from UI).</li>
+  <li><strong>Compute circumaction geometry</strong> CA1/CA2 — used conceptually in the KPMG financing contract.</li>
+  <li><strong>Detect vector conflicts</strong>: two IAs modulating the same vector property = conflict.</li>
+</ol>
+
+<h3>2.4 What the engine CANNOT do</h3>
+<ul>
+  <li>It does not simulate real public registries (neither Property nor Mercantile).</li>
+  <li>It does not sign cryptographically nor time-stamp.</li>
+  <li>It does not parse natural-language clauses — Claude generates them, it does not interpret them.</li>
+  <li>There is no caselaw search.</li>
+  <li>It does not simulate procedural deadlines (PhaseEngine is about states, not civil calendars).</li>
+  <li>It does not export to certified legal formats (XAdES, PAdES, eIDAS).</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2>3 · Real-world applications that can be built</h2>
+
+<table>
+  <thead><tr><th>Vertical</th><th>Use case</th><th>Fit with the engine</th><th>Effort</th></tr></thead>
+  <tbody>
+    <tr><td>Real Estate / Notarial</td><td>Land purchases with suspensive conditions, options, earnest money, deferred traditio</td><td><span class="tag ok">Excellent</span> — the Land Purchase case proves it</td><td>Low</td></tr>
+    <tr><td>Property Registry</td><td>Pre-validation of acts before inscription; detection of incompatibilities between charges, mortgages and sales</td><td><span class="tag ok">Excellent</span> — IF + opposability fit exactly</td><td>Medium</td></tr>
+    <tr><td>Project Finance</td><td>Multi-contract structures (financing + mortgage + assignment + bond) with EURIBOR cascades</td><td><span class="tag ok">Proven</span> with the KPMG case</td><td>Low</td></tr>
+    <tr><td>Corporate Insurance</td><td>Multi-coverage policies with exclusions and prior validations</td><td><span class="tag ok">Proven</span> with the Insurance case</td><td>Low</td></tr>
+    <tr><td>Corporate Compliance</td><td>Approval chains with blocks (Compliance → Audit → Regulatory → Board)</td><td><span class="tag ok">Proven</span> with KPMG Corporate</td><td>Low</td></tr>
+    <tr><td>SIAC Arbitration</td><td>Co-pilot for arbitrators: the repo has a skeleton <code>apps/arbitration</code></td><td><span class="tag partial">Partial</span> — flag active, UI missing</td><td>High</td></tr>
+    <tr><td>Mediation / Spanish 103 bis</td><td>Pre-procedural civil mediation flows</td><td><span class="tag partial">Planned</span> in config.py</td><td>High</td></tr>
+    <tr><td>Public Procurement</td><td>Public contracts with specifications, lots, extensions, modifications</td><td><span class="tag info">Would fit</span> — no development yet</td><td>Medium-High</td></tr>
+    <tr><td>M&amp;A</td><td>SPA + escrows + earn-outs + reps &amp; warranties + non-competes</td><td><span class="tag info">Would fit</span> — needs a new template</td><td>Medium</td></tr>
+    <tr><td>Energy / Power Purchase</td><td>PPAs with curtailment, indexations, guarantees of origin</td><td><span class="tag info">Would fit</span> — good 4th-case candidate</td><td>Medium</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<h2>4 · Is it really unique? Honest competitive analysis</h2>
+
+<table>
+  <thead><tr><th>Tool</th><th>What it does</th><th>What it does NOT do that PHENOMENON does</th></tr></thead>
+  <tbody>
+    <tr><td>DocuSign CLM, Ironclad, Icertis</td><td>Contract repositories with workflows and signatures</td><td>They do not model the contract as a network of phenomena with formal cascades; they do not validate ecosystems as a unit.</td></tr>
+    <tr><td>Harvey, Spellbook, Lexis+ AI</td><td>Generative assistants for lawyers</td><td>They produce text but do not guarantee structural consistency between related contracts.</td></tr>
+    <tr><td>Notion / Coda legal templates</td><td>Databases with templates</td><td>No propagation engine, no formal validation.</td></tr>
+    <tr><td>Smart contracts (Ethereum / DAML)</td><td>On-chain execution</td><td>They execute, they do not validate Spanish legal structure nor speak to the Registry.</td></tr>
+    <tr><td>Notarial systems (SIGNO)</td><td>Communication between notaries and Registries</td><td>They operate documentally, not structurally. They do not detect cascades.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout good">
+<strong>Genuinely differentiating:</strong>
+<ol style="margin: 6px 0 0 18px;">
+  <li><strong>Ecosystem as a unit of validation.</strong> Nobody else validates 16 contracts as a single coherent object.</li>
+  <li><strong>Cascades with semantic direction.</strong> ad-actio, de-actio, non, co-implication have different formal consequences — this is new.</li>
+  <li><strong>Structural blocking by exclusion (IF_non).</strong> COBERTURA_CREDITO does not activate <em>until</em> VALIDACION_FINANCIERA passes. Contractual and formal, not an ad-hoc workflow.</li>
+  <li><strong>Cosa / Bien / Ser distinction and real vs. instrumental traditio.</strong> Spanish civil-law concepts encoded in the engine — the Anglo legaltech SaaS world doesn't even know these exist.</li>
+</ol>
+</div>
+
+<div class="callout warn">
+<strong>Not unique yet:</strong>
+<ul style="margin: 6px 0 0 18px;">
+  <li>The graph UI (ContractGraph) — many legaltech products have similar views.</li>
+  <li>AI clause generation — Harvey and Spellbook do it better.</li>
+  <li>Per-contract homologation — it is <em>good</em>, not <em>new</em>.</li>
+</ul>
+Uniqueness lives in <em>the engine</em>, not in the screens. Sell the engine, not the UI.
+</div>
+
+<!-- ============================================================ -->
+<h2>5 · The current application · end-to-end diagnosis</h2>
+
+<h3>5.1 Real architecture</h3>
+<pre>
+[Browser]  &lt;-HMR-&gt;  [Vite + React + 24 components]
+                          |
+                          v axios
+[FastAPI]  - /phenomena · /cascade · /ecosystem · /demo · /ai · /documents
+   |              |
+   |              +-&gt; [phenomenon_engine (4,774 lines Python)]
+   |
+   +-&gt; [PostgreSQL · 1 table `phenomena` · JSONB in ess_json / ag_json]
+</pre>
+
+<h3>5.2 What works end-to-end (verified in the code)</h3>
+
+<table>
+  <thead><tr><th>Flow</th><th>Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Create project from template</td><td><span class="tag ok">OK</span></td><td>10 templates + 2 demo cards</td></tr>
+    <tr><td>Generate sub-contracts via AI</td><td><span class="tag ok">OK</span></td><td>Claude API with Spanish fallback</td></tr>
+    <tr><td>Auto master→sub cascade</td><td><span class="tag ok">OK</span></td><td>Triggered on field save</td></tr>
+    <tr><td>Auto sub→sibling cascade</td><td><span class="tag ok">OK</span></td><td>SUB_CASCADE_MAP mirrored frontend + backend</td></tr>
+    <tr><td>Reverse sub→master cascade</td><td><span class="tag ok">OK</span></td><td>Marks master NEEDS_REVIEW</td></tr>
+    <tr><td>Per-contract homologation</td><td><span class="tag ok">OK</span></td><td>2 passes: domain + theoretical</td></tr>
+    <tr><td>Ecosystem homologation</td><td><span class="tag ok">OK</span></td><td>Subs first, master last</td></tr>
+    <tr><td>Add party (novación subjetiva)</td><td><span class="tag ok">OK</span></td><td>Auto-suggests role C/D/E, propagates to all subs</td></tr>
+    <tr><td>Terminate contract with cascade</td><td><span class="tag ok">OK</span></td><td>Siblings + master receive NEEDS_REVIEW</td></tr>
+    <tr><td>Register in Registry (simulated)</td><td><span class="tag partial">SIMULATED</span></td><td>Flips Opus to OPONIBLE — not a real inscription</td></tr>
+    <tr><td>Printable legal document</td><td><span class="tag ok">OK</span></td><td>A4, Times, Reunidos/Exponen/Estipulan structure</td></tr>
+    <tr><td>KPMG demo: live EURIBOR slider</td><td><span class="tag ok">OK</span></td><td>1.2s debounce + graph flash</td></tr>
+    <tr><td>Insurance demo: claim + unblock</td><td><span class="tag ok">OK</span></td><td>Phase transitions visible</td></tr>
+    <tr><td>Land Purchase demo: solar condition</td><td><span class="tag ok">OK</span></td><td>Base case</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 What is broken, incomplete, or inconsistent</h3>
+
+<table>
+  <thead><tr><th>Problem</th><th>Severity</th><th>File</th><th>What it means in front of a Registrar</th></tr></thead>
+  <tbody>
+    <tr><td>IF conditions in EdgePanel live in memory, not persisted</td><td><span class="tag miss">High</span></td><td>ContractGraph.jsx</td><td>On refresh, conditions disappear. First thing they will test.</td></tr>
+    <tr><td>PhaseEngine in backend, not exposed in UI</td><td><span class="tag partial">Medium</span></td><td>phase_engine.py</td><td>The engine knows F1→F2→F3, the user does not see it.</td></tr>
+    <tr><td>No engine unit tests</td><td><span class="tag miss">High</span></td><td>—</td><td>If asked "how do you know cascade works?", the answer is "because I tested it in the UI".</td></tr>
+    <tr><td>"Register" is a field flip, not an inscription</td><td><span class="tag miss">High</span></td><td>routes_phenomena.py /register</td><td>A Registrar will spot this in 30 seconds. Must be renamed "Inscription Simulation".</td></tr>
+    <tr><td>Block VIII base cases empty</td><td><span class="tag partial">Medium</span></td><td>base_cases.py</td><td>If we brag about "complete ontological framework" and they peek here, there is a problem.</td></tr>
+    <tr><td>Insurance risk rules not implemented</td><td><span class="tag partial">Medium</span></td><td>RiskEngine.jsx</td><td>Policies do not warn about solvency, exposure, etc.</td></tr>
+    <tr><td>Arbitration app is an empty skeleton</td><td><span class="tag partial">Low</span></td><td>apps/arbitration/</td><td>Only matters if someone asks about SIAC.</td></tr>
+    <tr><td>No integrity hash, no electronic signature</td><td><span class="tag miss">High</span></td><td>—</td><td>Impossible to sell as a system for legal acts without this.</td></tr>
+  </tbody>
+</table>
+
+<h3>5.4 End-to-end inspection verdict</h3>
+<div class="callout warn">
+<strong>Verdict:</strong> the application is a <em>solid technical demonstration</em> with three complete cases.
+It is not a product. Distance to product, by increasing cost:
+<strong>(a)</strong> persist IF conditions and expose phases in the UI — days;
+<strong>(b)</strong> engine test coverage — days;
+<strong>(c)</strong> electronic signature and cryptographic integrity — weeks;
+<strong>(d)</strong> real integration with SIGNO / Catastro / Registry — months and depends on third parties.
+</div>
+
+<!-- ============================================================ -->
+<h2>6 · Concrete gaps vs. lawyers and Registrars</h2>
+
+<h3>6.1 What a Registrar will look for (and whether you have it)</h3>
+
+<table>
+  <thead><tr><th>Professional requirement</th><th>Do you have it?</th><th>What to do</th></tr></thead>
+  <tbody>
+    <tr class="priority-1"><td>Traceability: who changed what, when, why</td><td><span class="tag miss">No</span></td><td>Add <code>audit_log</code> append-only table. Chained hash.</td></tr>
+    <tr class="priority-1"><td>Integrity: cryptographic hash of the signed contract</td><td><span class="tag miss">No</span></td><td>SHA-256 of canonical JSON when transitioning to OPONIBLE.</td></tr>
+    <tr class="priority-1"><td>Electronic signature (eIDAS) or at least time stamp</td><td><span class="tag miss">No</span></td><td>Integrate with public TSA (Spanish FNMT) or clearly-labeled stub.</td></tr>
+    <tr class="priority-2"><td>Validated cadastral reference</td><td><span class="tag partial">Field only</span></td><td>Catastro API to verify the code (free).</td></tr>
+    <tr class="priority-2"><td>Prior charges check</td><td><span class="tag miss">No</span></td><td>Model as sub-contract CARGAS_PREVIAS with mock Registry call.</td></tr>
+    <tr class="priority-2"><td>Presentation entry with 60-day deadline</td><td><span class="tag miss">No</span></td><td>Ideal case for PhaseEngine — expose it in UI.</td></tr>
+    <tr class="priority-2"><td>Negative qualification with reasons</td><td><span class="tag partial">Partial</span></td><td>Homologation returns errors — convert to "qualification" format.</td></tr>
+    <tr class="priority-3"><td>Standard XML export (UBL/XBRL legal-like)</td><td><span class="tag miss">No</span></td><td>Generate structured XML following registry schemas.</td></tr>
+    <tr class="priority-3"><td>Multi-language (Spanish + Catalan + Basque at minimum)</td><td><span class="tag miss">No</span></td><td>Only Spanish today.</td></tr>
+  </tbody>
+</table>
+
+<h3>6.2 The five questions they will ask and the right answers</h3>
+<ol>
+  <li><strong>"How do I know this doesn't tamper with the contract?"</strong><br>
+      Expected answer: visible SHA-256 hash, append-only audit log, signed XML export. <em>You don't have this today.</em></li>
+  <li><strong>"Does this replace the Registry or complement it?"</strong><br>
+      It complements. It is a qualification assistant, not a Registry. Position it that way from the first sentence.</li>
+  <li><strong>"What if two contracts in the ecosystem contradict each other and the engine doesn't catch it?"</strong><br>
+      There are 6 consistency rules. At least 20 more are needed for real-estate cases. It is bounded, known work.</li>
+  <li><strong>"Where does the legal qualification of that cascade come from?"</strong><br>
+      From Block II of the PHENOMENON framework. It is documented. They will see it only if you show one concrete example, not theory.</li>
+  <li><strong>"Can I trust coverage?"</strong><br>
+      No, until there are engine unit tests with real cases. <em>This is blocking.</em></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>7 · Build plan with timeline and checklist</h2>
+
+<p>
+Three horizons. Each one with measurable exit criteria.
+<em>Do not advance to the next without meeting the current one.</em>
+</p>
+
+<h3>Horizon 1 · Technical solidity (1 week)</h3>
+<ul class="checklist">
+  <li>Persist IF conditions in the backend (new <code>if_conditions</code> table or a field in <code>ag_json</code>).</li>
+  <li>Engine unit tests: cascade_engine, ecosystem_engine, homologation_engine, ia_engine, opus_engine — minimum 80% coverage.</li>
+  <li>API integration tests: pytest + httpx, one spec per critical endpoint.</li>
+  <li>Audit log: append-only table with user, timestamp, contract_id, action, before_json, after_json, hash.</li>
+  <li>SHA-256 hash of canonical contract JSON on transition to OPONIBLE; show the hash in the UI.</li>
+  <li>Rename "Register" button to "Inscription Simulation" everywhere in the UI.</li>
+  <li>Fix bug #2 in the tracker (edge conditions not persisted).</li>
+</ul>
+<p class="meta">Exit criteria: <code>pytest --cov</code> ≥ 80% on <code>phenomenon_engine</code> and <code>backend/app</code>.</p>
+
+<h3>Horizon 2 · Demonstrable to professionals (2-3 weeks)</h3>
+<ul class="checklist">
+  <li>New case: <strong>Land Purchase with prior charges</strong> — a scenario a Registrar will recognize immediately.</li>
+  <li>Time stamp with a real TSA (Spanish FNMT-RCM has a free API) or stub labeled "not valid for legal traffic".</li>
+  <li>Cadastral reference validation against Catastro API.</li>
+  <li>Export to structured XML (proprietary schema, with field "not an official registry standard").</li>
+  <li>Expose PhaseEngine in the UI with timeline and presentation-entry deadlines.</li>
+  <li>20 additional real-estate consistency rules and 15 insurance risk rules.</li>
+  <li>"Qualification" mode that renders homologation output as a negative registry qualification.</li>
+  <li>Minimum internationalization (i18n) for at least Spanish + English.</li>
+</ul>
+<p class="meta">Exit criteria: a Registrar can use the system for 30 minutes without a visible error and without relying on a verbal demo explanation.</p>
+
+<h3>Horizon 3 · Product (2-3 months)</h3>
+<ul class="checklist">
+  <li>eIDAS-compatible electronic signature (XAdES-T minimum).</li>
+  <li>Real integration with SIGNO (if there is an agreement) or simulated inscription engine with official schemas.</li>
+  <li>Complete Block IX: computable specification derivable from Blocks I-VIII with theoretical regression tests.</li>
+  <li>Multi-tenant, SSO authentication, per-firm RBAC.</li>
+  <li>Dashboards: per project, per portfolio, per risk.</li>
+  <li>Audited export (PDF/A + signed XML + hash + optional blockchain).</li>
+  <li>Mobile consultation app (read-only).</li>
+</ul>
+<p class="meta">Exit criteria: acceptance ratio ≥ 1 pilot firm + 1 pilot Registry signing an NDA and starting to use it.</p>
+
+<!-- ============================================================ -->
+<h2>8 · End-to-end test framework with auto-repair</h2>
+
+<p>
+The complaint is legitimate: today a fault is only found when the user points it out.
+The root cause has three layers: no engine tests, no API coverage, and the 8 Playwright
+specs are "smoke", not "logic". The plan fixes all three.
+</p>
+
+<h3>8.1 Proposed test pyramid</h3>
+
+<table>
+  <thead><tr><th>Layer</th><th>Tool</th><th>What it covers</th><th>Target count</th></tr></thead>
+  <tbody>
+    <tr><td>Engine unit</td><td>pytest</td><td>cascade, ecosystem, homologation, ia, opus, oponibility, vector</td><td>~120 tests · 80% coverage</td></tr>
+    <tr><td>API integration</td><td>pytest + httpx + Postgres in Docker</td><td>each endpoint with happy path + 2 edge cases</td><td>~60 tests</td></tr>
+    <tr><td>UI logic</td><td>Playwright (8 existing + 12 new)</td><td>full flows per case: KPMG, Insurance, Land Purchase, Corporate</td><td>~20 specs</td></tr>
+    <tr><td>Production smoke</td><td>Headless Playwright every 30 min</td><td>app boots, demo loads, no console errors</td><td>1 looping spec</td></tr>
+    <tr><td>Property-based (later)</td><td>Hypothesis</td><td>cascades and homologation with random generators</td><td>~10 properties</td></tr>
+  </tbody>
+</table>
+
+<h3>8.2 Detection and auto-repair loop</h3>
+<pre>
+Cron 0 */1 * * *  (every hour)
+  |
+  v
+[Local CI runner]
+  +- pytest packages/engine/ --cov                 (minimum 80%)
+  +- pytest apps/contracts/backend/                (every endpoint)
+  +- npx playwright test --reporter=json           (full e2e suite)
+  +- curl smoke: list, create, cascade, homologate (sanity)
+  |
+  v
+[JSON report]  -&gt;  test_results/YYYY-MM-DD-HH.json
+  |
+  v
+[Analyzer] (Python script)
+  +- Computes deltas vs. previous run
+  +- If a new failure -&gt; opens a local issue in ERROR_DASHBOARD.md
+  +- Tags by module, severity, traceback fingerprint
+  +- Spawns a Claude agent with failure context IF inside auto-fixable patterns
+  |
+  v
+[Auto-fix loop] (bounded and supervised)
+  +- Only on files marked "autofix-allowed"
+  +- Only one attempt per failure
+  +- Creates branch, commit, opens PR — NEVER auto-merges
+  +- Notifies the human to review
+</pre>
+
+<div class="callout">
+<strong>Important.</strong> "Auto-repair" means <em>proposing</em> a patch, not <em>applying</em> it.
+The loop has a 1-attempt cap, requires human PR review, and only operates on pre-approved files.
+Anything else is dangerous.
+</div>
+
+<h3>8.3 Concrete test cases missing today</h3>
+<ol>
+  <li>Master EURIBOR cascade → financing → mortgage: verify all three update and ON_DISTRIBUTE is emitted.</li>
+  <li>Sub-cascade PAYMENT.paymentDays &gt; 60 → must emit a Ley 3/2004 warning.</li>
+  <li>IF_exclusion block: COBERTURA_CREDITO cannot activate with VALIDACION_FINANCIERA pending.</li>
+  <li>Subject novation: adding party C propagates additionalParties to ALL subs.</li>
+  <li>Ecosystem homologation with NDA.confidentialityPeriod &lt; DPA.dataRetention → inconsistency.</li>
+  <li>Terminate master: all subs must receive NEEDS_REVIEW.</li>
+  <li>Reverse cascade: critical change in sub must flag master NEEDS_REVIEW.</li>
+  <li>Opus PARTIAL→COMPLETE→OPONIBLE only if it passes homologation VALID.</li>
+  <li>IA superimposition: ad-actio + non on the same property must fail.</li>
+  <li>Project reset: deletes all children, leaves master untouched.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>9 · Claude Performance Dashboard</h2>
+
+<p>
+The complaint "you don't detect until I point it out" is a process failure, not a capability failure.
+The fix is not to promise better behavior, it is to <strong>measure</strong> it.
+Design for a Dashboard that logs every turn, every error, every correction.
+</p>
+
+<h3>9.1 What is measured</h3>
+
+<table>
+  <thead><tr><th>Metric</th><th>How it is captured</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td>Proactive detection rate</td><td>Tickets/issues I open vs. ones you flag</td><td>Whether I improve at catching them before you</td></tr>
+    <tr><td>Regression rate</td><td>Tests broken after my changes / total changes</td><td>Whether I break things while fixing others</td></tr>
+    <tr><td>Time to first error</td><td>Minutes between commit and first CI failure</td><td>Immediate quality</td></tr>
+    <tr><td>Coverage delta per change</td><td>Coverage delta per feature</td><td>If I add code without tests, it shows</td></tr>
+    <tr><td>Tool calls per task</td><td>Counter per conversation</td><td>Efficiency: fewer calls = better planning</td></tr>
+    <tr><td>Broken promises</td><td>Manual flag of "you said you would do X and didn't"</td><td>Quantified honesty</td></tr>
+    <tr><td>Repeated errors by category</td><td>Clustering by traceback / error fingerprint</td><td>Pattern detection</td></tr>
+  </tbody>
+</table>
+
+<h3>9.2 Dashboard sketch</h3>
+
+<pre>
++-----------------------------------------------------------------------+
+| CLAUDE PERFORMANCE · Week of 2026-05-13 to 2026-05-19                 |
++-----------------------------------------------------------------------+
+| Sessions:        14    Commits made:        37     Bugs found:        |
+|                                                       by me:  4       |
+| Tests added:     0     Tests passing:       66/66    by you: 9        |
+| Engine coverage: —     Backend coverage:     —                        |
++-----------------------------------------------------------------------+
+| PROACTIVE DETECTION RATE:   30%  ####............  (target: &gt;=70%)    |
+| REGRESSION RATE:             8%  #...............  (target: &lt;=5%)     |
+| TIME TO FIRST ERROR:         —   (no CI yet)                          |
++-----------------------------------------------------------------------+
+| TOP FAILURE CATEGORIES                                                |
+|   1. Frontend imports from constants.js before it is defined  (3x)    |
+|   2. parent_id vs parentId confusion in Python                (2x)    |
+|   3. Forgot to update SYSTEM_STATUS.md after feature          (5x)    |
+|   4. Did not test in the browser before marking done          (4x)    |
++-----------------------------------------------------------------------+
+| PENDING PROMISES (said and not closed)                                |
+|   - Persist IF conditions                                             |
+|   - Engine unit tests                                                 |
+|   - Insurance risk rules                                              |
++-----------------------------------------------------------------------+
+</pre>
+
+<h3>9.3 Proposed implementation</h3>
+<ul>
+  <li>File <code>CLAUDE_PERFORMANCE.json</code> in the repo, updated at the end of each session.</li>
+  <li>HTML page <code>performance.html</code> rendering it (no server required).</li>
+  <li>Git hook <code>post-commit</code> adding entries automatically.</li>
+  <li>Command <code>/audit-me</code> running the analysis and showing my performance at the end of each session.</li>
+  <li>"Broken promises" list extracted from CHANGES.md by keyword (TODO, pending, will be done).</li>
+</ul>
+
+<div class="callout good">
+<strong>Why this solves the root problem.</strong>
+The promise to "be more professional" is not fulfilled by intent.
+When there is a visible metric — <em>proactive detection rate</em> — behavior shifts because
+every session is recorded. This is exactly the feedback loop missing today.
+</div>
+
+<!-- ============================================================ -->
+<h2>10 · Decisions needed before any code is written</h2>
+
+<p>
+Before I start implementing Horizons 1-2-3 and the Dashboard, confirm or prioritize
+these points. If you say "all of it", I do them in the proposed order. If you want
+to re-order, do so.
+</p>
+
+<ol>
+  <li><strong>Do we ship engine tests before any new feature?</strong> My recommendation: yes, a full week on this alone. Without it, everything we add sits on sand.</li>
+  <li><strong>Which presentation comes first: investors or Registrars?</strong> Changes the order of Horizon 2. Registrars first: traditio, charges, time stamp, XML export. Investors first: polish KPMG and Insurance, add an M&amp;A case.</li>
+  <li><strong>Do we build the Claude Dashboard as the first deliverable?</strong> Light (one day) and gives us the measurement frame for everything else.</li>
+  <li><strong>Do we rename "Register" to "Inscription Simulation" everywhere right now?</strong> Five minutes and removes the risk of a professional believing this replaces the real Registry.</li>
+  <li><strong>Do you accept that Block VIII and IX stubs stay documented as pending and we do not exhibit them until we have content?</strong></li>
+  <li><strong>Should I keep this file alive</strong> (update it every time we close a horizon) or treat it as a one-shot?</li>
+</ol>
+
+<hr>
+
+<h2>Appendix · Quick reference</h2>
+
+<h3>How to run the project</h3>
+<pre>
+# Start everything
+cd phenomenon
+docker compose up -d
+
+# After backend Python changes
+docker compose up -d --force-recreate backend
+
+# Frontend changes: HMR handles it (~1 second)
+
+# Logs
+docker compose logs backend --tail=30
+docker compose logs frontend --tail=30
+</pre>
+
+<p>URLs: <code>http://localhost:5173</code> (frontend) · <code>http://localhost:8000</code> (API) · <code>http://localhost:8000/docs</code> (Swagger).</p>
+
+<h3>Critical files map</h3>
+<table>
+  <thead><tr><th>Layer</th><th>File</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend root</td><td><code>apps/contracts/frontend/src/App.jsx</code></td><td>Tab routing, global state</td></tr>
+    <tr><td>Domain config</td><td><code>apps/contracts/frontend/src/constants.js</code></td><td>All templates, IA types, cascade maps</td></tr>
+    <tr><td>Frontend state</td><td><code>apps/contracts/frontend/src/hooks/usePhenomenon.js</code></td><td>All app state + auto-cascade logic</td></tr>
+    <tr><td>Backend entry</td><td><code>apps/contracts/backend/app/main.py</code></td><td>Router registration</td></tr>
+    <tr><td>Cascade logic</td><td><code>packages/engine/phenomenon_engine/cascade_engine.py</code></td><td>Master→sub, sub→sibling, reverse</td></tr>
+    <tr><td>Ecosystem</td><td><code>packages/engine/phenomenon_engine/ecosystem_engine.py</code></td><td>6 consistency rules + coverage</td></tr>
+    <tr><td>Homologation</td><td><code>packages/engine/phenomenon_engine/homologation_engine.py</code></td><td>Validation in 2 passes</td></tr>
+    <tr><td>Config flags</td><td><code>packages/engine/phenomenon_engine/config.py</code></td><td>Which theoretical layers are active</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<p class="meta" style="text-align: center;">
+  Document generated 2026-05-20. File: <code>PROJECT_DIAGNOSIS.html</code> · Mirror: <code>PROJECT_DIAGNOSIS.md</code>.<br>
+  To save as PDF: top-right button or <em>Ctrl+P → Save as PDF</em>.
+</p>
+
+</body>
+</html>

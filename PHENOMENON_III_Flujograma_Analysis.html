@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHENOMENON III — Análisis Completo del Flujograma Fenomenológico del Seguro</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #ffa657;
+    --teal: #39d353;
+    --f1: #2563EB;
+    --f2: #D97706;
+    --f3: #7C3AED;
+    --engine: #059669;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.65; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Header */
+  .header { border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 3rem; }
+  .header h1 { font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; }
+  .header .subtitle { color: var(--muted); font-size: 1rem; }
+  .header .meta { margin-top: 1rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .badge-blue { background: #1d4ed820; color: #60a5fa; border: 1px solid #1d4ed840; }
+  .badge-green { background: #05966920; color: #34d399; border: 1px solid #05966940; }
+  .badge-orange { background: #d9772620; color: #fb923c; border: 1px solid #d9772640; }
+  .badge-red { background: #f8514920; color: #fc8181; border: 1px solid #f8514940; }
+  .badge-purple { background: #7c3aed20; color: #a78bfa; border: 1px solid #7c3aed40; }
+
+  /* Sections */
+  .section { margin-bottom: 3.5rem; }
+  .section-title { font-size: 1.35rem; font-weight: 700; color: var(--text); border-left: 3px solid var(--accent); padding-left: 0.75rem; margin-bottom: 1.5rem; }
+  .section-title span { color: var(--accent); }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+  .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; }
+  .card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+  .card ul { color: var(--muted); font-size: 0.9rem; padding-left: 1.2rem; }
+  .card ul li { margin-bottom: 0.3rem; }
+  .card-highlight { border-left: 3px solid var(--accent); }
+  .card-warn { border-left: 3px solid var(--yellow); }
+  .card-danger { border-left: 3px solid var(--red); }
+  .card-success { border-left: 3px solid var(--green); }
+  .card-engine { border-left: 3px solid var(--engine); }
+
+  /* Grid */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  @media (max-width: 768px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  /* F1 F2 F3 Diagram */
+  .flow-diagram { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 2.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .flow-row { display: flex; align-items: center; gap: 0; justify-content: center; flex-wrap: nowrap; min-width: 680px; }
+  .flow-node { width: 180px; border-radius: 10px; padding: 1.2rem; text-align: center; position: relative; flex-shrink: 0; }
+  .flow-node .node-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.4rem; opacity: 0.7; }
+  .flow-node .node-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .flow-node .node-sub { font-size: 0.75rem; opacity: 0.8; }
+  .node-f1 { background: #1d4ed815; border: 2px solid var(--f1); }
+  .node-f1 .node-title { color: #60a5fa; }
+  .node-f2 { background: #d9772615; border: 2px solid var(--f2); }
+  .node-f2 .node-title { color: #fb923c; }
+  .node-f3 { background: #7c3aed15; border: 2px solid var(--f3); }
+  .node-f3 .node-title { color: #a78bfa; }
+  .node-f3-dashed { background: #7c3aed08; border: 2px dashed var(--f3); opacity: 0.7; }
+  .flow-arrow { width: 80px; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+  .flow-arrow .arrow-line { width: 100%; height: 2px; background: var(--border); position: relative; }
+  .flow-arrow .arrow-head { width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 10px solid var(--muted); }
+  .flow-arrow .arrow-label { font-size: 0.65rem; color: var(--muted); text-align: center; }
+  .flow-arrow.dashed .arrow-line { background: repeating-linear-gradient(90deg, var(--border) 0, var(--border) 5px, transparent 5px, transparent 10px); }
+  .flow-arrow.dashed .arrow-head { border-left-color: var(--border); }
+
+  /* Engine Impact Table */
+  .impact-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+  .impact-table th { background: var(--surface2); color: var(--muted); text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .impact-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .impact-table tr:last-child td { border-bottom: none; }
+  .impact-table tr:hover td { background: var(--surface2); }
+  .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin: 0 2px; }
+  .pill-critical { background: #f8514920; color: #fc8181; }
+  .pill-high { background: #d9772620; color: #fb923c; }
+  .pill-medium { background: #d2992220; color: #fbbf24; }
+  .pill-low { background: #05966920; color: #34d399; }
+  .pill-new { background: #58a6ff20; color: #93c5fd; }
+  .pill-change { background: #bc8cff20; color: #c4b5fd; }
+  .pill-none { background: #30363d40; color: #6b7280; }
+
+  /* Code blocks */
+  .code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.2rem; font-family: 'Consolas', 'Cascadia Code', monospace; font-size: 0.8rem; overflow-x: auto; margin: 0.75rem 0; }
+  .code-block .kw { color: #ff7b72; }
+  .code-block .str { color: #a5d6ff; }
+  .code-block .cm { color: #8b949e; font-style: italic; }
+  .code-block .cls { color: #ffa657; }
+  .code-block .fn { color: #d2a8ff; }
+  .code-block .num { color: #79c0ff; }
+
+  /* Verdict box */
+  .verdict { background: var(--surface2); border-radius: 10px; padding: 2rem; margin: 2rem 0; border: 1px solid var(--border); }
+  .verdict h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); }
+  .verdict-row { display: flex; gap: 1rem; margin-bottom: 0.75rem; align-items: flex-start; }
+  .verdict-icon { font-size: 1.3rem; flex-shrink: 0; width: 28px; margin-top: 1px; }
+  .verdict-text { color: var(--muted); font-size: 0.9rem; }
+  .verdict-text strong { color: var(--text); }
+
+  /* SEccion engine deep dive */
+  .engine-map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 1rem 0; }
+  .engine-node { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; }
+  .engine-node .en-title { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; }
+  .engine-node .en-file { font-size: 0.65rem; color: var(--muted); font-family: monospace; margin-bottom: 0.4rem; }
+  .engine-node .en-status { font-size: 0.7rem; }
+  .en-exists { border-left: 2px solid var(--green); }
+  .en-partial { border-left: 2px solid var(--yellow); }
+  .en-missing { border-left: 2px solid var(--red); }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 2rem; }
+  .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .tl-item { position: relative; padding-bottom: 1.5rem; }
+  .tl-dot { position: absolute; left: -1.75rem; top: 0.2rem; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); }
+  .tl-dot-blue { border-color: var(--accent); background: var(--accent); }
+  .tl-dot-orange { border-color: var(--orange); background: var(--orange); }
+  .tl-dot-purple { border-color: var(--purple); background: var(--purple); }
+  .tl-dot-green { border-color: var(--green); background: var(--green); }
+  .tl-phase { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+  .tl-title { font-size: 0.95rem; font-weight: 600; color: var(--text); margin: 0.2rem 0; }
+  .tl-text { font-size: 0.85rem; color: var(--muted); }
+
+  /* Honesty box */
+  .honesty { background: #f8514908; border: 1px solid #f8514930; border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; }
+  .honesty h4 { color: #fc8181; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+  .honesty p { color: var(--muted); font-size: 0.875rem; line-height: 1.6; }
+
+  /* Highlight quote */
+  .quote { border-left: 3px solid var(--accent); padding: 0.75rem 1.2rem; background: var(--surface); margin: 1rem 0; border-radius: 0 6px 6px 0; }
+  .quote p { font-style: italic; color: var(--muted); font-size: 0.9rem; }
+
+  /* Scores */
+  .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .score-num { font-size: 2.5rem; font-weight: 800; line-height: 1; margin-bottom: 0.4rem; }
+  .score-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .score-high { color: var(--red); }
+  .score-med { color: var(--yellow); }
+  .score-low { color: var(--green); }
+
+  @media (max-width: 600px) { .score-grid { grid-template-columns: 1fr 1fr; } .engine-map { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>PHENOMENON III — Flujograma Fenomenológico del Seguro</h1>
+    <p class="subtitle">Análisis completo de impacto: aplicación al Caso Seguros, engine y arquitectura del sistema</p>
+    <div class="meta">
+      <span class="badge badge-blue">Documento: PHENOMENON_III_Flujograma</span>
+      <span class="badge badge-orange">Caso: Seguros (4 tipos)</span>
+      <span class="badge badge-green">Engine: phenomenon_engine v1</span>
+      <span class="badge badge-purple">Análisis: 29 mayo 2026</span>
+    </div>
+  </div>
+
+  <!-- RESUMEN EJECUTIVO -->
+  <div class="section">
+    <div class="section-title"><span>01</span> — Qué es este documento y qué cambia</div>
+
+    <div class="quote">
+      <p>"El seguro no paga una deuda ajena. El seguro indemniza una ferencia asegurada actualizada por siniestro."<br>
+      — Fórmula rectora de PHENOMENON III</p>
+    </div>
+
+    <p style="color: var(--muted); margin-bottom: 1.2rem; font-size: 0.95rem;">
+      PHENOMENON_III_Flujograma es el <strong style="color:var(--text)">documento operativo de mayor impacto conceptual</strong> que ha llegado al proyecto hasta la fecha. No introduce nueva teoría: <strong style="color:var(--text)">corrige un error estructural de diseño</strong> que existe en el Caso Seguros actual. El sistema modela hoy los seguros como contratos planos con sub-fenómenos (COBERTURA_VIDA, EXCLUSIONES_VIDA, PRIMA_VIDA). El Flujograma establece que eso es arquitectónicamente incorrecto: un seguro es <em>tres fenómenos conectados</em>, no uno con accesorios.
+    </p>
+
+    <div class="grid3">
+      <div class="card card-highlight">
+        <h3 style="color: #60a5fa;">Impacto en el engine</h3>
+        <p>Requiere 3 nuevos tipos de fenómeno (F1/F2/F3), 1 nuevo tipo de IA (co-activa), 3 nuevas SEC (DE, DS, OBC), y lógica de apertura condicional de F3.</p>
+      </div>
+      <div class="card card-warn">
+        <h3 style="color: #fb923c;">Impacto en el backend</h3>
+        <p>Necesita nuevos tipos de contrato, nuevos IF (siniestro-trigger, F2→F3 opcional), y nuevas rutas de demo que instancien 3 fenómenos por seguro en lugar de 1+3.</p>
+      </div>
+      <div class="card card-danger">
+        <h3 style="color: #fc8181;">Impacto en el frontend</h3>
+        <p>El mapa de relaciones debe poder visualizar la cadena F1→F2→F3 y mostrar el carácter eventual de F3 (línea discontinua). La demo visual cambia completamente.</p>
+      </div>
+    </div>
+
+    <div class="honesty">
+      <h4>Honestidad crítica</h4>
+      <p>La implementación actual del Caso Seguros NO es incorrecta para una demo de combinatoria. Es correcta desde el punto de vista del engine. Pero desde el punto de vista fenomenológico-jurídico, es superficial: un seguro de vida activo no tiene siniestro ni reclamación; eso son fenómenos futuros que sólo se abren si el siniestro se produce. El modelo actual los incluye como sub-fenómenos permanentes, lo que es ontológicamente erróneo.</p>
+    </div>
+  </div>
+
+  <!-- DIAGRAMA F1-F2-F3 -->
+  <div class="section">
+    <div class="section-title"><span>02</span> — La estructura F1→F2→F3: el núcleo del documento</div>
+
+    <div class="flow-diagram">
+      <div style="text-align:center; margin-bottom: 1.5rem;">
+        <span style="font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em;">Estructura Fenomenológica Correcta del Seguro (PHENOMENON III)</span>
+      </div>
+      <div class="flow-row">
+        <!-- F1 -->
+        <div class="flow-node node-f1">
+          <div class="node-label">Fenómeno 1</div>
+          <div class="node-title">F1 — Aseguramiento</div>
+          <div class="node-sub">Cobertura actual<br>IA co-activa / co-operactio<br>A1: cobertura estructural<br>SEC: DE · DS · OBC<br>Prima → servicio presente</div>
+        </div>
+        <!-- Arrow F1→F2: siniestro trigger -->
+        <div class="flow-arrow">
+          <div class="arrow-label" style="color:#fb923c">CST activa</div>
+          <div style="display:flex;align-items:center">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="arrow-label">siniestro CST<br>⚡ trigger</div>
+        </div>
+        <!-- F2 -->
+        <div class="flow-node node-f2">
+          <div class="node-label">Fenómeno 2</div>
+          <div class="node-title">F2 — Siniestro</div>
+          <div class="node-sub">Indemnización<br>≠ pago deuda ajena<br>≠ solventio Art.1158 CC<br>≠ subrogación automática<br>ID 1089 → hipótesis</div>
+        </div>
+        <!-- Arrow F2→F3: eventual -->
+        <div class="flow-arrow dashed">
+          <div class="arrow-label" style="color:#a78bfa">si hay culpable</div>
+          <div style="display:flex;align-items:center">
+            <div class="arrow-line"></div>
+            <div class="arrow-head" style="border-left-color:#6b7280"></div>
+          </div>
+          <div class="arrow-label">eventual<br>(no automático)</div>
+        </div>
+        <!-- F3 -->
+        <div class="flow-node node-f3 node-f3-dashed">
+          <div class="node-label">Fenómeno 3 (eventual)</div>
+          <div class="node-title">F3 — Reclamación</div>
+          <div class="node-sub">Vía propia<br>Art. 1902 CC<br>ID 1089<br>≠ subrogación<br>Culpable identificado</div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem; display:flex; gap:2rem; justify-content:center; flex-wrap:wrap;">
+        <div style="font-size:0.75rem; color:var(--muted)"><span style="color:#60a5fa">■</span> F1: siempre existe (cobertura activa)</div>
+        <div style="font-size:0.75rem; color:var(--muted)"><span style="color:#fb923c">■</span> F2: se abre cuando ocurre el siniestro CST</div>
+        <div style="font-size:0.75rem; color:var(--muted); font-style:italic"><span style="color:#a78bfa">⬡</span> F3: eventual, sólo si hay culpable</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Lo que actualmente hace el sistema (incorrecto)</h3>
+        <div class="code-block">
+<span class="cm">// Modelo actual — flat master/sub</span>
+SEGURO_VIDA (master)
+  └─ COBERTURA_VIDA (sub) ─ siempre presente
+  └─ EXCLUSIONES_VIDA (sub) ─ siempre presente
+  └─ PRIMA_VIDA (sub) ─ siempre presente
+<br><span class="cm">// Problema: siniestros e indemnizaciones</span>
+<span class="cm">// son sub-fenómenos permanentes, no</span>
+<span class="cm">// fenómenos condicionales separados</span>
+        </div>
+      </div>
+      <div class="card card-success">
+        <h3>Lo que debería hacer (correcto per PHENOMENON III)</h3>
+        <div class="code-block">
+<span class="cm">// Modelo correcto — F1/F2/F3 conectados</span>
+ASEGURAMIENTO_F1 (cobertura activa siempre)
+  SEC: DE · DS · OBC
+  IA: co-activa / co-operactio
+    ↓ (si CST: siniestro)
+SINIESTRO_F2 (nace cuando CST activa)
+  ID: 1089 → hipótesis
+  NOT: pago · solventio · subrogación
+    ↓ (si culpable identificado)
+RECLAMACION_F3 (eventual, vía propia)
+  BASE: Art. 1902 CC
+  ID: 1089
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUEVOS CONCEPTOS -->
+  <div class="section">
+    <div class="section-title"><span>03</span> — Nuevos conceptos que introduce PHENOMENON III</div>
+
+    <table class="impact-table">
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Definición en el documento</th>
+          <th>¿Existe en el engine?</th>
+          <th>Dónde implementar</th>
+          <th>Prioridad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Ferencia sensual</strong></td>
+          <td>El objeto asegurado (no el siniestro). La ferencia se cubre en F1 y se actualiza en F2.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>models.py → campo en ESS de F1</td>
+          <td><span class="pill pill-critical">CRÍTICA</span></td>
+        </tr>
+        <tr>
+          <td><strong>co-activa / co-operactio</strong></td>
+          <td>Tipo de IA específico de F1: la cobertura no es un estado dormido, es una operación activa present</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>enums.py → IAFormType o nuevo IAInsuranceType</td>
+          <td><span class="pill pill-critical">CRÍTICA</span></td>
+        </tr>
+        <tr>
+          <td><strong>OBC — o(b)creencia</strong></td>
+          <td>Pro-secuencias que corren frente al observador sin implicar causalidad directa entre eventos sucesivos.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>enums.py → SECType.OBC</td>
+          <td><span class="pill pill-high">ALTA</span></td>
+        </tr>
+        <tr>
+          <td><strong>DE — Daño emergente</strong></td>
+          <td>SEC principal del F1: primera capa de modulación de la cobertura.</td>
+          <td><span class="pill pill-high">PARCIAL</span></td>
+          <td>enums.py → SECType (ya hay términos de daño en AG)</td>
+          <td><span class="pill pill-high">ALTA</span></td>
+        </tr>
+        <tr>
+          <td><strong>DS — Daño siguiente</strong></td>
+          <td>SEC principal del F1: segunda capa de modulación.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>enums.py → SECType.DS</td>
+          <td><span class="pill pill-high">ALTA</span></td>
+        </tr>
+        <tr>
+          <td><strong>ID 1089</strong></td>
+          <td>Art. 1089 CC como punto de contacto jurídico para el nacimiento de obligaciones en F2 y F3.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>models.py → campo legal_basis en F2 y F3</td>
+          <td><span class="pill pill-medium">MEDIA</span></td>
+        </tr>
+        <tr>
+          <td><strong>CST — siniestro concreto</strong></td>
+          <td>El evento que activa la transición F1→F2. Riesgo IST = riesgo abstracto, CST = siniestro concreto.</td>
+          <td><span class="pill pill-high">PARCIAL</span></td>
+          <td>engine: IF tipo "siniestro_trigger" F1→F2</td>
+          <td><span class="pill pill-critical">CRÍTICA</span></td>
+        </tr>
+        <tr>
+          <td><strong>IF siniestro_trigger</strong></td>
+          <td>Link inter-fenómeno que conecta F1→F2, se activa sólo cuando CST ocurre. NO pre-existe.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>cascade_engine.py → nueva regla IF condicional</td>
+          <td><span class="pill pill-critical">CRÍTICA</span></td>
+        </tr>
+        <tr>
+          <td><strong>IF culpable_trigger</strong></td>
+          <td>Link eventual F2→F3. Sólo se abre si hay culpable identificado. F3 NO existe siempre.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>cascade_engine.py → nueva regla IF eventual</td>
+          <td><span class="pill pill-high">ALTA</span></td>
+        </tr>
+        <tr>
+          <td><strong>Negaciones explícitas</strong></td>
+          <td>NOT solventio (Art.1158 CC), NOT pago de deuda ajena, NOT subrogación automática.</td>
+          <td><span class="pill pill-critical">NO</span></td>
+          <td>engine: nuevo OperationType.NON_SUBROGATION, validación en F2</td>
+          <td><span class="pill pill-medium">MEDIA</span></td>
+        </tr>
+        <tr>
+          <td><strong>Secucion / Prosecucion / Reaccion</strong></td>
+          <td>Reglas geométricas para distinguir continuidad de vía (no repetir acción) vs. reinicio de acción.</td>
+          <td><span class="pill pill-high">PARCIAL</span></td>
+          <td>bloque_ii.py / phase_engine.py</td>
+          <td><span class="pill pill-low">BAJA</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- IMPACTO EN EL ENGINE -->
+  <div class="section">
+    <div class="section-title"><span>04</span> — Impacto profundo en el engine</div>
+
+    <p style="color:var(--muted); margin-bottom: 1.2rem; font-size:0.9rem;">
+      El engine (<code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:0.8rem">phenomenon_engine/</code>) tiene una arquitectura sólida pero fue diseñado para contratos lineales. PHENOMENON III revela 4 gaps estructurales que requieren trabajo real.
+    </p>
+
+    <div class="engine-map">
+      <div class="engine-node en-exists">
+        <div class="en-title" style="color:#34d399">cascade_engine.py</div>
+        <div class="en-file">Existe y funciona</div>
+        <div class="en-status" style="color:var(--muted)">Maneja IF master→sub y sibling. Necesita nueva regla: IF condicional (F1→F2 solo cuando CST) y IF eventual (F2→F3 si culpable).</div>
+      </div>
+      <div class="engine-node en-partial">
+        <div class="en-title" style="color:#fbbf24">enums.py</div>
+        <div class="en-file">Parcial</div>
+        <div class="en-status" style="color:var(--muted)">IAFormType tiene RETROACTION, PLICATION, DIRECTION, POSITION, SENSE. Falta: CO_ACTIVA. OperationType tiene CONTINUE, INTERRUPT, DISTRIBUTE. Falta: NON (negación explícita).</div>
+      </div>
+      <div class="engine-node en-missing">
+        <div class="en-title" style="color:#fc8181">models.py</div>
+        <div class="en-file">Gap crítico</div>
+        <div class="en-status" style="color:var(--muted)">PhenomenonRecord no tiene campo para ferencia_sensual (objeto asegurado). EssFields tampoco. El modelo de datos no puede representar el objeto asegurado separado del contrato.</div>
+      </div>
+      <div class="engine-node en-partial">
+        <div class="en-title" style="color:#fbbf24">ia_engine.py</div>
+        <div class="en-file">Parcial</div>
+        <div class="en-status" style="color:var(--muted)">Maneja IA genérica. No tiene co-activa como tipo especializado. La co-operactio (cobertura presente activa) no tiene representación.</div>
+      </div>
+      <div class="engine-node en-missing">
+        <div class="en-title" style="color:#fc8181">phase_engine.py</div>
+        <div class="en-file">Gap: transiciones F1→F2</div>
+        <div class="en-status" style="color:var(--muted)">El engine de fases no tiene transición condicional "siniestro activa F2". Las transiciones actuales son temporales o manuales, no event-driven por CST.</div>
+      </div>
+      <div class="engine-node en-partial">
+        <div class="en-title" style="color:#fbbf24">homologation_engine.py</div>
+        <div class="en-file">Funciona, incompleto</div>
+        <div class="en-status" style="color:var(--muted)">La homologación actual no verifica que F2 esté abierto ANTES de intentar la indemnización. Falta guard: "no puede pagarse indemnización si F2 no existe".</div>
+      </div>
+    </div>
+
+    <div class="card card-engine" style="margin-top: 1.5rem;">
+      <h3 style="color: #34d399;">Cambios de código concretos necesarios en el engine</h3>
+      <div class="code-block">
+<span class="cm"># 1. enums.py — nuevos valores</span>
+<span class="kw">class</span> <span class="cls">IAFormType</span>(str, Enum):
+    <span class="cm"># ... existentes ...</span>
+    CO_ACTIVA = <span class="str">"co-activa"</span>   <span class="cm"># cobertura presente activa (F1)</span>
+    CO_OPERACTIO = <span class="str">"co-operactio"</span>  <span class="cm"># alias operativo del anterior</span>
+
+<span class="kw">class</span> <span class="cls">SECType</span>(str, Enum):      <span class="cm"># NUEVO enum completo</span>
+    DE = <span class="str">"DE"</span>   <span class="cm"># daño emergente</span>
+    DS = <span class="str">"DS"</span>   <span class="cm"># daño siguiente</span>
+    OBC = <span class="str">"OBC"</span> <span class="cm"># o(b)creencia — pro-secuencias sin causalidad directa</span>
+
+<span class="kw">class</span> <span class="cls">IFTriggerType</span>(str, Enum): <span class="cm"># NUEVO — tipos de trigger IF</span>
+    SINIESTRO = <span class="str">"siniestro_cst"</span>   <span class="cm"># F1 → F2, condicional</span>
+    CULPABLE  = <span class="str">"culpable_id"</span>     <span class="cm"># F2 → F3, eventual</span>
+    MANUAL    = <span class="str">"manual"</span>          <span class="cm"># trigger existente</span>
+
+<span class="cm"># 2. models.py — añadir a PhenomenonRecord</span>
+<span class="kw">class</span> <span class="cls">PhenomenonRecord</span>(BaseModel):
+    <span class="cm"># ... campos existentes ...</span>
+    ferencia_sensual: Optional[str] = None  <span class="cm"># objeto asegurado</span>
+    sec_types: list[str] = Field(default_factory=list)  <span class="cm"># DE/DS/OBC</span>
+    legal_basis: Optional[str] = None  <span class="cm"># Art. 1089 CC, Art. 1902 CC</span>
+    negaciones: list[str] = Field(default_factory=list)  <span class="cm"># NOT-subrogacion, etc.</span>
+
+<span class="cm"># 3. cascade_engine.py — nueva lógica de IF condicional</span>
+<span class="kw">def</span> <span class="fn">open_f2_on_siniestro</span>(f1_id: str, cst_event: dict) -> PhenomenonRecord:
+    <span class="cm">"""F2 no pre-existe. Se crea cuando CST activa la ferencia asegurada."""</span>
+    <span class="cm"># crear F2 como nuevo fenómeno conectado a F1</span>
+    <span class="cm"># bloquear: solventio, pago-deuda-ajena, subrogacion-automatica</span>
+    <span class="cm"># base: ID 1089 bajando a hipótesis</span>
+    ...
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPACTO EN LA DEMO -->
+  <div class="section">
+    <div class="section-title"><span>05</span> — Impacto en la demo del Caso Seguros</div>
+
+    <p style="color:var(--muted); margin-bottom:1.2rem; font-size:0.9rem;">
+      Actualmente la demo crea 4 seguros + 12 sub-fenómenos en <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:0.8rem">routes_demo.py</code> (endpoint <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:0.8rem">/demo/seguros/setup</code>). El Flujograma cambia la narrativa de la demo sin destruir lo construido.
+    </p>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Demo actual (lo que hace hoy)</h3>
+        <ul>
+          <li>SEGURO_VIDA: master + COBERTURA_VIDA + EXCLUSIONES_VIDA + PRIMA_VIDA</li>
+          <li>SEGURO_RC: master + COBERTURA_RC + LIMITES_RC + FRANQUICIA_RC</li>
+          <li>SEGURO_DANOS: master + COBERTURA_DANOS + PERITACION + EXCLUSIONES_DANOS</li>
+          <li>SEGURO_CREDITO: master + COBERTURA_CREDITO + VALIDACION_FINANCIERA + RIESGO_EMPRESARIAL</li>
+          <li style="margin-top:0.5rem; color:#fc8181">Total: 16 fenómenos — estructura plana</li>
+          <li style="color:#fc8181">Narración: "mira cuántos contratos conectados"</li>
+          <li style="color:#fc8181">F2/F3 no existen como fenómenos reales</li>
+        </ul>
+      </div>
+      <div class="card card-success">
+        <h3>Demo post-PHENOMENON III (propuesta)</h3>
+        <ul>
+          <li>SEGURO_VIDA → F1_VIDA (cobertura presente) + F2_VIDA (siniestro, latente) + F3_VIDA (reclamación, eventual)</li>
+          <li>Los 4 seguros comparten la misma estructura F1/F2/F3</li>
+          <li>F2 y F3 aparecen en el mapa con estilo diferente (latente/eventual)</li>
+          <li>La demo puede simular: "ocurre el siniestro CST → F2 se activa"</li>
+          <li style="margin-top:0.5rem; color:#34d399">Total: 12 fenómenos — arquitectura correcta</li>
+          <li style="color:#34d399">Narración: "el engine distingue cobertura, siniestro y reclamación"</li>
+          <li style="color:#34d399">Impresión legal: correcta y defendible ante juristas</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card card-warn" style="margin-top:1rem;">
+      <h3 style="color:#fb923c;">Lo que más impacta visualmente a una aseguradora o jurista</h3>
+      <p>El sistema PUEDE DEMOSTRAR que sabe la diferencia entre <strong style="color:var(--text)">indemnización</strong> (propia del asegurador, F2) y <strong style="color:var(--text)">pago de deuda ajena</strong> (que el asegurador NO hace). Esta distinción es exactamente la que más confusión genera en el mercado asegurador y la que cualquier dirección jurídica de una aseguradora consideraría un logro técnico notable. <strong style="color:var(--text)">Ningún otro software de gestión de pólizas hace esto.</strong></p>
+    </div>
+  </div>
+
+  <!-- MEJORAS A LA APLICACIÓN -->
+  <div class="section">
+    <div class="section-title"><span>06</span> — Mejoras concretas que aporta a la aplicación</div>
+
+    <table class="impact-table">
+      <thead>
+        <tr>
+          <th>Capa</th>
+          <th>Mejora</th>
+          <th>Antes</th>
+          <th>Después</th>
+          <th>Esfuerzo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Demo narrativa</strong></td>
+          <td>Narración de 3 fases F1/F2/F3 visible en la UI</td>
+          <td>16 nodos planos, estructuralmente correctos pero narrativamente pobres</td>
+          <td>12 nodos en 3 capas, con estado visible (activo/latente/eventual)</td>
+          <td><span class="pill pill-medium">2–3 días</span></td>
+        </tr>
+        <tr>
+          <td><strong>Engine semántico</strong></td>
+          <td>Tipos DE, DS, OBC como SEC formales</td>
+          <td>Daños y exclusiones en campos AG sin tipado semántico</td>
+          <td>SEC tipados, consultables, diferenciados en el mapa</td>
+          <td><span class="pill pill-medium">1 día</span></td>
+        </tr>
+        <tr>
+          <td><strong>IF condicional</strong></td>
+          <td>Nuevo tipo IF: siniestro_trigger (F1→F2)</td>
+          <td>IF sólo temporal, lógica o exclusión. No hay trigger de siniestro.</td>
+          <td>El engine puede recibir un evento CST y abrir F2 automáticamente</td>
+          <td><span class="pill pill-high">3–4 días</span></td>
+        </tr>
+        <tr>
+          <td><strong>Validación jurídica</strong></td>
+          <td>Guard: bloquear solventio/subrogación en F2</td>
+          <td>No hay guards que impidan modelar un seguro como "pago por otro"</td>
+          <td>Validación activa: si alguien intenta modelar F2 como solventio, el engine lo rechaza</td>
+          <td><span class="pill pill-medium">1 día</span></td>
+        </tr>
+        <tr>
+          <td><strong>Frontend mapa</strong></td>
+          <td>Visual F3 con línea discontinua (carácter eventual)</td>
+          <td>Todos los nodos con el mismo estilo sólido</td>
+          <td>F3 con borde discontinuo, icono diferente, tooltip: "fenómeno eventual"</td>
+          <td><span class="pill pill-low">0.5 días</span></td>
+        </tr>
+        <tr>
+          <td><strong>Protocolo de uso</strong></td>
+          <td>Checklist F1/F2/F3 en la UI (como guía para el usuario)</td>
+          <td>No hay guía contextual de en qué fenómeno se está</td>
+          <td>Panel lateral: "¿en qué fenómeno estás? ¿CST producido? ¿culpable identificado?"</td>
+          <td><span class="pill pill-low">0.5 días</span></td>
+        </tr>
+        <tr>
+          <td><strong>IA model</strong></td>
+          <td>Nuevo tipo IA co-activa para cláusulas de cobertura</td>
+          <td>Claude genera cláusulas sin distinción entre cobertura activa y obligación dormida</td>
+          <td>Prompts diferenciados: F1 genera cláusulas de cobertura presente; F2 genera indemnización</td>
+          <td><span class="pill pill-medium">1 día</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CUÁNDO Y CÓMO USAR -->
+  <div class="section">
+    <div class="section-title"><span>07</span> — Cuándo y cómo implementar</div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-blue"></div>
+        <div class="tl-phase">Fase 1 — Sin tocar el engine (inmediato)</div>
+        <div class="tl-title">Cambiar la narrativa de la demo sin cambiar el código</div>
+        <div class="tl-text">Renombrar los 4 masters a F1_VIDA, F1_RC, F1_DANOS, F1_CREDITO. Añadir en la descripción del fenómeno los términos correctos: "ferencia sensual", "cobertura co-activa". Documentar en la UI que F2 y F3 serían los siguientes fenómenos si ocurriese el siniestro. Coste: <strong style="color:var(--text)">2–4 horas</strong>. Impacto en la demo: <strong style="color:#34d399">muy alto</strong> (sin riesgo).</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-orange"></div>
+        <div class="tl-phase">Fase 2 — Engine: nuevos enums y modelo de datos</div>
+        <div class="tl-title">SECType (DE/DS/OBC), IAFormType.CO_ACTIVA, ferencia_sensual en PhenomenonRecord</div>
+        <div class="tl-text">Añadir los enums a <code>enums.py</code>, el campo <code>ferencia_sensual</code> y <code>sec_types</code> a <code>models.py</code>. NO rompe nada existente (campos opcionales). Coste: <strong style="color:var(--text)">1 día</strong>. Requiere rebuild del backend Docker.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-purple"></div>
+        <div class="tl-phase">Fase 3 — Engine: IF condicional siniestro_trigger</div>
+        <div class="tl-title">cascade_engine.py: lógica de apertura de F2 al recibir evento CST</div>
+        <div class="tl-text">Nueva función <code>open_f2_on_siniestro(f1_id, cst)</code> en cascade_engine. Nuevo endpoint <code>POST /phenomena/{id}/siniestro</code> en el backend. La demo puede entonces mostrar en vivo: "dispara siniestro → F2 aparece en el mapa". Coste: <strong style="color:var(--text)">3–4 días</strong>. Esta es la feature más espectacular para la demo.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-green"></div>
+        <div class="tl-phase">Fase 4 — IF eventual F2→F3 y guards jurídicos</div>
+        <div class="tl-title">culpable_trigger, guard NOT-subrogacion, F3 como fenómeno creado bajo demanda</div>
+        <div class="tl-text">La cadena completa F1→F2→F3 queda operativa. El engine puede validar que no se modele un seguro como solventio del Art.1158. Coste: <strong style="color:var(--text)">2–3 días</strong>. Para presentación a aseguradoras es la feature más diferenciadora.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPACTO EN EL ENGINE: DETALLE TÉCNICO -->
+  <div class="section">
+    <div class="section-title"><span>08</span> — Matriz de impacto cruzado: engine vs. aplicación</div>
+
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-num score-high">9/10</div>
+        <div class="score-label">Impacto conceptual en el engine</div>
+      </div>
+      <div class="score-card">
+        <div class="score-num score-high">8/10</div>
+        <div class="score-label">Impacto en la demo Seguros</div>
+      </div>
+      <div class="score-card">
+        <div class="score-num score-med">6/10</div>
+        <div class="score-label">Complejidad de implementación</div>
+      </div>
+      <div class="score-card">
+        <div class="score-num score-low">9/10</div>
+        <div class="score-label">ROI para presentación jurídica</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Lo que el engine gana</h3>
+        <ul>
+          <li><strong>IF condicional event-driven</strong>: hoy solo hay IF estáticos; F1→F2 introduce IF que se activan por eventos externos (CST), no solo por cambios de estado manual</li>
+          <li><strong>Fenómenos eventuales</strong>: F3 introduce el concepto de fenómeno que NO pre-existe sino que se crea bajo condición — esto generaliza el engine a muchos casos futuros</li>
+          <li><strong>SEC tipados semánticamente</strong>: DE/DS/OBC hacen consultables los tipos de consecuencia, actualmente enterrados en AG como texto libre</li>
+          <li><strong>Negaciones formales</strong>: el engine puede expresar qué NO es un fenómeno (NOT solventio), lo que da base para validaciones negativas</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Riesgos de la implementación</h3>
+        <ul>
+          <li><strong>Ruptura de la demo actual</strong>: si se cambia el modelo de datos sin cuidado, la demo de Seguros actual deja de funcionar</li>
+          <li><strong>Complejidad del cascade</strong>: el IF condicional (F1→F2 solo cuando CST) requiere que el cascade_engine distinga entre IF activos siempre vs. IF latentes esperando un evento</li>
+          <li><strong>Tests a actualizar</strong>: los 66 tests actuales están diseñados para el modelo plano; F1/F2/F3 requieren tests nuevos para los guards de F2 y la apertura de F3</li>
+          <li><strong>Datos de demo existentes</strong>: el endpoint /demo/seguros/setup crea 16 fenómenos específicos; habría que migrar o paralelizar con la nueva estructura</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- VEREDICTO HONESTO -->
+  <div class="section">
+    <div class="section-title"><span>09</span> — Veredicto honesto: qué hacer y en qué orden</div>
+
+    <div class="verdict">
+      <h2>Análisis final</h2>
+
+      <div class="verdict-row">
+        <div class="verdict-icon">✅</div>
+        <div class="verdict-text"><strong>Usar INMEDIATAMENTE</strong> la terminología del Flujograma en los nombres de fenómenos de la demo (F1_VIDA, F1_RC...) y en las descripciones del AG. Coste cero, impacto narrativo máximo. Convierte la demo de "gestor de pólizas avanzado" a "sistema con fundamento fenomenológico correcto".</div>
+      </div>
+
+      <div class="verdict-row">
+        <div class="verdict-icon">✅</div>
+        <div class="verdict-text"><strong>Implementar en el engine</strong> los nuevos enums (SECType.DE/DS/OBC, IAFormType.CO_ACTIVA) y el campo ferencia_sensual. Son no-breaking, añaden semántica real, y preparan el terreno para F2/F3. Esta es la Fase 2: 1 día de trabajo.</div>
+      </div>
+
+      <div class="verdict-row">
+        <div class="verdict-icon">⚠️</div>
+        <div class="verdict-text"><strong>IF condicional F1→F2</strong>: es la feature más potente pero también la más compleja. El cascade_engine actual no tiene infraestructura para IF event-triggered. Hacerlo bien requiere diseño cuidadoso. <strong>Recomendación: hacer esto ANTES de la demo con aseguradoras, pero NO antes de la demo con inversores</strong> (que se impresionan con la combinatoria actual).</div>
+      </div>
+
+      <div class="verdict-row">
+        <div class="verdict-icon">⚠️</div>
+        <div class="verdict-text"><strong>Guards jurídicos</strong> (NOT solventio, NOT subrogación automática): son importantes para la credibilidad con juristas especializados, pero no son necesarios para la demo visual. Se pueden añadir en Fase 4 sin urgencia.</div>
+      </div>
+
+      <div class="verdict-row">
+        <div class="verdict-icon">🔴</div>
+        <div class="verdict-text"><strong>No romper la demo actual</strong>: los 16 fenómenos que crea /demo/seguros/setup funcionan hoy. No tocar esa ruta hasta tener la nueva estructura F1/F2/F3 completa y testeada. Crear una nueva ruta /demo/seguros/setup-v2 en paralelo.</div>
+      </div>
+
+      <div class="verdict-row">
+        <div class="verdict-icon">💡</div>
+        <div class="verdict-text"><strong>El mayor valor del documento NO es técnico sino narrativo</strong>: PHENOMENON III da a Param las palabras exactas para explicar a una aseguradora por qué el sistema es diferente. "El engine distingue cobertura, siniestro e imputación — tres fenómenos distintos, no una cadena de pago" es una frase que ningún CTO de aseguradora ha escuchado antes de un software. Eso vale más que cualquier feature en el corto plazo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIAGRAMA COMPLETO -->
+  <div class="section">
+    <div class="section-title"><span>10</span> — Mapa de integración completo: PHENOMENON III ↔ Sistema actual</div>
+
+    <div class="flow-diagram" style="padding: 2rem 1.5rem;">
+      <div style="text-align:center; margin-bottom: 1.5rem; font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em;">
+        Cómo encaja PHENOMENON III en la arquitectura existente
+      </div>
+      <!-- Row 1: Current system -->
+      <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:1rem; margin-bottom:1.5rem; min-width:700px;">
+        <div style="background:#161b22; border:1px solid #30363d; border-radius:8px; padding:1rem; text-align:center;">
+          <div style="font-size:0.7rem; color:#8b949e; text-transform:uppercase; margin-bottom:0.4rem;">Frontend</div>
+          <div style="font-size:0.85rem; color:#e6edf3; font-weight:600;">React Map</div>
+          <div style="font-size:0.7rem; color:#8b949e; margin-top:0.3rem;">Nuevo: F1/F2/F3 visual<br>F3 línea discontinua<br>Panel protocolo</div>
+        </div>
+        <div style="background:#161b22; border:2px solid #059669; border-radius:8px; padding:1rem; text-align:center;">
+          <div style="font-size:0.7rem; color:#34d399; text-transform:uppercase; margin-bottom:0.4rem;">phenomenon_engine — núcleo</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; font-size:0.7rem; margin-top:0.5rem;">
+            <div style="background:#0d1117; border-radius:4px; padding:0.4rem; border:1px solid #30363d;">
+              <div style="color:#60a5fa;">enums.py</div>
+              <div style="color:#8b949e; margin-top:0.2rem;">+ CO_ACTIVA<br>+ SECType<br>+ IFTrigger</div>
+            </div>
+            <div style="background:#0d1117; border-radius:4px; padding:0.4rem; border:1px solid #30363d;">
+              <div style="color:#fb923c;">cascade_engine</div>
+              <div style="color:#8b949e; margin-top:0.2rem;">+ IF condicional<br>+ F2 apertura<br>+ F3 eventual</div>
+            </div>
+            <div style="background:#0d1117; border-radius:4px; padding:0.4rem; border:1px solid #30363d;">
+              <div style="color:#a78bfa;">models.py</div>
+              <div style="color:#8b949e; margin-top:0.2rem;">+ ferencia_sensual<br>+ sec_types<br>+ negaciones</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#161b22; border:1px solid #30363d; border-radius:8px; padding:1rem; text-align:center;">
+          <div style="font-size:0.7rem; color:#8b949e; text-transform:uppercase; margin-bottom:0.4rem;">Backend</div>
+          <div style="font-size:0.85rem; color:#e6edf3; font-weight:600;">FastAPI</div>
+          <div style="font-size:0.7rem; color:#8b949e; margin-top:0.3rem;">Nuevo: POST /siniestro<br>Demo v2 F1/F2/F3<br>Guards jurídicos</div>
+        </div>
+      </div>
+      <!-- Row 2: PHENOMENON III document -->
+      <div style="text-align:center; margin-bottom:0.5rem;">
+        <div style="display:inline-block; background:#1d4ed815; border:2px solid #2563EB; border-radius:8px; padding:0.8rem 2rem;">
+          <div style="font-size:0.7rem; color:#60a5fa; text-transform:uppercase; letter-spacing:0.1em;">PHENOMENON III Flujograma</div>
+          <div style="font-size:0.85rem; color:#93c5fd; font-weight:600; margin-top:0.2rem;">F1 → F2 → F3 · ferencia sensual · OBC · DE/DS · ID1089</div>
+          <div style="font-size:0.7rem; color:#8b949e; margin-top:0.2rem;">Fórmula rectora: "el seguro indemniza una ferencia asegurada actualizada por siniestro"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST FINAL -->
+  <div class="section">
+    <div class="section-title"><span>11</span> — Checklist de implementación</div>
+    <div class="card">
+      <h3>Qué hacer ahora mismo (sin riesgo)</h3>
+      <div class="code-block" style="line-height:2">
+<span style="color:#34d399">□</span> Renombrar masters en demo a F1_VIDA / F1_RC / F1_DANOS / F1_CREDITO
+<span style="color:#34d399">□</span> Añadir en AG description: "F1 — cobertura activa (co-operactio). Ferencia sensual: [objeto]"
+<span style="color:#34d399">□</span> Añadir en constants.js: nuevas etiquetas F1/F2/F3 con colores diferenciados
+<span style="color:#34d399">□</span> Añadir en la UI del mapa: tooltip explicando "este fenómeno es F1 (cobertura presente)"
+<span style="color:#fbbf24">□</span> enums.py: añadir CO_ACTIVA, SECType con DE/DS/OBC (no-breaking)
+<span style="color:#fbbf24">□</span> models.py: añadir ferencia_sensual (Optional[str]), sec_types (list[str])
+<span style="color:#fbbf24">□</span> prompts.py (Claude AI): actualizar prompt de F1 para generar cláusulas de cobertura co-activa
+<span style="color:#fb923c">□</span> cascade_engine.py: IF condicional siniestro_trigger F1→F2
+<span style="color:#fb923c">□</span> routes_demo.py: nuevo endpoint /demo/seguros/setup-v2 con F1/F2/F3
+<span style="color:#fb923c">□</span> Frontend: F3 con borde discontinuo en el mapa
+<span style="color:#fc8181">□</span> guards: NOT-solventio, NOT-subrogacion-automatica en F2
+<span style="color:#fc8181">□</span> IF eventual F2→F3 (culpable_trigger)
+<span style="color:#fc8181">□</span> Tests: nuevos tests para apertura F2 y creación bajo demanda de F3
+      </div>
+      <div style="margin-top:0.75rem; font-size:0.8rem; color:var(--muted)">
+        <span style="color:#34d399">■</span> Verde = sin riesgo, hoy mismo &nbsp;
+        <span style="color:#fbbf24">■</span> Amarillo = 1 día, no-breaking &nbsp;
+        <span style="color:#fb923c">■</span> Naranja = 3–4 días, cuidado con tests &nbsp;
+        <span style="color:#fc8181">■</span> Rojo = 5+ días, diseño cuidadoso
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="border-top:1px solid var(--border); padding-top:2rem; margin-top:3rem; color:var(--muted); font-size:0.8rem; text-align:center;">
+    PHENOMENON III — Análisis de impacto · Generado por Claude Code · 29 mayo 2026<br>
+    Basado en: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx + PHENOMENON_Caso_Seguros_Completo.docx + análisis del engine actual
+  </div>
+
+</div>
+</body>
+</html>

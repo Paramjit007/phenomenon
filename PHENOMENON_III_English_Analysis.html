@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHENOMENON III — Full Integration Analysis (English)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #ffa657;
+    --f1: #2563EB;
+    --f2: #D97706;
+    --f3: #7C3AED;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+  .container { max-width: 1180px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+  /* ── Header ── */
+  .hdr { border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 3rem; }
+  .hdr h1 { font-size: 2rem; font-weight: 800; color: var(--accent); }
+  .hdr .sub { color: var(--muted); font-size: 1rem; margin-top: 0.3rem; }
+  .hdr .chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+  .chip { padding: 0.2rem 0.75rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+  .chip-b { background: #1d4ed820; color: #93c5fd; border: 1px solid #1d4ed840; }
+  .chip-g { background: #05966920; color: #6ee7b7; border: 1px solid #05966940; }
+  .chip-o { background: #d9772620; color: #fdba74; border: 1px solid #d9772640; }
+  .chip-r { background: #f8514920; color: #fca5a5; border: 1px solid #f8514940; }
+  .chip-p { background: #7c3aed20; color: #c4b5fd; border: 1px solid #7c3aed40; }
+
+  /* ── Section headers ── */
+  .sec { margin-bottom: 3.5rem; }
+  .sec-title { font-size: 1.3rem; font-weight: 700; border-left: 3px solid var(--accent); padding-left: 0.8rem; margin-bottom: 1.5rem; }
+  .sec-num { color: var(--accent); }
+
+  /* ── Grid layouts ── */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+  @media(max-width:750px){ .g2,.g3,.g4{ grid-template-columns:1fr; } }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.4rem; }
+  .card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.7rem; }
+  .card p, .card ul { color: var(--muted); font-size: 0.875rem; }
+  .card ul { padding-left: 1.2rem; }
+  .card ul li { margin-bottom: 0.3rem; }
+  .c-blue  { border-left: 3px solid #3b82f6; }
+  .c-green { border-left: 3px solid #22c55e; }
+  .c-orange{ border-left: 3px solid #f97316; }
+  .c-red   { border-left: 3px solid #ef4444; }
+  .c-purple{ border-left: 3px solid #a855f7; }
+  .c-yellow{ border-left: 3px solid #eab308; }
+
+  /* ── Big verdict ── */
+  .verdict-bar { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.9rem 1.2rem;
+    background: var(--surface2); border-radius: 6px; margin-bottom: 0.6rem; }
+  .v-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+  .v-text { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+  .v-text strong { color: var(--text); }
+
+  /* ── Code ── */
+  .code { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 1rem 1.2rem; font-family: Consolas, monospace; font-size: 0.78rem;
+    overflow-x: auto; margin: 0.8rem 0; line-height: 1.8; }
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .fn { color: #d2a8ff; }
+  .cls { color: #ffa657; }
+
+  /* ── Table ── */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0; }
+  .tbl th { background: var(--surface2); color: var(--muted); text-align: left;
+    padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border);
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .tbl td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--surface2); }
+
+  /* ── Pills ── */
+  .pill { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 4px;
+    font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+  .p-crit   { background: #f8514920; color: #fca5a5; }
+  .p-high   { background: #f9731620; color: #fdba74; }
+  .p-med    { background: #eab30820; color: #fde047; }
+  .p-low    { background: #22c55e20; color: #86efac; }
+  .p-none   { background: #30363d40; color: #6b7280; }
+  .p-new    { background: #58a6ff20; color: #93c5fd; }
+  .p-safe   { background: #22c55e20; color: #86efac; }
+  .p-break  { background: #f8514920; color: #fca5a5; }
+
+  /* ── Score cards ── */
+  .score-g { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin: 1.5rem 0; }
+  .score-c { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.2rem; text-align: center; }
+  .score-n { font-size: 2.6rem; font-weight: 900; line-height: 1; margin-bottom: 0.35rem; }
+  .score-l { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .s-red  { color: #f87171; }
+  .s-ora  { color: #fb923c; }
+  .s-yel  { color: #fbbf24; }
+  .s-grn  { color: #4ade80; }
+  @media(max-width:600px){ .score-g{ grid-template-columns:1fr 1fr; } }
+
+  /* ── Quote ── */
+  .quote { border-left: 3px solid var(--accent); padding: 0.7rem 1.2rem;
+    background: var(--surface); margin: 1rem 0; border-radius: 0 6px 6px 0; }
+  .quote p { font-style: italic; color: var(--muted); font-size: 0.9rem; }
+
+  /* ── Warning ── */
+  .warn-box { background: #d2992210; border: 1px solid #d2992240; border-radius: 8px;
+    padding: 1.1rem 1.4rem; margin: 1.2rem 0; }
+  .warn-box h4 { color: #fbbf24; font-size: 0.82rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.45rem; }
+  .warn-box p { color: var(--muted); font-size: 0.875rem; }
+  .ok-box { background: #22c55e10; border: 1px solid #22c55e30; border-radius: 8px;
+    padding: 1.1rem 1.4rem; margin: 1.2rem 0; }
+  .ok-box h4 { color: #4ade80; font-size: 0.82rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.45rem; }
+  .ok-box p { color: var(--muted); font-size: 0.875rem; }
+  .danger-box { background: #ef444410; border: 1px solid #ef444430; border-radius: 8px;
+    padding: 1.1rem 1.4rem; margin: 1.2rem 0; }
+  .danger-box h4 { color: #f87171; font-size: 0.82rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.45rem; }
+  .danger-box p { color: var(--muted); font-size: 0.875rem; }
+
+  /* ── Timeline ── */
+  .tl { position: relative; padding-left: 2rem; }
+  .tl::before { content:''; position:absolute; left:0.5rem; top:0; bottom:0;
+    width:2px; background:var(--border); }
+  .tl-item { position: relative; padding-bottom: 1.5rem; }
+  .tl-dot { position:absolute; left:-1.75rem; top:0.25rem; width:12px; height:12px;
+    border-radius:50%; border:2px solid var(--border); background:var(--bg); }
+  .tl-b { border-color:#3b82f6; background:#3b82f6; }
+  .tl-o { border-color:#f97316; background:#f97316; }
+  .tl-p { border-color:#a855f7; background:#a855f7; }
+  .tl-g { border-color:#22c55e; background:#22c55e; }
+  .tl-ph { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--muted); font-weight:700; }
+  .tl-h { font-size:0.95rem; font-weight:700; color:var(--text); margin:0.2rem 0; }
+  .tl-t { font-size:0.85rem; color:var(--muted); }
+
+  /* ── Frontend diagram ── */
+  .fd-wrap { background:var(--surface2); border:1px solid var(--border); border-radius:12px;
+    padding:2rem; margin:1.5rem 0; overflow-x:auto; }
+  .fd-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase;
+    letter-spacing:0.1em; text-align:center; margin-bottom:1.5rem; }
+
+  /* screen mockup */
+  .screen { background:#0d1117; border:1px solid var(--border); border-radius:8px;
+    overflow:hidden; font-family:monospace; font-size:0.72rem; }
+  .screen-bar { background:#1c2128; border-bottom:1px solid var(--border);
+    padding:0.35rem 0.8rem; display:flex; align-items:center; gap:0.5rem; }
+  .screen-dot { width:8px; height:8px; border-radius:50%; }
+  .screen-body { padding:1rem; }
+
+  /* node boxes */
+  .node-row { display:flex; align-items:center; gap:0; justify-content:center;
+    flex-wrap:nowrap; min-width:620px; }
+  .fnode { width:160px; border-radius:9px; padding:1rem; text-align:center; flex-shrink:0; }
+  .fnode .fn-phase { font-size:0.62rem; text-transform:uppercase; letter-spacing:0.1em;
+    font-weight:700; opacity:0.65; margin-bottom:0.3rem; }
+  .fnode .fn-name { font-size:0.9rem; font-weight:700; margin-bottom:0.3rem; }
+  .fnode .fn-body { font-size:0.68rem; opacity:0.8; line-height:1.5; }
+  .fn-f1 { background:#1d4ed810; border:2px solid #3b82f6; }
+  .fn-f1 .fn-name { color:#60a5fa; }
+  .fn-f2 { background:#d9772610; border:2px solid #f97316; }
+  .fn-f2 .fn-name { color:#fb923c; }
+  .fn-f3 { background:#7c3aed10; border:2px dashed #a855f7; opacity:0.75; }
+  .fn-f3 .fn-name { color:#c4b5fd; }
+  .farrow { width:70px; display:flex; flex-direction:column; align-items:center;
+    gap:0.25rem; flex-shrink:0; }
+  .farrow-line { width:100%; height:2px; background:var(--border); }
+  .farrow-head { width:0; height:0; border-top:5px solid transparent;
+    border-bottom:5px solid transparent; border-left:9px solid var(--muted); }
+  .farrow-lbl { font-size:0.6rem; color:var(--muted); text-align:center; }
+  .farrow.dashed .farrow-line { background:repeating-linear-gradient(90deg,
+    var(--border) 0,var(--border) 4px,transparent 4px,transparent 9px); }
+
+  /* component annotation */
+  .ann { display:flex; gap:0.5rem; margin-bottom:0.4rem; align-items:flex-start; }
+  .ann-file { font-family:monospace; font-size:0.7rem; background:var(--surface2);
+    border:1px solid var(--border); padding:0.1rem 0.4rem; border-radius:3px;
+    color:#93c5fd; white-space:nowrap; flex-shrink:0; }
+  .ann-text { font-size:0.8rem; color:var(--muted); }
+
+  /* risk traffic light */
+  .risk-row { display:flex; gap:0.5rem; align-items:center; padding:0.5rem 0;
+    border-bottom:1px solid var(--border); }
+  .risk-row:last-child { border-bottom:none; }
+  .risk-light { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .rl-g { background:#22c55e; }
+  .rl-y { background:#eab308; }
+  .rl-r { background:#ef4444; }
+  .risk-name { font-size:0.82rem; font-weight:600; flex:1; }
+  .risk-desc { font-size:0.78rem; color:var(--muted); }
+
+  /* comparison table */
+  .cmp { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.2rem 0; }
+  .cmp-col { background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    overflow:hidden; }
+  .cmp-hdr { padding:0.7rem 1rem; font-size:0.8rem; font-weight:700;
+    border-bottom:1px solid var(--border); }
+  .cmp-hdr.bad  { background:#ef444410; color:#f87171; }
+  .cmp-hdr.good { background:#22c55e10; color:#4ade80; }
+  .cmp-body { padding:0.9rem 1rem; }
+  .cmp-item { font-size:0.82rem; color:var(--muted); padding:0.3rem 0;
+    border-bottom:1px solid var(--border); display:flex; gap:0.5rem; }
+  .cmp-item:last-child { border-bottom:none; }
+  .cmp-item span { flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════ HEADER -->
+<div class="hdr">
+  <h1>PHENOMENON III — Complete Integration Analysis</h1>
+  <p class="sub">What the Flujograma document means for the Seguros case, the engine, and the frontend — in plain English</p>
+  <div class="chips">
+    <span class="chip chip-b">Document: PHENOMENON_III_Flujograma</span>
+    <span class="chip chip-o">Caso: Seguros (4 insurance types)</span>
+    <span class="chip chip-g">Engine: phenomenon_engine</span>
+    <span class="chip chip-p">Frontend: React + SegurosComparativeView</span>
+    <span class="chip chip-r">Analysis: May 29 2026</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 01 WHAT IS IT -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">01</span> — What is this document, honestly?</div>
+
+  <div class="quote">
+    <p>"Insurance does not pay another party's debt. Insurance indemnifies an insured object (ferencia sensual) that has been actualised by a claim event." — PHENOMENON III governing formula</p>
+  </div>
+
+  <p style="color:var(--muted); font-size:0.925rem; margin-bottom:1.2rem;">
+    PHENOMENON_III_Flujograma is an <strong style="color:var(--text)">operational clarification document</strong>, not a new theoretical layer. Its purpose is to fix how the insurance phenomenon is <em>modelled</em>. The current Seguros case in the application treats each insurance product as a master contract with three sub-contracts (COBERTURA, EXCLUSIONES, PRIMA). That structure is fine for demonstrating combinatorics, but it is <strong style="color:var(--text)">architecturally wrong</strong> from a phenomenological standpoint. Insurance is not one phenomenon with accessories — it is three connected phenomena that open sequentially.
+  </p>
+
+  <div class="g3">
+    <div class="card c-blue">
+      <h3 style="color:#93c5fd;">F1 — Coverage (always exists)</h3>
+      <p>The insurance contract is live. The insurer is currently providing the service of coverage (IA co-activa). The premium pays for this present service, not for a future payment. The insured object (ferencia sensual) is covered but not yet damaged.</p>
+    </div>
+    <div class="card c-orange">
+      <h3 style="color:#fdba74;">F2 — Claim (opens only when loss occurs)</h3>
+      <p>A specific claim event (CST) actualises the insured object. F2 is NOT pre-existing — it is created when the loss happens. The indemnification is born here via ID 1089 (Art. 1089 CC). This is NOT paying a debt and NOT automatic subrogation.</p>
+    </div>
+    <div class="card c-purple">
+      <h3 style="color:#c4b5fd;">F3 — Recovery (eventual, if culpable party)</h3>
+      <p>Only opened after F2 if a liable third party exists. It is its own independent legal path (Art. 1902 CC), not an automatic reflection of F2. F3 does not always exist. Never confuse it with F2.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ 02 IS IT OK TO IMPLEMENT -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">02</span> — Is it safe to implement? Will it break anything?</div>
+
+  <div class="ok-box">
+    <h4>Short answer: YES, safe to implement — but in phases, not all at once</h4>
+    <p>The document introduces new concepts that can be added <em>on top of</em> the existing architecture without deleting anything. The risk of breaking existing functionality is <strong style="color:var(--text)">LOW</strong> if you follow the phased approach described in section 07. The current Seguros demo (16 phenomena, the comparative view, all cross-policy IF edges) continues working untouched while you build the new F1/F2/F3 layer in parallel.</p>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="risk-row">
+        <div class="risk-light rl-g"></div>
+        <div class="risk-name">constants.js — adding F1/F2/F3 labels</div>
+        <div class="risk-desc">Zero risk. New keys only. Nothing existing changes.</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-light rl-g"></div>
+        <div class="risk-name">enums.py — adding CO_ACTIVA, SECType</div>
+        <div class="risk-desc">Zero risk. New enum values. Backward compatible.</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-light rl-g"></div>
+        <div class="risk-name">models.py — adding ferencia_sensual field</div>
+        <div class="risk-desc">Zero risk. Optional field. Existing records unaffected.</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-light rl-y"></div>
+        <div class="risk-name">cascade_engine — conditional IF F1→F2</div>
+        <div class="risk-desc">Low-medium risk. New code path, existing paths untouched. Needs tests.</div>
+      </div>
+    </div>
+    <div>
+      <div class="risk-row">
+        <div class="risk-light rl-y"></div>
+        <div class="risk-name">SegurosComparativeView.jsx — new node types</div>
+        <div class="risk-desc">Low risk if done as additive rendering. Existing logic untouched.</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-light rl-y"></div>
+        <div class="risk-name">routes_demo.py — new setup-v2 endpoint</div>
+        <div class="risk-desc">Zero risk: parallel endpoint, original /seguros/setup unchanged.</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-light rl-r"></div>
+        <div class="risk-name">Replacing existing demo data with F1/F2/F3</div>
+        <div class="risk-desc">HIGH RISK if done before new structure is fully tested. Do NOT do this in Phase 1.</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-light rl-g"></div>
+        <div class="risk-name">KPMG case, Compraventa case</div>
+        <div class="risk-desc">Zero impact. Those cases are completely isolated from Seguros.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <h4>The one thing that can go wrong</h4>
+    <p>The only real risk is <strong style="color:var(--text)">trying to replace the current flat 16-phenomenon Seguros demo before the F1/F2/F3 structure is complete</strong>. The current demo works and impresses investors. Keep it working. Build F1/F2/F3 as a parallel demo route (setup-v2) and only cut over once it is fully tested and visually richer than what exists today.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ 03 CURRENT STATE -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">03</span> — What the system does today vs. what PHENOMENON III requires</div>
+
+  <div class="cmp">
+    <div class="cmp-col">
+      <div class="cmp-hdr bad">Current model — flat master/sub (works, but architecturally shallow)</div>
+      <div class="cmp-body">
+        <div class="cmp-item"><span>📁</span>SEGURO_VIDA (master) — always active</div>
+        <div class="cmp-item"><span>  └</span>COBERTURA_VIDA — always present as sub</div>
+        <div class="cmp-item"><span>  └</span>EXCLUSIONES_VIDA — always present as sub</div>
+        <div class="cmp-item"><span>  └</span>PRIMA_VIDA — always present as sub</div>
+        <div class="cmp-item"><span>📁</span>SEGURO_RC, SEGURO_DANOS, SEGURO_CREDITO — same pattern</div>
+        <div class="cmp-item"><span>⚠</span>F2 and F3 do not exist as phenomena — claims and recoveries are not modelled as separate events</div>
+        <div class="cmp-item"><span>⚠</span>No distinction between "coverage now active" vs "claim event occurred"</div>
+        <div class="cmp-item"><span>⚠</span>Indemnification is described in text fields, not as a separate phenomenon with its own legal basis</div>
+      </div>
+    </div>
+    <div class="cmp-col">
+      <div class="cmp-hdr good">PHENOMENON III model — 3 connected phenomena (correct)</div>
+      <div class="cmp-body">
+        <div class="cmp-item"><span>🔵</span>F1_VIDA — Aseguramiento/Coverage (always exists, IA co-activa)</div>
+        <div class="cmp-item"><span>  SEC:</span>DE (daño emergente) · DS (daño siguiente) · OBC (o(b)creencia)</div>
+        <div class="cmp-item"><span>  ↓</span>IF trigger: CST (specific loss event) opens F2</div>
+        <div class="cmp-item"><span>🟠</span>F2_VIDA — Claim/Indemnification (only exists after loss)</div>
+        <div class="cmp-item"><span>  ID:</span>Art. 1089 CC (legal basis for obligation)</div>
+        <div class="cmp-item"><span>  NOT:</span>solventio · debt payment · auto-subrogation</div>
+        <div class="cmp-item"><span>  ↓</span>IF trigger: culpable party identified → opens F3 (optional)</div>
+        <div class="cmp-item"><span>🟣</span>F3_VIDA — Recovery (eventual, via Art. 1902 CC, own legal path)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ 04 FRONTEND CHANGES IN DETAIL -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">04</span> — Frontend changes in detail</div>
+
+  <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem;">
+    These are the <strong style="color:var(--text)">exact files and components</strong> that need to change, and precisely what changes in each. All changes are additive — nothing is deleted until the new structure is verified.
+  </p>
+
+  <!-- 4A constants.js -->
+  <div class="card c-blue" style="margin-bottom:1rem;">
+    <h3 style="color:#93c5fd;">constants.js — 4 changes, all non-breaking</h3>
+    <div class="ann"><span class="ann-file">src/constants.js</span><span class="ann-text">This is the single source of truth for all labels, types, templates, and configs in the frontend.</span></div>
+    <div class="code">
+<span class="cm">// 1. Add new insurance phenomenon types to CONTRACT_TEMPLATES</span>
+<span class="cm">//    These are F1/F2/F3 variants — do NOT remove the existing SEGURO_VIDA etc.</span>
+SEGURO_VIDA_F1: {
+  label: <span class="str">"Life Insurance — Coverage (F1)"</span>,
+  subtitle: <span class="str">"Active coverage · IA co-activa"</span>,
+  icon: <span class="str">"♡"</span>, color: <span class="str">"#2563EB"</span>,
+  phenomenologicalPhase: <span class="str">"F1"</span>,
+  ferenciaSensual: <span class="str">"insured life of [name]"</span>,  <span class="cm">// NEW field</span>
+  secTypes: [<span class="str">"DE"</span>, <span class="str">"DS"</span>, <span class="str">"OBC"</span>],              <span class="cm">// NEW field</span>
+  <span class="cm">// ... rest same as SEGURO_VIDA</span>
+},
+SEGURO_VIDA_F2: {
+  label: <span class="str">"Life Insurance — Claim (F2)"</span>,
+  subtitle: <span class="str">"Indemnification · ID 1089"</span>,
+  icon: <span class="str">"⚡"</span>, color: <span class="str">"#D97706"</span>,
+  phenomenologicalPhase: <span class="str">"F2"</span>,
+  legalBasis: <span class="str">"Art. 1089 CC"</span>,               <span class="cm">// NEW field</span>
+  negaciones: [<span class="str">"NOT-solventio-1158"</span>, <span class="str">"NOT-subrogacion-automatica"</span>], <span class="cm">// NEW field</span>
+},
+SEGURO_VIDA_F3: {
+  label: <span class="str">"Life Insurance — Recovery (F3)"</span>,
+  subtitle: <span class="str">"Optional · Art. 1902 CC"</span>,
+  icon: <span class="str">"⬡"</span>, color: <span class="str">"#7C3AED"</span>,
+  phenomenologicalPhase: <span class="str">"F3"</span>,
+  eventual: <span class="kw">true</span>,                           <span class="cm">// NEW field — drives dashed border</span>
+  legalBasis: <span class="str">"Art. 1902 CC · Art. 1089 CC"</span>,
+},
+
+<span class="cm">// 2. Add phase labels (used by SegurosComparativeView for rendering)</span>
+<span class="kw">export const</span> PHENOMENON_PHASE_CFG = {
+  F1: { label: <span class="str">"F1 — Coverage"</span>,       color: <span class="str">"#3b82f6"</span>, border: <span class="str">"solid"</span>  },
+  F2: { label: <span class="str">"F2 — Claim"</span>,          color: <span class="str">"#f97316"</span>, border: <span class="str">"solid"</span>  },
+  F3: { label: <span class="str">"F3 — Recovery"</span>,       color: <span class="str">"#a855f7"</span>, border: <span class="str">"dashed"</span> },
+};
+
+<span class="cm">// 3. Add IF trigger types (for the IF Link Map in App.jsx)</span>
+<span class="kw">export const</span> IF_TRIGGER_TYPES = {
+  siniestro_cst:  { label: <span class="str">"CST trigger → F2"</span>,   color: <span class="str">"#f97316"</span>, conditional: <span class="kw">true</span>  },
+  culpable_id:    { label: <span class="str">"Culpable → F3"</span>,      color: <span class="str">"#a855f7"</span>, eventual:    <span class="kw">true</span>  },
+};
+
+<span class="cm">// 4. Add SEC type labels (for rendering in IAEngineView and detail panels)</span>
+<span class="kw">export const</span> SEC_TYPES = {
+  DE:  { label: <span class="str">"Daño Emergente"</span>,   desc: <span class="str">"Direct loss — first modulation layer of F1 coverage"</span> },
+  DS:  { label: <span class="str">"Daño Siguiente"</span>,  desc: <span class="str">"Consequential loss — second modulation layer"</span> },
+  OBC: { label: <span class="str">"O(b)creencia"</span>,    desc: <span class="str">"Pro-sequences observed without direct causation — prevents confusing sequence with causality"</span> },
+};
+    </div>
+  </div>
+
+  <!-- 4B SegurosComparativeView.jsx -->
+  <div class="card c-orange" style="margin-bottom:1rem;">
+    <h3 style="color:#fdba74;">SegurosComparativeView.jsx — the biggest visual change</h3>
+    <div class="ann"><span class="ann-file">components/SegurosComparativeView.jsx</span><span class="ann-text">This is the dedicated insurance comparative view. It already has CA_TYPE_MAP, PHASE_CFG (SA1, COBERTURA_ACTIVA, SINIESTRO, INDEMNIZACION), and StatusDot. Most of the visual infrastructure already exists — it just needs to render the F1/F2/F3 chain.</span></div>
+
+    <p style="color:var(--muted); font-size:0.85rem; margin-bottom:0.8rem;">The file already has <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">PHASE_CFG</code> with SINIESTRO and INDEMNIZACION phases. What it lacks is the structural rendering of F2 and F3 as <em>separate phenomenon nodes</em> rather than status labels on existing contracts.</p>
+
+    <div class="code">
+<span class="cm">// CHANGE 1: In the policy header row, show phase badge</span>
+<span class="cm">// Currently: shows status + type label</span>
+<span class="cm">// After: shows F1 / F2(if open) / F3(if open) badges</span>
+<span class="fn">function</span> <span class="cls">PolicyPhaseBar</span>({ policyKey, f1Contract, f2Contract, f3Contract }) {
+  <span class="kw">return</span> (
+    &lt;div style={{ display:<span class="str">"flex"</span>, gap:6, alignItems:<span class="str">"center"</span> }}&gt;
+      &lt;PhaseBadge phase=<span class="str">"F1"</span> active={!!f1Contract} /&gt;
+      &lt;span style={{ color:<span class="str">"#30363d"</span> }}&gt;→&lt;/span&gt;
+      &lt;PhaseBadge phase=<span class="str">"F2"</span> active={!!f2Contract} latent={!f2Contract} /&gt;
+      &lt;span style={{ color:<span class="str">"#30363d"</span>, borderStyle:<span class="str">"dashed"</span> }}&gt;⤳&lt;/span&gt;
+      &lt;PhaseBadge phase=<span class="str">"F3"</span> active={!!f3Contract} eventual={!f3Contract} /&gt;
+    &lt;/div&gt;
+  );
+}
+
+<span class="cm">// CHANGE 2: F3 nodes render with dashed border</span>
+<span class="cm">// Currently: all policy nodes have solid borders</span>
+<span class="cm">// After: F3 nodes get borderStyle: "dashed" + reduced opacity + "eventual" tooltip</span>
+<span class="kw">const</span> nodeStyle = (phase) =&gt; ({
+  border: `2px ${phase === <span class="str">"F3"</span> ? <span class="str">"dashed"</span> : <span class="str">"solid"</span>} ${PHENOMENON_PHASE_CFG[phase].color}`,
+  opacity: phase === <span class="str">"F3"</span> ? 0.7 : 1,
+  background: `${PHENOMENON_PHASE_CFG[phase].color}10`,
+});
+
+<span class="cm">// CHANGE 3: "Trigger Siniestro" button on F1 contracts (demo simulation)</span>
+<span class="cm">// This is the most impactful demo feature — user presses button, F2 appears</span>
+<span class="fn">function</span> <span class="cls">TriggerSiniestroBtn</span>({ f1Id, onF2Created }) {
+  <span class="kw">const</span> [loading, setLoading] = useState(<span class="kw">false</span>);
+  <span class="kw">const</span> handle = <span class="kw">async</span> () =&gt; {
+    setLoading(<span class="kw">true</span>);
+    <span class="kw">const</span> f2 = <span class="kw">await</span> api.<span class="fn">triggerSiniestro</span>(f1Id, { cstType: <span class="str">"loss-event"</span> });
+    onF2Created(f2);
+    setLoading(<span class="kw">false</span>);
+  };
+  <span class="kw">return</span> &lt;button onClick={handle} style={{ borderColor:<span class="str">"#f97316"</span> }}&gt;
+    {loading ? <span class="str">"Opening F2..."</span> : <span class="str">"⚡ Trigger Loss Event (CST)"</span>}
+  &lt;/button&gt;;
+}
+    </div>
+  </div>
+
+  <!-- 4C ContractGraph.jsx -->
+  <div class="card c-purple" style="margin-bottom:1rem;">
+    <h3 style="color:#c4b5fd;">ContractGraph.jsx — node rendering for F1/F2/F3</h3>
+    <div class="ann"><span class="ann-file">components/ContractGraph.jsx</span><span class="ann-text">The SVG graph that renders all phenomena as radial nodes. Currently treats all nodes identically. Needs to distinguish F1/F2/F3 visually.</span></div>
+    <div class="code">
+<span class="cm">// CHANGE: Detect phenomenological phase from contract data</span>
+<span class="cm">// Currently: node style = status color only</span>
+<span class="cm">// After: node style also reflects F1/F2/F3 phase</span>
+
+<span class="kw">function</span> <span class="fn">getNodeStyle</span>(contract) {
+  <span class="kw">const</span> phase = contract?.ag?.terms?.phenomenological_phase;
+  <span class="kw">if</span> (phase === <span class="str">"F2"</span>) <span class="kw">return</span> { strokeDasharray: <span class="str">"none"</span>, stroke: <span class="str">"#f97316"</span>, glow: <span class="str">"#f9731640"</span> };
+  <span class="kw">if</span> (phase === <span class="str">"F3"</span>) <span class="kw">return</span> { strokeDasharray: <span class="str">"5 3"</span>,    stroke: <span class="str">"#a855f7"</span>, glow: <span class="str">"#a855f740"</span> };
+  <span class="kw">return</span> { strokeDasharray: <span class="str">"none"</span>, stroke: statusColor(contract.status), glow: <span class="str">"none"</span> };
+}
+
+<span class="cm">// The IF arrows between F1→F2 and F2→F3 also need distinct styling:</span>
+<span class="cm">// F1→F2 arrow: orange, label "CST trigger", solid line</span>
+<span class="cm">// F2→F3 arrow: purple, label "culpable?", dashed line</span>
+    </div>
+  </div>
+
+  <!-- 4D IAEngineView.jsx -->
+  <div class="card c-green" style="margin-bottom:1rem;">
+    <h3 style="color:#86efac;">IAEngineView.jsx — show co-activa IA type + SEC types</h3>
+    <div class="ann"><span class="ann-file">components/IAEngineView.jsx</span><span class="ann-text">Renders IA operators and their interactions. Currently shows ad-actio, de-actio, non, co-implication. Needs to render co-activa and the SEC types DE/DS/OBC.</span></div>
+    <div class="code">
+<span class="cm">// CHANGE: Add co-activa as a displayable IA type</span>
+<span class="cm">// Currently: IATypeCode only has AD_ACTIO, DE_ACTIO, NON, CO_IMPLICATION</span>
+<span class="cm">// After: add CO_ACTIVA with its own icon and description</span>
+
+<span class="kw">const</span> IA_DISPLAY = {
+  <span class="str">"co-activa"</span>: {
+    label: <span class="str">"co-activa"</span>,
+    icon: <span class="str">"⊛"</span>,
+    color: <span class="str">"#3b82f6"</span>,
+    desc: <span class="str">"Active co-coverage: the insurer is currently providing the coverage service (not dormant)"</span>,
+  },
+};
+
+<span class="cm">// CHANGE: Add SEC type panel below the IA operators</span>
+<span class="cm">// Show DE / DS / OBC badges if the selected contract is an F1 phenomenon</span>
+<span class="fn">function</span> <span class="cls">SECTypesPanel</span>({ contract }) {
+  <span class="kw">const</span> secTypes = contract?.ag?.terms?.sec_types ?? [];
+  <span class="kw">if</span> (!secTypes.length) <span class="kw">return null</span>;
+  <span class="kw">return</span> (
+    &lt;div&gt;
+      &lt;div&gt;SEC Modulation Types&lt;/div&gt;
+      {secTypes.<span class="fn">map</span>(t =&gt; (
+        &lt;div key={t}&gt;
+          &lt;strong&gt;{SEC_TYPES[t]?.label}&lt;/strong&gt; — {SEC_TYPES[t]?.desc}
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}
+    </div>
+  </div>
+
+  <!-- 4E api/phenomenon.js -->
+  <div class="card c-yellow" style="margin-bottom:1rem;">
+    <h3 style="color:#fde047;">api/phenomenon.js — new API calls for F2/F3 creation</h3>
+    <div class="ann"><span class="ann-file">api/phenomenon.js</span><span class="ann-text">Single file for all API calls. Needs two new functions to trigger F2 and F3 creation from the frontend.</span></div>
+    <div class="code">
+<span class="cm">// NEW FUNCTION 1: Trigger a loss event on an F1 phenomenon — creates F2</span>
+<span class="kw">export async function</span> <span class="fn">triggerSiniestro</span>(f1Id, payload) {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(`/phenomena/${f1Id}/siniestro`, {
+    method: <span class="str">"POST"</span>,
+    headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },
+    body: JSON.<span class="fn">stringify</span>(payload),
+  });
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="cm">// NEW FUNCTION 2: Identify culpable party on an F2 — creates F3 (eventual)</span>
+<span class="kw">export async function</span> <span class="fn">openReclamacion</span>(f2Id, payload) {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(`/phenomena/${f2Id}/reclamacion`, {
+    method: <span class="str">"POST"</span>,
+    headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },
+    body: JSON.<span class="fn">stringify</span>(payload),
+  });
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ 05 WHAT THE USER SEES -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">05</span> — What the user actually sees before and after</div>
+
+  <div class="fd-wrap">
+    <div class="fd-label">BEFORE: Current SegurosComparativeView — flat master/sub structure</div>
+    <div class="screen" style="max-width:700px; margin:0 auto;">
+      <div class="screen-bar">
+        <div class="screen-dot" style="background:#f87171;"></div>
+        <div class="screen-dot" style="background:#fbbf24;"></div>
+        <div class="screen-dot" style="background:#4ade80;"></div>
+        <span style="color:var(--muted);font-size:0.7rem;margin-left:0.5rem;">localhost:5173 — Seguros Comparative View</span>
+      </div>
+      <div class="screen-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+          <div style="background:#05966920; border:1px solid #059669; border-radius:6px; padding:0.5rem; text-align:center;">
+            <div style="color:#34d399; font-size:0.7rem; font-weight:700;">♡ Vida</div>
+            <div style="color:#8b949e; font-size:0.6rem; margin-top:0.2rem;">ACTIVE ●</div>
+            <div style="color:#8b949e; font-size:0.55rem; margin-top:0.4rem; border-top:1px solid #30363d; padding-top:0.3rem;">COBERTURA_VIDA ↓<br>EXCLUSIONES_VIDA ↓<br>PRIMA_VIDA ↓</div>
+          </div>
+          <div style="background:#2563EB20; border:1px solid #2563EB; border-radius:6px; padding:0.5rem; text-align:center;">
+            <div style="color:#93c5fd; font-size:0.7rem; font-weight:700;">◎ RC</div>
+            <div style="color:#8b949e; font-size:0.6rem; margin-top:0.2rem;">ACTIVE ●</div>
+            <div style="color:#8b949e; font-size:0.55rem; margin-top:0.4rem; border-top:1px solid #30363d; padding-top:0.3rem;">COBERTURA_RC ↓<br>LIMITES_RC ↓<br>FRANQUICIA_RC ↓</div>
+          </div>
+          <div style="background:#D9770620; border:1px solid #D97706; border-radius:6px; padding:0.5rem; text-align:center;">
+            <div style="color:#fdba74; font-size:0.7rem; font-weight:700;">⊕ Daños</div>
+            <div style="color:#8b949e; font-size:0.6rem; margin-top:0.2rem;">ACTIVE ●</div>
+            <div style="color:#8b949e; font-size:0.55rem; margin-top:0.4rem; border-top:1px solid #30363d; padding-top:0.3rem;">COBERTURA_DANOS ↓<br>PERITACION ↓<br>EXCLUSIONES_DANOS ↓</div>
+          </div>
+          <div style="background:#7C3AED20; border:1px solid #7C3AED; border-radius:6px; padding:0.5rem; text-align:center;">
+            <div style="color:#c4b5fd; font-size:0.7rem; font-weight:700;">⬡ Crédito</div>
+            <div style="color:#8b949e; font-size:0.6rem; margin-top:0.2rem;">ACTIVE ●</div>
+            <div style="color:#8b949e; font-size:0.55rem; margin-top:0.4rem; border-top:1px solid #30363d; padding-top:0.3rem;">COBERTURA_CREDITO ↓<br>VALIDACION_FINANCIERA ↓<br>RIESGO_EMPRESARIAL ↓</div>
+          </div>
+        </div>
+        <div style="color:#8b949e; font-size:0.65rem; text-align:center; padding-top:0.3rem;">All 16 nodes permanent · No lifecycle · No event triggering</div>
+      </div>
+    </div>
+
+    <div style="height:1.5rem;"></div>
+    <div class="fd-label">AFTER: Post-PHENOMENON III — F1/F2/F3 chain with event simulation</div>
+    <div class="screen" style="max-width:760px; margin:0 auto;">
+      <div class="screen-bar">
+        <div class="screen-dot" style="background:#f87171;"></div>
+        <div class="screen-dot" style="background:#fbbf24;"></div>
+        <div class="screen-dot" style="background:#4ade80;"></div>
+        <span style="color:var(--muted);font-size:0.7rem;margin-left:0.5rem;">localhost:5173 — Seguros v2 (F1/F2/F3 structure)</span>
+      </div>
+      <div class="screen-body">
+        <!-- Life insurance row -->
+        <div style="margin-bottom:0.6rem;">
+          <div style="color:#34d399; font-size:0.65rem; font-weight:700; margin-bottom:0.3rem;">♡ VIDA — AXA Vida S.A.</div>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <div style="background:#3b82f610; border:2px solid #3b82f6; border-radius:5px; padding:0.4rem 0.6rem; min-width:130px;">
+              <div style="color:#60a5fa; font-size:0.62rem; font-weight:700;">F1 — COVERAGE ●</div>
+              <div style="color:#8b949e; font-size:0.55rem;">co-activa · ferencia: vida Pedro G.<br>SEC: DE · DS · OBC<br>Prima: 1.850€/yr</div>
+            </div>
+            <div style="color:#f97316; font-size:0.7rem;">→ CST</div>
+            <div style="background:#f9731610; border:2px solid #f97316; border-radius:5px; padding:0.4rem 0.6rem; min-width:130px;">
+              <div style="color:#fb923c; font-size:0.62rem; font-weight:700;">F2 — CLAIM ⚡</div>
+              <div style="color:#8b949e; font-size:0.55rem;">ID 1089 · Art. 1089 CC<br>NOT: solventio · NOT: subrogación<br>Indemnización: 300.000€</div>
+            </div>
+            <div style="color:#a855f7; font-size:0.7rem; opacity:0.6;">⤳ culpable?</div>
+            <div style="background:#a855f710; border:2px dashed #a855f7; border-radius:5px; padding:0.4rem 0.6rem; min-width:110px; opacity:0.6;">
+              <div style="color:#c4b5fd; font-size:0.62rem; font-weight:700;">F3 — RECOVERY ⬡</div>
+              <div style="color:#8b949e; font-size:0.55rem;">eventual<br>Art. 1902 CC<br>(not opened yet)</div>
+            </div>
+          </div>
+        </div>
+        <!-- RC row (F2 not triggered) -->
+        <div style="margin-bottom:0.5rem;">
+          <div style="color:#93c5fd; font-size:0.65rem; font-weight:700; margin-bottom:0.3rem;">◎ RC — Mapfre S.A.</div>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <div style="background:#3b82f610; border:2px solid #3b82f6; border-radius:5px; padding:0.4rem 0.6rem; min-width:130px;">
+              <div style="color:#60a5fa; font-size:0.62rem; font-weight:700;">F1 — COVERAGE ●</div>
+              <div style="color:#8b949e; font-size:0.55rem;">co-activa · 600k€/siniestro</div>
+            </div>
+            <div style="color:#30363d; font-size:0.7rem;">→</div>
+            <div style="background:#30363d20; border:1px dashed #30363d; border-radius:5px; padding:0.4rem 0.6rem; min-width:130px; opacity:0.4;">
+              <div style="color:#6b7280; font-size:0.62rem; font-weight:700;">F2 — latent (no CST)</div>
+            </div>
+            <div style="color:#30363d; font-size:0.7rem; opacity:0.3;">⤳</div>
+            <div style="background:#30363d10; border:1px dashed #30363d; border-radius:5px; padding:0.4rem 0.6rem; min-width:110px; opacity:0.3;">
+              <div style="color:#6b7280; font-size:0.62rem;">F3 — not opened</div>
+            </div>
+          </div>
+        </div>
+        <div style="color:#8b949e; font-size:0.6rem; padding-top:0.4rem; display:flex; gap:1rem;">
+          <span><span style="color:#60a5fa">●</span> F1 always active</span>
+          <span><span style="color:#f97316">⚡</span> F2 opens on loss event</span>
+          <span><span style="color:#a855f7">⬡</span> F3 eventual (dashed)</span>
+          <span style="color:#3b82f6;cursor:pointer">[⚡ Trigger CST on RC →]</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-top:1.2rem;">
+    <div class="card">
+      <h3>What the user gains</h3>
+      <ul>
+        <li><strong style="color:var(--text)">Live event simulation</strong> — can press "Trigger Loss Event" and watch F2 appear on screen in real time</li>
+        <li><strong style="color:var(--text)">Phase awareness</strong> — clearly sees which insurance products have had claims opened vs. which are still in coverage-only mode</li>
+        <li><strong style="color:var(--text)">Legal vocabulary</strong> — tooltip on F3 explains "eventual phenomenon — only opens if culpable party identified (Art. 1902 CC)"</li>
+        <li><strong style="color:var(--text)">SEC type visibility</strong> — hovering an F1 node shows DE · DS · OBC as the modulation layers of coverage</li>
+        <li><strong style="color:var(--text)">Negation display</strong> — F2 node clearly shows "NOT: solventio · NOT: auto-subrogation" — the engine's jurisprudential intelligence made visible</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What the developer touches</h3>
+      <ul>
+        <li><code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:0.78rem">constants.js</code> — add 12 new keys (F1/F2/F3 × 4 insurance types) + PHENOMENON_PHASE_CFG</li>
+        <li><code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:0.78rem">SegurosComparativeView.jsx</code> — add PolicyPhaseBar component + F3 dashed rendering + TriggerSiniestroBtn</li>
+        <li><code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:0.78rem">ContractGraph.jsx</code> — add phase-aware node styling (dashed border, glow color)</li>
+        <li><code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:0.78rem">IAEngineView.jsx</code> — add co-activa IA display + SECTypesPanel</li>
+        <li><code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:0.78rem">api/phenomenon.js</code> — add triggerSiniestro() and openReclamacion() functions</li>
+        <li><code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:0.78rem">App.jsx</code> — wire the new demo tab or toggle to load v2 structure</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ 06 ENGINE IMPACT -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">06</span> — Engine impact: what specifically needs to change</div>
+
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>What changes</th>
+        <th>Risk</th>
+        <th>Breaks existing?</th>
+        <th>Effort</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>enums.py</strong></td>
+        <td>Add <code>IAFormType.CO_ACTIVA</code>, new <code>SECType</code> enum (DE, DS, OBC), new <code>IFTriggerType</code> enum</td>
+        <td><span class="pill p-low">ZERO</span></td>
+        <td><span class="pill p-safe">NO</span></td>
+        <td>2 hours</td>
+      </tr>
+      <tr>
+        <td><strong>models.py</strong></td>
+        <td>Add optional fields to <code>PhenomenonRecord</code>: <code>ferencia_sensual</code>, <code>sec_types</code>, <code>legal_basis</code>, <code>negaciones</code>, <code>phenomenological_phase</code></td>
+        <td><span class="pill p-low">ZERO</span></td>
+        <td><span class="pill p-safe">NO</span></td>
+        <td>1 hour</td>
+      </tr>
+      <tr>
+        <td><strong>cascade_engine.py</strong></td>
+        <td>New function <code>open_f2_on_siniestro(f1_id, cst)</code> — creates F2 phenomenon linked to F1. New function <code>open_f3_on_culpable(f2_id, culpable_data)</code></td>
+        <td><span class="pill p-med">LOW-MED</span></td>
+        <td><span class="pill p-safe">NO (new code path)</span></td>
+        <td>2–3 days</td>
+      </tr>
+      <tr>
+        <td><strong>homologation_engine.py</strong></td>
+        <td>Add guard: indemnification homologation requires F2 to exist. Prevents marking a SEGURO_VIDA as "indemnisation complete" without an F2 phenomenon.</td>
+        <td><span class="pill p-med">LOW</span></td>
+        <td><span class="pill p-safe">NO</span></td>
+        <td>0.5 days</td>
+      </tr>
+      <tr>
+        <td><strong>routes_demo.py</strong></td>
+        <td>New endpoint <code>POST /phenomena/{id}/siniestro</code> and <code>POST /phenomena/{id}/reclamacion</code>. New route <code>POST /demo/seguros/setup-v2</code> using F1/F2/F3 structure.</td>
+        <td><span class="pill p-med">LOW</span></td>
+        <td><span class="pill p-safe">NO (parallel endpoints)</span></td>
+        <td>1–2 days</td>
+      </tr>
+      <tr>
+        <td><strong>ai/prompts.py</strong></td>
+        <td>Update insurance clause generation prompts: F1 generates coverage co-activa language; F2 generates indemnification language with explicit NOT-solventio; F3 generates recovery claim language.</td>
+        <td><span class="pill p-low">ZERO</span></td>
+        <td><span class="pill p-safe">NO</span></td>
+        <td>0.5 days</td>
+      </tr>
+      <tr>
+        <td><strong>Tests (66 passing)</strong></td>
+        <td>No existing tests need to change. Add new test file: <code>test_insurance_f1_f2_f3.py</code> covering: F2 only opens after CST, F3 only opens after F2, guard NOT-solventio in F2.</td>
+        <td><span class="pill p-low">ZERO</span></td>
+        <td><span class="pill p-safe">NO</span></td>
+        <td>1 day</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════ 07 IMPLEMENTATION PLAN -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">07</span> — Implementation plan: phases that protect existing functionality</div>
+
+  <div class="tl">
+    <div class="tl-item">
+      <div class="tl-dot tl-b"></div>
+      <div class="tl-ph">Phase 1 — Today, 2–4 hours, zero risk</div>
+      <div class="tl-h">Rename + relabel: use PHENOMENON III vocabulary in existing demo</div>
+      <div class="tl-t">In <code>routes_demo.py</code>, change the description fields of SEGURO_VIDA etc. to include "F1 — active coverage (IA co-activa). Ferencia sensual: [insured object]." In <code>constants.js</code>, add PHENOMENON_PHASE_CFG and F1/F2/F3 labels. In <code>SegurosComparativeView.jsx</code>, add the phase badge row (F1 active · F2 latent · F3 eventual) above each policy card. <strong style="color:var(--text)">Result: same data, dramatically better narrative for the demo. No backend change needed.</strong></div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-o"></div>
+      <div class="tl-ph">Phase 2 — 1 day, no-breaking</div>
+      <div class="tl-h">Engine semantics: new enums + optional model fields</div>
+      <div class="tl-t">Add <code>IAFormType.CO_ACTIVA</code>, <code>SECType</code> (DE/DS/OBC), optional <code>ferencia_sensual</code> to <code>PhenomenonRecord</code>. Rebuild backend Docker container. Update <code>IAEngineView.jsx</code> to render co-activa and SEC panel. <strong style="color:var(--text)">Result: the engine can now express the F1 concept correctly. Existing data unaffected.</strong></div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-p"></div>
+      <div class="tl-ph">Phase 3 — 3–4 days, requires testing</div>
+      <div class="tl-h">Live F2 creation: the most impressive demo feature</div>
+      <div class="tl-t">Implement <code>open_f2_on_siniestro()</code> in cascade_engine. Add <code>POST /phenomena/{id}/siniestro</code> endpoint. Add <code>triggerSiniestro()</code> to api/phenomenon.js. Add "⚡ Trigger Loss Event" button in SegurosComparativeView. <strong style="color:var(--text)">Result: in the demo, you can press a button and watch F2 appear in real time. This is the single most powerful live demo moment this application has.</strong></div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot tl-g"></div>
+      <div class="tl-ph">Phase 4 — 5+ days, design carefully</div>
+      <div class="tl-h">Full F1/F2/F3 demo + F3 creation + legal guards</div>
+      <div class="tl-t">Create <code>/demo/seguros/setup-v2</code> endpoint that builds F1/F2/F3 structure for all 4 insurance types. Add <code>open_f3_on_culpable()</code>. Add guard: NOT-solventio validation in F2. Add new test file. Update ContractGraph to render F3 with dashed borders. <strong style="color:var(--text)">Only cut over from setup-v1 to setup-v2 in the demo toggle AFTER this phase is fully verified.</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ 08 HONEST ASSESSMENT -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">08</span> — Honest assessment: what gets better and what gets harder</div>
+
+  <div class="score-g">
+    <div class="score-c">
+      <div class="score-n s-grn">+9</div>
+      <div class="score-l">Demo narrative quality</div>
+    </div>
+    <div class="score-c">
+      <div class="score-n s-grn">+8</div>
+      <div class="score-l">Legal credibility with insurers</div>
+    </div>
+    <div class="score-c">
+      <div class="score-n s-yel">-2</div>
+      <div class="score-l">Data complexity to manage</div>
+    </div>
+    <div class="score-c">
+      <div class="score-n s-grn">0</div>
+      <div class="score-l">Risk to current functionality</div>
+    </div>
+  </div>
+
+  <div class="verdict-bar">
+    <div class="v-icon">✅</div>
+    <div class="v-text"><strong>What definitely gets better</strong> — The Seguros demo goes from "impressive combinatorics tool" to "system that understands the legal structure of insurance." Any lawyer or insurance director who sees the F1→F2→F3 flow with explicit NOT-solventio will immediately recognise that this engine thinks differently from any other software they have seen.</div>
+  </div>
+
+  <div class="verdict-bar">
+    <div class="v-icon">✅</div>
+    <div class="v-text"><strong>What stays exactly the same</strong> — The KPMG case, the Compraventa case, all 66 passing tests, the existing Seguros demo (16 phenomena, the comparative view, cross-policy IF edges, cascades). None of this is touched in Phases 1 and 2. They only change in Phase 4, and only after setup-v2 is proven.</div>
+  </div>
+
+  <div class="verdict-bar">
+    <div class="v-icon">⚠️</div>
+    <div class="v-text"><strong>What gets slightly more complex to explain</strong> — The data model now has two ways of doing insurance (old flat structure + new F1/F2/F3). During the transition this creates a period where the codebase carries both paradigms. This is expected and manageable — it resolves when Phase 4 is done and the old endpoints are deprecated.</div>
+  </div>
+
+  <div class="verdict-bar">
+    <div class="v-icon">🔴</div>
+    <div class="v-text"><strong>The one thing that must not happen</strong> — Do not replace the existing <code>/demo/seguros/setup</code> endpoint or the existing SEGURO_VIDA / SEGURO_RC templates until the F1/F2/F3 setup is visually verified in the browser and passes all tests. The current demo works and is used. Preserve it until the new one is demonstrably better and fully functional.</div>
+  </div>
+
+  <div class="verdict-bar">
+    <div class="v-icon">💡</div>
+    <div class="v-text"><strong>The biggest single insight</strong> — PHENOMENON III's value is not primarily technical. It gives you a sentence that no competitor has ever said to an insurance company: <em>"Our engine knows the difference between coverage (F1), indemnification (F2), and recovery (F3) — and it enforces the distinction at the data level. Indemnification is not debt payment, and recovery is not automatic subrogation."</em> That sentence, backed by a live demo that shows F2 appearing when you trigger a loss event, is worth more than any feature list.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ 09 CHECKLIST -->
+<div class="sec">
+  <div class="sec-title"><span class="sec-num">09</span> — Implementation checklist</div>
+  <div class="card">
+    <h3>Ordered by safety: green = do now, yellow = this week, red = after full testing</h3>
+    <div class="code" style="line-height:2.1;">
+<span style="color:#4ade80;">□</span> <span style="color:#4ade80;">Phase 1</span>  constants.js — add PHENOMENON_PHASE_CFG (F1/F2/F3 colors, labels, border styles)
+<span style="color:#4ade80;">□</span> <span style="color:#4ade80;">Phase 1</span>  constants.js — add SEC_TYPES (DE, DS, OBC with descriptions)
+<span style="color:#4ade80;">□</span> <span style="color:#4ade80;">Phase 1</span>  constants.js — add IF_TRIGGER_TYPES (siniestro_cst, culpable_id)
+<span style="color:#4ade80;">□</span> <span style="color:#4ade80;">Phase 1</span>  SegurosComparativeView.jsx — add PolicyPhaseBar showing F1/F2(latent)/F3(eventual)
+<span style="color:#4ade80;">□</span> <span style="color:#4ade80;">Phase 1</span>  routes_demo.py — update AG descriptions of SEGURO_VIDA/RC/DANOS/CREDITO with F1 language
+<span style="color:#fbbf24;">□</span> <span style="color:#fbbf24;">Phase 2</span>  enums.py — add IAFormType.CO_ACTIVA and CO_OPERACTIO
+<span style="color:#fbbf24;">□</span> <span style="color:#fbbf24;">Phase 2</span>  enums.py — add SECType enum (DE, DS, OBC)
+<span style="color:#fbbf24;">□</span> <span style="color:#fbbf24;">Phase 2</span>  enums.py — add IFTriggerType enum (SINIESTRO, CULPABLE, MANUAL)
+<span style="color:#fbbf24;">□</span> <span style="color:#fbbf24;">Phase 2</span>  models.py — add optional ferencia_sensual, sec_types, legal_basis, negaciones, phenomenological_phase
+<span style="color:#fbbf24;">□</span> <span style="color:#fbbf24;">Phase 2</span>  IAEngineView.jsx — add co-activa display + SECTypesPanel component
+<span style="color:#fbbf24;">□</span> <span style="color:#fbbf24;">Phase 2</span>  ai/prompts.py — add F1-specific coverage prompt, F2 indemnification prompt
+<span style="color:#fb923c;">□</span> <span style="color:#fb923c;">Phase 3</span>  cascade_engine.py — implement open_f2_on_siniestro(f1_id, cst_event)
+<span style="color:#fb923c;">□</span> <span style="color:#fb923c;">Phase 3</span>  routes_demo.py — add POST /phenomena/{id}/siniestro endpoint
+<span style="color:#fb923c;">□</span> <span style="color:#fb923c;">Phase 3</span>  api/phenomenon.js — add triggerSiniestro(f1Id, payload)
+<span style="color:#fb923c;">□</span> <span style="color:#fb923c;">Phase 3</span>  SegurosComparativeView.jsx — add TriggerSiniestroBtn + F2 rendering on response
+<span style="color:#fb923c;">□</span> <span style="color:#fb923c;">Phase 3</span>  ContractGraph.jsx — dashed border + glow for F3 nodes
+<span style="color:#f87171;">□</span> <span style="color:#f87171;">Phase 4</span>  cascade_engine.py — implement open_f3_on_culpable(f2_id, culpable_data)
+<span style="color:#f87171;">□</span> <span style="color:#f87171;">Phase 4</span>  routes_demo.py — add POST /demo/seguros/setup-v2 with full F1/F2/F3 structure
+<span style="color:#f87171;">□</span> <span style="color:#f87171;">Phase 4</span>  homologation_engine.py — add guard: F2 must exist before indemnification homologation
+<span style="color:#f87171;">□</span> <span style="color:#f87171;">Phase 4</span>  tests — add test_insurance_f1_f2_f3.py (F2 requires CST, F3 requires F2, NOT-solventio guard)
+<span style="color:#f87171;">□</span> <span style="color:#f87171;">Phase 4</span>  App.jsx — add demo v2 toggle / tab to load setup-v2 structure
+    </div>
+    <div style="margin-top:0.75rem; font-size:0.78rem; color:var(--muted)">
+      <span style="color:#4ade80">■</span> Green = today, no rebuild needed &nbsp;
+      <span style="color:#fbbf24">■</span> Yellow = 1 day, rebuild backend &nbsp;
+      <span style="color:#fb923c">■</span> Orange = 3–4 days, new backend logic &nbsp;
+      <span style="color:#f87171">■</span> Red = 5+ days, full test suite update required
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FOOTER -->
+<div style="border-top:1px solid var(--border); padding-top:1.5rem; margin-top:2.5rem;
+  color:var(--muted); font-size:0.78rem; text-align:center;">
+  PHENOMENON III — English Integration Analysis · Claude Code · 29 May 2026<br>
+  Based on: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx ·
+  PHENOMENON_Caso_Seguros_Completo.docx ·
+  Live analysis of phenomenon_engine, SegurosComparativeView.jsx, ContractGraph.jsx, constants.js
+</div>
+
+</div>
+</body>
+</html>
