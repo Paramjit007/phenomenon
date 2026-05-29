@@ -3,6 +3,7 @@ import {
   C, font,
   INSURANCE_POLICY_CONFIG, INSURANCE_TEMPLATE_KEYS,
   CROSS_POLICY_IF_EDGES, SUB_META, statusColor, statusLabel,
+  PHENOMENON_III_ENABLED, PHENOMENON_PHASE_CFG, SEC_TYPES, F2_NEGACIONES,
 } from "../constants.js";
 import * as api from "../api/phenomenon.js";
 
@@ -195,6 +196,128 @@ function CheckRow({ ok, label, location, animate }) {
   );
 }
 
+// ─── PHENOMENON III — F1/F2/F3 phase bar ─────────────────────────────────────
+// Gated: only renders when PHENOMENON_III_ENABLED = true in constants.js
+// Shows the three connected phenomena of any insurance product:
+//   F1 (always active) → F2 (opens on CST loss event) ⤳ F3 (eventual, culpable)
+function PhenomenonIIIPhaseBar({ policyLabel, hasSiniestro }) {
+  const f1 = PHENOMENON_PHASE_CFG.F1;
+  const f2 = PHENOMENON_PHASE_CFG.F2;
+  const f3 = PHENOMENON_PHASE_CFG.F3;
+
+  // F2 is "open" if a siniestro is pending or paid — F3 never auto-opens in UI
+  const f2Active = hasSiniestro;
+
+  return (
+    <div style={{
+      margin:"8px 0 4px",
+      padding:"8px 10px",
+      background:"#0d1117",
+      border:"1px solid #30363d",
+      borderRadius:8,
+      display:"flex",
+      flexDirection:"column",
+      gap:6,
+    }}>
+      {/* Label */}
+      <div style={{ fontSize:8, color:"#8b949e", fontFamily:"monospace", textTransform:"uppercase",
+        letterSpacing:"0.08em", fontWeight:700 }}>
+        PHENOMENON III · F1 → F2 → F3 structure
+      </div>
+
+      {/* Phase chain */}
+      <div style={{ display:"flex", alignItems:"center", gap:0 }}>
+
+        {/* F1 — always active */}
+        <div style={{
+          flex:1, padding:"5px 7px", borderRadius:5,
+          background:`${f1.color}18`,
+          border:`1.5px solid ${f1.color}`,
+          textAlign:"center",
+        }}>
+          <div style={{ fontSize:8, color:f1.color, fontWeight:800, letterSpacing:"0.06em" }}>F1</div>
+          <div style={{ fontSize:8, color:"#e6edf3", fontWeight:600, marginTop:1 }}>Coverage</div>
+          <div style={{ fontSize:7, color:"#8b949e", marginTop:1 }}>co-activa · active</div>
+        </div>
+
+        {/* Arrow F1 → F2 (solid, CST trigger) */}
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"0 3px", flexShrink:0 }}>
+          <div style={{ fontSize:7, color: f2Active ? "#f97316" : "#6b7280", fontWeight:700 }}>
+            {f2Active ? "CST ⚡" : "→"}
+          </div>
+        </div>
+
+        {/* F2 — exists only if siniestro occurred */}
+        <div style={{
+          flex:1, padding:"5px 7px", borderRadius:5,
+          background: f2Active ? `${f2.color}18` : "#30363d18",
+          border:`1.5px ${f2Active ? "solid" : "dashed"} ${f2Active ? f2.color : "#6b7280"}`,
+          textAlign:"center",
+          opacity: f2Active ? 1 : 0.55,
+        }}>
+          <div style={{ fontSize:8, color: f2Active ? f2.color : "#6b7280", fontWeight:800, letterSpacing:"0.06em" }}>F2</div>
+          <div style={{ fontSize:8, color:"#e6edf3", fontWeight:600, marginTop:1 }}>
+            {f2Active ? "Claim open" : "Claim"}
+          </div>
+          <div style={{ fontSize:7, color:"#8b949e", marginTop:1 }}>
+            {f2Active ? "ID 1089 CC" : "latent · no CST yet"}
+          </div>
+        </div>
+
+        {/* Arrow F2 → F3 (dashed, eventual) */}
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"0 3px", flexShrink:0 }}>
+          <div style={{ fontSize:7, color:"#6b7280", fontWeight:700 }}>⤳</div>
+        </div>
+
+        {/* F3 — eventual, never auto-opens */}
+        <div style={{
+          flex:1, padding:"5px 7px", borderRadius:5,
+          background:"#7c3aed10",
+          border:`1.5px dashed #a855f7`,
+          textAlign:"center",
+          opacity:0.6,
+        }}>
+          <div style={{ fontSize:8, color:"#a855f7", fontWeight:800, letterSpacing:"0.06em" }}>F3</div>
+          <div style={{ fontSize:8, color:"#e6edf3", fontWeight:600, marginTop:1 }}>Recovery</div>
+          <div style={{ fontSize:7, color:"#8b949e", marginTop:1 }}>eventual · 1902 CC</div>
+        </div>
+      </div>
+
+      {/* F2 negations strip — shown only when F2 is active */}
+      {f2Active && (
+        <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+          {F2_NEGACIONES.map(n => (
+            <span key={n.id} style={{
+              fontSize:7, fontFamily:"monospace", padding:"1px 5px",
+              borderRadius:4, background:"#f8514920", color:"#fca5a5",
+              border:"1px solid #f8514940", fontWeight:700,
+            }}>
+              {n.label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* SEC types strip (DE · DS · OBC) */}
+      <div style={{ display:"flex", gap:4 }}>
+        {Object.entries(SEC_TYPES).map(([key, sec]) => (
+          <span key={key} style={{
+            fontSize:7, fontFamily:"monospace", padding:"1px 5px",
+            borderRadius:4, background:`${sec.color}18`,
+            color:sec.color, border:`1px solid ${sec.color}40`, fontWeight:700,
+          }}>
+            {key}
+          </span>
+        ))}
+        <span style={{ fontSize:7, fontFamily:"monospace", color:"#8b949e",
+          padding:"1px 5px", alignSelf:"center" }}>
+          SEC modulation layers
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Policy builder column ────────────────────────────────────────────────────
 function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelect, onFill, onSiniestro, onCrossCascade, onDelete, filling, isCrossLinked, visibleKeys, addLog }) {
   const { label, color, icon } = cfg;
@@ -251,6 +374,14 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
       </div>
 
       <div style={{ flex:1, padding:"12px 14px", display:"flex", flexDirection:"column", gap:10, overflowY:"auto" }}>
+
+        {/* PHENOMENON III phase bar — hidden unless flag is true */}
+        {PHENOMENON_III_ENABLED && (
+          <PhenomenonIIIPhaseBar
+            policyLabel={cfg.label}
+            hasSiniestro={hasSin}
+          />
+        )}
 
         {/* Sub-contracts status */}
         <div>

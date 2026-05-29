@@ -1322,7 +1322,7 @@ export const CROSS_POLICY_IF_EDGES = [
 // To instantly revert all Phase 3 visual changes: set this back to false.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const PHENOMENON_III_ENABLED = false;
+export const PHENOMENON_III_ENABLED = true;
 
 // F1/F2/F3 phase display config — colors, labels, border style for rendering
 export const PHENOMENON_PHASE_CFG = {
