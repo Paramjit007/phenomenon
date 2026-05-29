@@ -61,7 +61,7 @@ Expected: 104 passed, 3 skipped. If you get anything else, DO NOT continue — d
 ```
 Phase 0 — Baseline commit + progress file   [ DONE ] commit: 0cd1e3c
 Phase 1 — constants.js + feature flag       [ DONE ] commit: see below
-Phase 2 — engine enums + model fields       [ NOT STARTED ]
+Phase 2 — engine enums + model fields       [ DONE ] commit: 1eed555
 Phase 3 — frontend F1/F2/F3 visual layer    [ NOT STARTED ]
 Phase 4 — backend F2/F3 endpoints           [ NOT STARTED ]
 Phase 5 — full F1/F2/F3 demo + cutover      [ NOT STARTED ]
