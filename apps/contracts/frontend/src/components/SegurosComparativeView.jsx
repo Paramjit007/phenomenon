@@ -323,7 +323,8 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
   const { label, color, icon } = cfg;
   const isValid    = validation.score === 100;
   const isBlocked  = master?.status === "BLOCKED" || subs.some(s => s?.status === "BLOCKED");
-  const hasSin     = subs.some(s => s?.status === "SINIESTRO_PENDIENTE");
+  const SINIESTRO_STATUSES = ["SINIESTRO_PENDIENTE", "INDEMNIZACION_PAGADA", "RECHAZO"];
+  const hasSin     = subs.some(s => SINIESTRO_STATUSES.includes(s?.status));
   const activeCrossLinks = CROSS_POLICY_IF_EDGES.filter(e =>
     (e.aPolicyKey === policyKey || e.bPolicyKey === policyKey) &&
     visibleKeys.includes(e.aPolicyKey) && visibleKeys.includes(e.bPolicyKey)
@@ -524,7 +525,7 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
             </button>
           )}
 
-          {/* Siniestro button (only when valid and no pending siniestro) */}
+          {/* Siniestro button (only when valid, no siniestro of any kind, not blocked) */}
           {isValid && !hasSin && !isBlocked && (() => {
             const cobertura = subs.find(s => s?.type?.startsWith("COBERTURA_"));
             return cobertura ? (
@@ -536,6 +537,36 @@ function PolicyBuilderColumn({ policyKey, cfg, master, subs, validation, onSelec
               </button>
             ) : null;
           })()}
+
+          {/* Resolved siniestro badges — shown instead of button when already processed */}
+          {subs.some(s => s?.status === "INDEMNIZACION_PAGADA") && (
+            <div style={{ padding:"8px 12px", borderRadius:8, background:"#F0FDF4",
+              border:`1px solid #86EFAC`, display:"flex", alignItems:"center", gap:7 }}>
+              <span style={{ fontSize:14 }}>✅</span>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#16A34A", fontFamily:font.ui }}>
+                  Indemnización pagada
+                </div>
+                <div style={{ fontSize:9, color:"#4B5563", fontFamily:font.ui }}>
+                  Ciclo fenomenológico completo · F1→F2 cerrado
+                </div>
+              </div>
+            </div>
+          )}
+          {subs.some(s => s?.status === "RECHAZO") && (
+            <div style={{ padding:"8px 12px", borderRadius:8, background:"#FEF2F2",
+              border:`1px solid #FECACA`, display:"flex", alignItems:"center", gap:7 }}>
+              <span style={{ fontSize:14 }}>⛔</span>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#DC2626", fontFamily:font.ui }}>
+                  Siniestro rechazado
+                </div>
+                <div style={{ fontSize:9, color:"#4B5563", fontFamily:font.ui }}>
+                  Art. 1902 CC — impugnación disponible (nueva órbita)
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Resolve siniestro — opens wizard at step 2 with existing hypothesis */}
           {hasSin && (() => {
