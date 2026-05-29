@@ -1724,6 +1724,10 @@ def fill_policy_data(req: FillPolicyRequest, db: Session = Depends(get_db)):
 
     template_key: str = master.ag.get("terms", {}).get("templateKey", "")
 
+    # Strip _F1 / _F2 / _F3 suffix so SEGURO_VIDA_F1 → SEGURO_VIDA, etc.
+    import re as _re
+    template_key = _re.sub(r"_F[123]$", "", template_key)
+
     _VALID_KEYS = {
         "SEGURO_VIDA", "SEGURO_RC", "SEGURO_DANOS", "SEGURO_CREDITO_COMERCIAL",
     }

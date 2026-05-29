@@ -468,13 +468,21 @@ function AppInner() {
     );
   }
 
-  const activeTemplate = template ?? (() => {
-    // First try matching via ag.terms.templateKey (reliable for seeded demos)
-    const tkFromTerms = master?.ag?.terms?.templateKey;
-    if (tkFromTerms && CONTRACT_TEMPLATES[tkFromTerms]) {
-      if (!templateKey) setTemplateKey(tkFromTerms);
-      return CONTRACT_TEMPLATES[tkFromTerms];
+  const activeTemplate = (() => {
+    // Priority 1: the contract's OWN templateKey always wins over app-level state.
+    // This prevents stale SelectionScreen state from showing wrong fields when
+    // a different contract type is displayed (e.g. SEGURO_VIDA_F1 showing RC fields).
+    const tkFromContract = master?.ag?.terms?.templateKey;
+    if (tkFromContract) {
+      // Direct match — most common case
+      if (CONTRACT_TEMPLATES[tkFromContract]) return CONTRACT_TEMPLATES[tkFromContract];
+      // F1/F2/F3 type → strip suffix and use base template (e.g. SEGURO_VIDA_F1 → SEGURO_VIDA)
+      const baseKey = tkFromContract.replace(/_F[123]$/, "");
+      if (baseKey !== tkFromContract && CONTRACT_TEMPLATES[baseKey]) return CONTRACT_TEMPLATES[baseKey];
     }
+    // Priority 2: app-level templateKey (from SelectionScreen) — only when contract has no template
+    if (template) return template;
+    // Priority 3: name-based fallback
     const found = Object.entries(CONTRACT_TEMPLATES).find(([, t]) => t.label === master?.name);
     if (found && !templateKey) setTemplateKey(found[0]);
     return found?.[1] ?? CONTRACT_TEMPLATES.CSM;
