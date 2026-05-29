@@ -59,8 +59,8 @@ Expected: 104 passed, 3 skipped. If you get anything else, DO NOT continue — d
 ## CURRENT STATE
 
 ```
-Phase 0 — Baseline commit + progress file   [ DONE ]
-Phase 1 — constants.js + feature flag       [ NOT STARTED ]
+Phase 0 — Baseline commit + progress file   [ DONE ] commit: 0cd1e3c
+Phase 1 — constants.js + feature flag       [ DONE ] commit: see below
 Phase 2 — engine enums + model fields       [ NOT STARTED ]
 Phase 3 — frontend F1/F2/F3 visual layer    [ NOT STARTED ]
 Phase 4 — backend F2/F3 endpoints           [ NOT STARTED ]
@@ -91,7 +91,22 @@ Not applicable — Phase 0 is only the tracker file and analysis. Nothing functi
 
 ---
 
-## Phase 1 — NOT STARTED
+## Phase 1 — DONE ✅
+
+### Verification result
+- Tests: 104 passed, 3 skipped (identical to baseline)
+- Frontend: Vite HMR picked up constants.js, all 22 components reloaded — zero errors
+- Feature flag `PHENOMENON_III_ENABLED = false` — UI is 100% identical to baseline
+- New exports available: PHENOMENON_PHASE_CFG, SEC_TYPES, IF_TRIGGER_TYPES, INSURANCE_F1_F2_F3_TYPES, F2_NEGACIONES, INSURANCE_LEGAL_BASIS, getInsurancePhase(), getPolicyF1F2F3Keys()
+
+### Rollback
+```bash
+git checkout -- phenomenon/apps/contracts/frontend/src/constants.js
+```
+
+---
+
+## Phase 1 — (ORIGINAL INSTRUCTIONS, now DONE)
 
 ### What Phase 1 does
 Adds new constants to `constants.js` only. Zero backend changes. Zero component changes.
