@@ -35,3 +35,13 @@ class PhenomenonRecord(BaseModel):
     opus: OpusState
     parentId: Optional[str] = None
     children: list[str] = Field(default_factory=list)
+
+    # ── PHENOMENON III insurance fields (all Optional — existing records unaffected) ──
+    # Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+    phenomenological_phase: Optional[str] = None   # "F1" | "F2" | "F3"
+    ferencia_sensual: Optional[str] = None          # the insured object (e.g. "life of Pedro García")
+    sec_types: list[str] = Field(default_factory=list)   # ["DE","DS","OBC"]
+    legal_basis: Optional[str] = None               # e.g. "Art. 1089 CC"
+    negaciones: list[str] = Field(default_factory=list)  # ["NOT_SOLVENTIO_1158", ...]
+    cst_trigger_id: Optional[str] = None            # ID of the F1 that this F2 was opened from
+    culpable_trigger_id: Optional[str] = None       # ID of the F2 that this F3 was opened from

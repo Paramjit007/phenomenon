@@ -178,3 +178,48 @@ class EventType(str, Enum):
     ON_INTERRUPT  = "ON_INTERRUPT"
     ON_DISTRIBUTE = "ON_DISTRIBUTE"
     ON_TERMINATE  = "ON_TERMINATE"
+
+
+# ── PHENOMENON III — Insurance F1/F2/F3 enums ────────────────────────────────
+# Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+# These enums are purely additive — nothing above this line is changed.
+
+class InsurancePhase(str, Enum):
+    """
+    PHENOMENON III §4-6 — the three connected phenomena of any insurance product.
+    F1 always exists. F2 opens only when a CST (specific loss event) occurs.
+    F3 is eventual — only if a culpable party is identified after F2.
+    """
+    F1 = "F1"  # Aseguramiento / Coverage (IA co-activa, always active)
+    F2 = "F2"  # Siniestro / Indemnification (created on CST event, NOT debt payment)
+    F3 = "F3"  # Reclamación / Recovery (eventual, Art. 1902 CC, own legal path)
+
+
+class SECType(str, Enum):
+    """
+    PHENOMENON III §4.3-4.4 — Consequential Effect Classes (SEC).
+    Modulation layers of F1 coverage. All three operate before any claim occurs.
+    """
+    DE  = "DE"   # Daño Emergente — direct loss, first modulation layer of coverage
+    DS  = "DS"   # Daño Siguiente — consequential loss, second modulation layer
+    OBC = "OBC"  # O(b)creencia — observed pro-sequences without direct causality
+
+
+class IFTriggerType(str, Enum):
+    """
+    PHENOMENON III §5-6 — types of inter-phenomenon trigger for insurance chains.
+    Distinct from standard IF links: these open NEW phenomena conditionally.
+    """
+    SINIESTRO = "siniestro_cst"  # CST event triggers creation of F2 from F1
+    CULPABLE  = "culpable_id"    # Culpable party identified triggers creation of F3 from F2
+    MANUAL    = "manual"         # Standard manually-created IF (existing behaviour)
+
+
+class InsuranceNegacion(str, Enum):
+    """
+    PHENOMENON III §5.2 — explicit negations enforced in F2 indemnification.
+    The engine uses these as guards: if any of these is attempted in F2, reject.
+    """
+    NOT_SOLVENTIO        = "NOT_SOLVENTIO_1158"      # NOT Art. 1158 CC solventio
+    NOT_DEBT_PAYMENT     = "NOT_DEBT_PAYMENT"         # NOT paying another party's debt
+    NOT_AUTO_SUBROGATION = "NOT_AUTO_SUBROGATION"     # NOT automatic subrogation into culpable's debt
