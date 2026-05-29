@@ -4,6 +4,9 @@ from phenomenon_engine import PhenomenonRecord, EssFields, Vector, OpusState
 
 
 def _to_record(obj: PhenomenonDB, children: list[str] | None = None) -> PhenomenonRecord:
+    # PHENOMENON III fields are stored in ag_json["_ph3"] to avoid a DB migration.
+    # Existing records without "_ph3" default to None/empty safely.
+    ph3 = (obj.ag_json or {}).get("_ph3", {}) if isinstance(obj.ag_json, dict) else {}
     return PhenomenonRecord(
         id=obj.id,
         type=obj.type,
@@ -16,6 +19,13 @@ def _to_record(obj: PhenomenonDB, children: list[str] | None = None) -> Phenomen
         opus=OpusState(**obj.opus_json),
         parentId=obj.parent_id,
         children=children or [],
+        phenomenological_phase=ph3.get("phenomenological_phase"),
+        ferencia_sensual=ph3.get("ferencia_sensual"),
+        sec_types=ph3.get("sec_types", []),
+        legal_basis=ph3.get("legal_basis"),
+        negaciones=ph3.get("negaciones", []),
+        cst_trigger_id=ph3.get("cst_trigger_id"),
+        culpable_trigger_id=ph3.get("culpable_trigger_id"),
     )
 
 
@@ -47,10 +57,24 @@ class PhenomenaRepository:
 
     def save(self, record: PhenomenonRecord) -> PhenomenonRecord:
         obj = self.db.query(PhenomenonDB).filter(PhenomenonDB.id == record.id).first()
+        # Persist PHENOMENON III fields in ag_json["_ph3"] — no DB migration needed.
+        ag = dict(record.ag) if record.ag else {}
+        ph3_data = {
+            "phenomenological_phase": record.phenomenological_phase,
+            "ferencia_sensual":       record.ferencia_sensual,
+            "sec_types":              record.sec_types,
+            "legal_basis":            record.legal_basis,
+            "negaciones":             record.negaciones,
+            "cst_trigger_id":         record.cst_trigger_id,
+            "culpable_trigger_id":    record.culpable_trigger_id,
+        }
+        # Only write _ph3 if at least one field is set (keeps existing records clean)
+        if any(v for v in ph3_data.values() if v):
+            ag["_ph3"] = ph3_data
         data = {
             "status": record.status,
             "ess_json": record.ess.model_dump(),
-            "ag_json": record.ag,
+            "ag_json": ag,
             "ia_instances": record.ia_instances,
             "vectors_json": [v.model_dump() for v in record.vectors],
             "opus_json": record.opus.model_dump(),

@@ -85,3 +85,24 @@ export async function generateClause({ contractId, prompt }) {
     method: "POST", body: { contract_id: contractId, prompt },
   });
 }
+
+// ─── PHENOMENON III — F1/F2/F3 Insurance Chain API ───────────────────────────
+// Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+
+// Setup 4 F1 phenomena (one per insurance type). F2/F3 created on demand.
+export const setupSegurosV2 = () =>
+  req("/demo/seguros/setup-v2", { method: "POST" });
+
+// Open F2 (Claim) from F1 when a CST loss event occurs.
+// f1_id: the F1 coverage phenomenon ID
+// cst_cause: description of the loss event
+// estimated_damage: estimated loss amount in EUR
+export const openF2Siniestro = (f1_id, cst_cause, estimated_damage = 0) =>
+  req("/demo/seguros/open-f2", { method: "POST", body: { f1_id, cst_cause, estimated_damage } });
+
+// Open F3 (Recovery) from F2 when a culpable party is identified.
+// f2_id: the F2 claim phenomenon ID
+// culpable_party: name of the liable third party
+// legal_basis: defaults to Art. 1902 CC · Art. 1089 CC
+export const openF3Reclamacion = (f2_id, culpable_party, legal_basis = "Art. 1902 CC · Art. 1089 CC") =>
+  req("/demo/seguros/open-f3", { method: "POST", body: { f2_id, culpable_party, legal_basis } });

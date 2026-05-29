@@ -568,3 +568,208 @@ class ReverseCascadeEngine:
             reason=reason,
             triggered=True,
         )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHENOMENON III — F1/F2/F3 Insurance Chain Functions
+# Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+#
+# These functions implement the three-phenomenon structure of any insurance
+# product. They are standalone (not methods on CascadeEngine) and purely additive.
+# All existing cascade logic above is untouched.
+# ─────────────────────────────────────────────────────────────────────────────
+
+from dataclasses import dataclass as _dc
+import uuid as _uuid
+
+
+@_dc
+class F2OpenResult:
+    """Result of opening an F2 Claim phenomenon from an F1 Coverage phenomenon."""
+    f1_id: str
+    f2_id: str
+    f2_type: str
+    cst_cause: str
+    estimated_damage: float
+    negaciones: list
+
+
+@_dc
+class F3OpenResult:
+    """Result of opening an F3 Recovery phenomenon from an F2 Claim phenomenon."""
+    f2_id: str
+    f3_id: str
+    f3_type: str
+    culpable_party: str
+    legal_basis: str
+
+
+def open_f2_on_siniestro(
+    f1_id: str,
+    cst_cause: str,
+    estimated_damage: float,
+    repo: "PhenomenonRepository",
+) -> F2OpenResult:
+    """
+    PHENOMENON III §5 — Open F2 (Claim/Indemnification) from F1 (Coverage).
+
+    F2 is NOT pre-existing. It is created only when a specific loss event (CST)
+    actualises the ferencia sensual of F1. This is not a debt payment, not
+    solventio (Art. 1158 CC), and not automatic subrogation.
+
+    Legal basis: Art. 1089 CC (origin of obligations).
+
+    Guards enforced:
+    - F1 must exist and have phenomenological_phase = "F1"
+    - F1 must be ACTIVE (coverage must be live)
+    - F2 negaciones are stored on the new record for downstream enforcement
+    """
+    from .enums import InsuranceNegacion
+
+    f1 = repo.get(f1_id)
+    if f1 is None:
+        raise ValueError(f"F1 phenomenon {f1_id} not found — cannot open F2")
+
+    if f1.phenomenological_phase not in ("F1", None):
+        raise ValueError(
+            f"Phenomenon {f1_id} has phase '{f1.phenomenological_phase}', not F1 — "
+            "F2 can only be opened from an F1 coverage phenomenon"
+        )
+
+    if f1.status not in ("ACTIVE", "DRAFT", "MODIFIED"):
+        raise ValueError(
+            f"F1 phenomenon {f1_id} has status '{f1.status}' — "
+            "coverage must be active to open a claim"
+        )
+
+    # Derive F2 type from F1 type (e.g. SEGURO_VIDA_F1 → SEGURO_VIDA_F2)
+    f1_type = f1.type
+    if f1_type.endswith("_F1"):
+        f2_type = f1_type[:-3] + "_F2"
+    else:
+        f2_type = f1_type + "_F2"
+
+    negaciones = [
+        InsuranceNegacion.NOT_SOLVENTIO.value,
+        InsuranceNegacion.NOT_DEBT_PAYMENT.value,
+        InsuranceNegacion.NOT_AUTO_SUBROGATION.value,
+    ]
+
+    f2 = PhenomenonRecord(
+        id=f"f2-{_uuid.uuid4().hex[:10]}",
+        type=f2_type,
+        name=f"F2 — {f1.name.replace('F1 — ', '').replace('F1', '').strip()} — Claim",
+        status="ACTIVE",
+        ess=f1.ess,
+        ag={
+            "clauses": [
+                f"Indemnification opened by CST event: {cst_cause}",
+                "Art. 1089 CC — basis for obligation (bajando a hipótesis)",
+                "NOT Art. 1158 CC solventio — insurer does not pay another party's debt",
+                "NOT automatic subrogation — F3 is a separate eventual phenomenon",
+            ],
+            "terms": {
+                "cst_cause": cst_cause,
+                "estimated_damage": str(estimated_damage),
+                "f1_id": f1_id,
+                "opened_from": "CST_trigger",
+            },
+        },
+        ia_instances=["ad-actio"],
+        opus=f1.opus.model_copy(update={"homologation": "PENDING"}),
+        parentId=f1_id,
+        phenomenological_phase="F2",
+        ferencia_sensual=f1.ferencia_sensual,
+        legal_basis="Art. 1089 CC (origin of obligations, indemnification hypothesis)",
+        negaciones=negaciones,
+        cst_trigger_id=f1_id,
+    )
+
+    repo.save(f2)
+
+    return F2OpenResult(
+        f1_id=f1_id,
+        f2_id=f2.id,
+        f2_type=f2_type,
+        cst_cause=cst_cause,
+        estimated_damage=estimated_damage,
+        negaciones=negaciones,
+    )
+
+
+def open_f3_on_culpable(
+    f2_id: str,
+    culpable_party: str,
+    repo: "PhenomenonRepository",
+    legal_basis: str = "Art. 1902 CC · Art. 1089 CC",
+) -> F3OpenResult:
+    """
+    PHENOMENON III §6 — Open F3 (Recovery) from F2 (Claim).
+
+    F3 is EVENTUAL and INDEPENDENT. It opens only after F2 exists AND a culpable
+    third party has been identified. It is its own legal path via Art. 1902 CC —
+    NOT a reflex of F2 and NOT automatic subrogation.
+
+    Guards enforced:
+    - F2 must exist and have phenomenological_phase = "F2"
+    - culpable_party must be provided (non-empty)
+    - F3 is linked to F2 via culpable_trigger_id, NOT to F1
+    """
+    f2 = repo.get(f2_id)
+    if f2 is None:
+        raise ValueError(f"F2 phenomenon {f2_id} not found — cannot open F3")
+
+    if f2.phenomenological_phase != "F2":
+        raise ValueError(
+            f"Phenomenon {f2_id} has phase '{f2.phenomenological_phase}', not F2 — "
+            "F3 can only be opened from an F2 claim phenomenon"
+        )
+
+    if not culpable_party or not culpable_party.strip():
+        raise ValueError("culpable_party is required to open F3 — F3 is conditional on identification of a liable party")
+
+    f2_type = f2.type
+    if f2_type.endswith("_F2"):
+        f3_type = f2_type[:-3] + "_F3"
+    else:
+        f3_type = f2_type + "_F3"
+
+    f3 = PhenomenonRecord(
+        id=f"f3-{_uuid.uuid4().hex[:10]}",
+        type=f3_type,
+        name=f"F3 — Recovery — {culpable_party}",
+        status="ACTIVE",
+        ess=f2.ess,
+        ag={
+            "clauses": [
+                f"Recovery claim against culpable party: {culpable_party}",
+                f"Legal basis: {legal_basis}",
+                "INDEPENDENT legal path — NOT a reflex of F2 indemnification",
+                "NOT automatic subrogation — this is a separate phenomenon (F3)",
+            ],
+            "terms": {
+                "culpable_party": culpable_party,
+                "f2_id": f2_id,
+                "legal_basis": legal_basis,
+                "opened_from": "culpable_trigger",
+            },
+        },
+        ia_instances=["ad-actio"],
+        opus=f2.opus.model_copy(update={"homologation": "PENDING"}),
+        parentId=f2_id,
+        phenomenological_phase="F3",
+        ferencia_sensual=f2.ferencia_sensual,
+        legal_basis=legal_basis,
+        negaciones=[],
+        culpable_trigger_id=f2_id,
+    )
+
+    repo.save(f3)
+
+    return F3OpenResult(
+        f2_id=f2_id,
+        f3_id=f3.id,
+        f3_type=f3_type,
+        culpable_party=culpable_party,
+        legal_basis=legal_basis,
+    )

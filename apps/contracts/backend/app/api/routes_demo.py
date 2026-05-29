@@ -2188,3 +2188,302 @@ def clear_seguros(db: Session = Depends(get_db)):
     repo = PhenomenaRepository(db)
     _delete_all_contracts(repo)
     return {"cleared": True, "message": "All contracts deleted. Frontend will show SelectionScreen."}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHENOMENON III — F1/F2/F3 Insurance Chain Endpoints
+# Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+#
+# All endpoints below are ADDITIVE. Existing /seguros/* endpoints untouched.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class OpenF2Request(BaseModel):
+    f1_id: str
+    cst_cause: str
+    estimated_damage: float = 0.0
+
+
+class OpenF3Request(BaseModel):
+    f2_id: str
+    culpable_party: str
+    legal_basis: str = "Art. 1902 CC · Art. 1089 CC"
+
+
+@router.post("/seguros/open-f2")
+def open_f2(req: OpenF2Request, db: Session = Depends(get_db)):
+    """
+    PHENOMENON III §5 — Open F2 (Claim/Indemnification) from F1 (Coverage).
+
+    Creates a new F2 phenomenon linked to the given F1 when a CST loss event occurs.
+    F2 does NOT pre-exist — it is created here for the first time.
+
+    Enforces negaciones: NOT solventio (Art.1158 CC), NOT debt payment, NOT auto-subrogation.
+    Legal basis: Art. 1089 CC.
+    """
+    from phenomenon_engine.cascade_engine import open_f2_on_siniestro
+    from ..repositories.phenomena_repo import PhenomenaRepository
+
+    repo = PhenomenaRepository(db)
+    try:
+        result = open_f2_on_siniestro(req.f1_id, req.cst_cause, req.estimated_damage, repo)
+    except ValueError as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return {
+        "opened": True,
+        "f1_id": result.f1_id,
+        "f2_id": result.f2_id,
+        "f2_type": result.f2_type,
+        "cst_cause": result.cst_cause,
+        "estimated_damage": result.estimated_damage,
+        "negaciones": result.negaciones,
+        "legal_basis": "Art. 1089 CC (origin of obligations, indemnification hypothesis)",
+        "message": (
+            "F2 Claim phenomenon created. "
+            "This is NOT a debt payment (NOT Art. 1158 CC solventio). "
+            "F3 Recovery is a separate eventual phenomenon."
+        ),
+    }
+
+
+@router.post("/seguros/open-f3")
+def open_f3(req: OpenF3Request, db: Session = Depends(get_db)):
+    """
+    PHENOMENON III §6 — Open F3 (Recovery) from F2 (Claim).
+
+    Creates F3 only if a culpable party has been identified after F2.
+    F3 is EVENTUAL and INDEPENDENT — its own legal path via Art. 1902 CC.
+    NOT automatic subrogation.
+    """
+    from phenomenon_engine.cascade_engine import open_f3_on_culpable
+    from ..repositories.phenomena_repo import PhenomenaRepository
+
+    repo = PhenomenaRepository(db)
+    try:
+        result = open_f3_on_culpable(req.f2_id, req.culpable_party, repo, req.legal_basis)
+    except ValueError as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return {
+        "opened": True,
+        "f2_id": result.f2_id,
+        "f3_id": result.f3_id,
+        "f3_type": result.f3_type,
+        "culpable_party": result.culpable_party,
+        "legal_basis": result.legal_basis,
+        "message": (
+            "F3 Recovery phenomenon created. "
+            "This is an INDEPENDENT legal path — NOT automatic subrogation. "
+            "F3 pursues the culpable party via Art. 1902 CC."
+        ),
+    }
+
+
+@router.post("/seguros/setup-v2")
+def setup_seguros_v2(db: Session = Depends(get_db)):
+    """
+    PHENOMENON III — Setup F1/F2/F3 structure for the 4 insurance products.
+
+    Creates 4 F1 phenomena (one per insurance type), each with:
+      - phenomenological_phase = "F1"
+      - ferencia_sensual (the insured object)
+      - sec_types = ["DE", "DS", "OBC"]
+      - IA co-activa (active coverage — not a dormant contract)
+
+    F2 and F3 are NOT created here — they are created on demand via
+    POST /demo/seguros/open-f2 and POST /demo/seguros/open-f3.
+    This is architecturally correct: F1 exists at policy inception,
+    F2 only when a specific loss event (CST) occurs.
+
+    SAFE: does not delete or modify any existing contracts.
+    Uses distinct IDs prefixed with 'ph3-' to avoid collision.
+    """
+    repo = PhenomenaRepository(db)
+
+    def _vec():
+        return VectorEngine().generate(ia_type="ad-actio", is_sub=False)
+
+    now_ess = lambda partyA, partyB, jurisdiction: EssFields(
+        partyA=partyA,
+        partyB=partyB,
+        jurisdiction=jurisdiction,
+        effectiveDate="2026-01-01",
+        expiryDate="2027-01-01",
+    )
+
+    f1_ids = {}
+
+    # ── F1 — Seguro de Vida (AXA Vida S.A.) ──────────────────────────────────
+    vida_f1_id = f"ph3-vida-f1-{uuid.uuid4().hex[:8]}"
+    repo.save(PhenomenonRecord(
+        id=vida_f1_id,
+        type="SEGURO_VIDA_F1",
+        name="F1 — Life Insurance Coverage (AXA Vida S.A.)",
+        status="ACTIVE",
+        ess=now_ess("Comerciales del Levante S.L.", "AXA Vida S.A.", "Madrid"),
+        ag={
+            "clauses": [
+                "F1 — Active coverage (IA co-activa). The insurer is currently providing "
+                "the coverage service. The premium sustains this present operation.",
+                "Ferencia sensual: life of the insured (Pedro García López, age 45).",
+                "SEC modulation: DE (direct loss) · DS (consequential loss) · OBC (non-causal sequences).",
+                "Art. 83-99 LCS — Life insurance regulatory framework.",
+            ],
+            "terms": {
+                "templateKey": "SEGURO_VIDA_F1",
+                "phenomenological_phase": "F1",
+                "ferencia_sensual": "Life of Pedro García López (age 45)",
+                "sec_types": "DE · DS · OBC",
+                "ia_type": "co-activa (co-operactio)",
+                "capitalDeceso": "300000",
+                "capitalInvalidez": "300000",
+                "primaAnual": "1850",
+                "coverageType": "Fallecimiento e invalidez absoluta permanente",
+                "medicalValidation": "Aprobada sin exclusiones",
+                "beneficiaries": "Cónyuge e hijos por partes iguales",
+                "insuredName": "Pedro García López",
+                "insuredAge": "45",
+            },
+        },
+        ia_instances=["co-activa", "ad-actio"],
+        vectors=[_vec()],
+        opus=OpusState(status="ACTIVE", homologation="VALID"),
+        phenomenological_phase="F1",
+        ferencia_sensual="Life of Pedro García López (age 45)",
+        sec_types=["DE", "DS", "OBC"],
+        legal_basis=None,
+        negaciones=[],
+    ))
+    f1_ids["vida"] = vida_f1_id
+
+    # ── F1 — Seguro RC (Mapfre S.A.) ─────────────────────────────────────────
+    rc_f1_id = f"ph3-rc-f1-{uuid.uuid4().hex[:8]}"
+    repo.save(PhenomenonRecord(
+        id=rc_f1_id,
+        type="SEGURO_RC_F1",
+        name="F1 — RC Insurance Coverage (Mapfre S.A.)",
+        status="ACTIVE",
+        ess=now_ess("Comerciales del Levante S.L.", "Mapfre S.A.", "Valencia"),
+        ag={
+            "clauses": [
+                "F1 — Active coverage (IA co-activa). RC professional coverage is live.",
+                "Ferencia sensual: professional liability exposure of Comerciales del Levante S.L.",
+                "SEC: DE (direct third-party damage) · DS (consequential loss to third party) · OBC.",
+                "Art. 73-76 LCS — RC insurance. Art. 1902 CC (third-party liability).",
+            ],
+            "terms": {
+                "templateKey": "SEGURO_RC_F1",
+                "phenomenological_phase": "F1",
+                "ferencia_sensual": "Professional liability of Comerciales del Levante S.L.",
+                "ia_type": "co-activa",
+                "coverageLimit": "600000",
+                "annualAggregateLimit": "1200000",
+                "franquicia": "3000",
+                "primaAnual": "4200",
+                "rcType": "RC Profesional (errores y omisiones)",
+                "activityInsured": "Distribución comercial e importación",
+            },
+        },
+        ia_instances=["co-activa", "ad-actio"],
+        vectors=[_vec()],
+        opus=OpusState(status="ACTIVE", homologation="VALID"),
+        phenomenological_phase="F1",
+        ferencia_sensual="Professional liability of Comerciales del Levante S.L.",
+        sec_types=["DE", "DS", "OBC"],
+        legal_basis=None,
+        negaciones=[],
+    ))
+    f1_ids["rc"] = rc_f1_id
+
+    # ── F1 — Seguro Daños (Allianz S.A.) ─────────────────────────────────────
+    danos_f1_id = f"ph3-danos-f1-{uuid.uuid4().hex[:8]}"
+    repo.save(PhenomenonRecord(
+        id=danos_f1_id,
+        type="SEGURO_DANOS_F1",
+        name="F1 — Property Insurance Coverage (Allianz S.A.)",
+        status="ACTIVE",
+        ess=now_ess("Comerciales del Levante S.L.", "Allianz S.A.", "Valencia"),
+        ag={
+            "clauses": [
+                "F1 — Active coverage (IA co-activa). Property coverage is live.",
+                "Ferencia sensual: industrial warehouse at Polígono Industrial Norte, Valencia (750.000 €).",
+                "SEC: DE (direct property damage) · DS (business interruption) · OBC.",
+                "Art. 25-60 LCS — Property insurance. Art. 38 LCS (appraisal procedure).",
+            ],
+            "terms": {
+                "templateKey": "SEGURO_DANOS_F1",
+                "phenomenological_phase": "F1",
+                "ferencia_sensual": "Industrial warehouse — Polígono Industrial Norte, Valencia (750,000 €)",
+                "ia_type": "co-activa",
+                "propertyValue": "750000",
+                "coverageRisks": "Incendio, explosión, daños por agua, robo, daños eléctricos",
+                "deductible": "10",
+                "primaAnual": "6800",
+                "propertyDescription": "Nave industrial 2.800 m² — Polígono Industrial Norte",
+            },
+        },
+        ia_instances=["co-activa", "ad-actio"],
+        vectors=[_vec()],
+        opus=OpusState(status="ACTIVE", homologation="VALID"),
+        phenomenological_phase="F1",
+        ferencia_sensual="Industrial warehouse — Polígono Industrial Norte, Valencia (750,000 €)",
+        sec_types=["DE", "DS", "OBC"],
+        legal_basis=None,
+        negaciones=[],
+    ))
+    f1_ids["danos"] = danos_f1_id
+
+    # ── F1 — Seguro Crédito (Mapfre Crédito) ─────────────────────────────────
+    credito_f1_id = f"ph3-credito-f1-{uuid.uuid4().hex[:8]}"
+    repo.save(PhenomenonRecord(
+        id=credito_f1_id,
+        type="SEGURO_CREDITO_F1",
+        name="F1 — Credit Insurance Coverage (Mapfre Crédito y Caución S.A.)",
+        status="ACTIVE",
+        ess=now_ess("Comerciales del Levante S.L.", "Mapfre Crédito y Caución S.A.", "Valencia"),
+        ag={
+            "clauses": [
+                "F1 — Active coverage (IA co-activa). Credit insurance coverage is live.",
+                "Ferencia sensual: trade receivables from Distribuciones Sur S.L. (credit limit 200,000 €).",
+                "SEC: DE (direct credit loss) · DS (consequential business impact) · OBC.",
+                "Ley 50/1980 LCS — Credit insurance.",
+            ],
+            "terms": {
+                "templateKey": "SEGURO_CREDITO_F1",
+                "phenomenological_phase": "F1",
+                "ferencia_sensual": "Trade receivables from Distribuciones Sur S.L. (200,000 € credit limit)",
+                "ia_type": "co-activa",
+                "creditLimit": "200000",
+                "indemnityPct": "85",
+                "primaAnual": "3200",
+                "debtorName": "Distribuciones Sur S.L.",
+                "waitingPeriod": "3",
+                "financialValidation": "Rating A — Riesgo bajo",
+            },
+        },
+        ia_instances=["co-activa", "ad-actio"],
+        vectors=[_vec()],
+        opus=OpusState(status="ACTIVE", homologation="VALID"),
+        phenomenological_phase="F1",
+        ferencia_sensual="Trade receivables from Distribuciones Sur S.L. (200,000 € credit limit)",
+        sec_types=["DE", "DS", "OBC"],
+        legal_basis=None,
+        negaciones=[],
+    ))
+    f1_ids["credito"] = credito_f1_id
+
+    return {
+        "setup_v2": True,
+        "structure": "PHENOMENON III — F1/F2/F3",
+        "f1_phenomena": f1_ids,
+        "f2_instruction": "POST /demo/seguros/open-f2 with {f1_id, cst_cause, estimated_damage}",
+        "f3_instruction": "POST /demo/seguros/open-f3 with {f2_id, culpable_party}",
+        "total_created": 4,
+        "note": (
+            "4 F1 (coverage) phenomena created. F2 and F3 are created on demand — "
+            "F2 only when a loss event (CST) occurs, F3 only if a culpable party is identified. "
+            "Existing /seguros/seed contracts are untouched."
+        ),
+    }
