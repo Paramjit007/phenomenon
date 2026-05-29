@@ -59,12 +59,32 @@ Expected: 104 passed, 3 skipped. If you get anything else, DO NOT continue — d
 ## CURRENT STATE
 
 ```
-Phase 0 — Baseline commit + progress file   [ DONE ] commit: 0cd1e3c
-Phase 1 — constants.js + feature flag       [ DONE ] commit: see below
-Phase 2 — engine enums + model fields       [ DONE ] commit: 1eed555
-Phase 3 — frontend F1/F2/F3 visual layer    [ NOT STARTED ]
-Phase 4 — backend F2/F3 endpoints           [ NOT STARTED ]
-Phase 5 — full F1/F2/F3 demo + cutover      [ NOT STARTED ]
+Phase 0 — Baseline commit + progress file   [ DONE ] commit: 0cd1e3c (parent)
+Phase 1 — constants.js + feature flag       [ DONE ] commit: 440d122 (submodule)
+Phase 2 — engine enums + model fields       [ DONE ] commit: 1eed555 (submodule)
+Phase 3 — frontend F1/F2/F3 visual layer    [ DONE ] commit: 024b612 (submodule)
+Phase 4 — backend F2/F3 endpoints           [ DONE ] commit: c760109 (submodule)
+Phase 5 — F1/F2/F3 demo setup-v2 + tests   [ DONE ] commit: c760109 (submodule)
+```
+
+## INTEGRATION COMPLETE
+
+All 5 phases done. 121 engine tests passing (17 new F1/F2/F3 tests), 3 skipped.
+Full F1->F2->F3 API chain verified end-to-end.
+PHENOMENON_III_ENABLED = true (phase bar visible in Seguros view).
+
+### Final verification commands
+```powershell
+docker exec phenomenon-backend-1 python3 -m pytest /workspace/packages/engine/tests/ -q --tb=no
+# Expected: 121 passed, 3 skipped
+
+curl http://localhost:8000/health
+# Expected: status ok
+
+# Full chain smoke test:
+# POST /demo/seguros/setup-v2  -> returns f1_phenomena.{vida,rc,danos,credito}
+# POST /demo/seguros/open-f2   -> {f1_id, cst_cause, estimated_damage}
+# POST /demo/seguros/open-f3   -> {f2_id, culpable_party}
 ```
 
 **Feature flag location**: `phenomenon/apps/contracts/frontend/src/constants.js`
