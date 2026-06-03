@@ -182,6 +182,7 @@ class EventType(str, Enum):
 
 # ── PHENOMENON III — Insurance F1/F2/F3 enums ────────────────────────────────
 # Source: PHENOMENON_III_Flujograma_fenomenologico_del_seguro.docx
+#         PHENOMENON_III_Seguro_y_EDCO_EDCIB_fractalizado.docx (fractalization)
 # These enums are purely additive — nothing above this line is changed.
 
 class InsurancePhase(str, Enum):
@@ -223,3 +224,50 @@ class InsuranceNegacion(str, Enum):
     NOT_SOLVENTIO        = "NOT_SOLVENTIO_1158"      # NOT Art. 1158 CC solventio
     NOT_DEBT_PAYMENT     = "NOT_DEBT_PAYMENT"         # NOT paying another party's debt
     NOT_AUTO_SUBROGATION = "NOT_AUTO_SUBROGATION"     # NOT automatic subrogation into culpable's debt
+
+
+class CoverageType(str, Enum):
+    """
+    PHENOMENON III — P1/F1 coverage sub-types (fractalization).
+    Source: PHENOMENON_III_Seguro_y_EDCO_EDCIB_fractalizado.docx §V.1
+    """
+    P1_BIEN_PRINCIPAL    = "P1.1"  # Coverage of main asset/property
+    P1_RESPONSABILIDAD   = "P1.2"  # Liability coverage (third-party claims)
+    P1_CARGA_MERCANCIA   = "P1.3"  # Cargo/merchandise/associated value
+    P1_DANO_SIGUIENTE    = "P1.4"  # Consequential loss / operational interruption
+    P1_FINANCIERA        = "P1.5"  # Financial / parametric coverage
+
+
+class FerenciaType(str, Enum):
+    """
+    PHENOMENON III — P2/F2 ferencia sub-types (fractalization).
+    Source: PHENOMENON_III_Seguro_y_EDCO_EDCIB_fractalizado.docx §V.2
+    These are the types of insured ferencia that a siniestro can actualise.
+
+    Relationship to SECType (F1) — these are NOT duplicates:
+      SECType.DE / DS / OBC (enums.py, above) model coverage modulation on F1.
+      They represent risk expectations constituted BEFORE any siniestro occurs.
+      FerenciaType members model actualized losses realized on F2 AFTER a CST event.
+      Same legal labels (DE/DS), different phenomenological moment:
+        F1 SECType  = potential coverage layer (the insurance is prepared for this)
+        F2 FerenciaType = the actual ferencia that the siniestro has activated
+      A siniestro that activates SECType.DE coverage on F1 produces a
+      FerenciaType.DE_SINIESTRO_MATERIAL or DE_DANO_EMERGENTE ferencia on F2.
+    """
+    DE_SINIESTRO_MATERIAL  = "P2.1"  # Direct material loss (Daño Emergente principal)
+    DE_DANO_EMERGENTE      = "P2.2"  # Immediate repair/replacement costs
+    DS_DANO_SIGUIENTE      = "P2.3"  # Consequential loss (not identical to initial damage)
+    INTERRUPCION_OPERATIVA = "P2.4"  # Functional/productive ferencia
+    RECLAMACIONES_CRUZADAS = "P2.5"  # Cross-claims between multiple subjects/insurers
+
+
+class ReclamacionType(str, Enum):
+    """
+    PHENOMENON III — P3/F3 post-claim recovery sub-types (fractalization).
+    Source: PHENOMENON_III_Seguro_y_EDCO_EDCIB_fractalizado.docx §V.3
+    """
+    CAUSANTE_DIRECTO     = "P3.1"  # Direct culpable party
+    OPERADOR_TERCERO     = "P3.2"  # Operator / transporter / maintainer
+    CONTRACTUAL          = "P3.3"  # Contractual recovery basis
+    EXTRACONTRACTUAL     = "P3.4"  # Extra-contractual (tort) recovery basis
+    ENTRE_ASEGURADORAS   = "P3.5"  # Inter-insurer recovery / concurrence

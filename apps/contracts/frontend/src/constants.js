@@ -684,6 +684,34 @@ export const SUB_META = {
   RIESGO_EMPRESARIAL:      { label: "Análisis de Riesgo Empresarial",            short: "RIESGO.EMP", color: "#5B21B6", icon: "◆", law: "LCS arts. 70-71" },
 };
 
+// ─── PHENOMENON III — Fractalization enum constants ───────────────────────────
+// CoverageType (P1.1–P1.5): what type of F1/P1 coverage this sub-contract represents
+export const PHENOMENON_III_COVERAGE_TYPES = [
+  "P1.1 — Bien principal (activo, inmueble o nave central)",
+  "P1.2 — Responsabilidad civil frente a terceros",
+  "P1.3 — Carga, mercancía o valor asociado",
+  "P1.4 — Daño siguiente e interrupción operativa",
+  "P1.5 — Cobertura financiera o paramétrica",
+];
+
+// FerenciaType (P2.1–P2.5): what type of actualized loss a siniestro produced
+export const PHENOMENON_III_FERENCIA_TYPES = [
+  "P2.1 — Siniestro material directo (ferencia principal)",
+  "P2.2 — Daño emergente (costes inmediatos de reparación o sustitución)",
+  "P2.3 — Daño siguiente (consecuencias no idénticas al daño inicial)",
+  "P2.4 — Interrupción operativa (ferencia funcional o productiva)",
+  "P2.5 — Reclamaciones cruzadas (entre varios sujetos o aseguradoras)",
+];
+
+// ReclamacionType (P3.1–P3.5): what type of post-claim recovery path is being pursued
+export const PHENOMENON_III_RECLAMACION_TYPES = [
+  "P3.1 — Causante directo (responsable principal del siniestro)",
+  "P3.2 — Operador, transportista o mantenedor vinculado al daño",
+  "P3.3 — Reclamación contractual (relación previa de prestación)",
+  "P3.4 — Reclamación extracontractual (Art. 1902 CC)",
+  "P3.5 — Reclamación entre aseguradoras (concurrencia o coaseguro)",
+];
+
 // ─── Sub-contract specific fields (stored in ag_json.terms) ──────────────────
 export const SUB_FIELDS = {
   NDA: [
@@ -887,6 +915,9 @@ export const SUB_FIELDS = {
       { key: "activationCondition", label: "Condición IF para activación", type: "select", options: ["Declaración de salud aceptada (sin exclusiones)","Superado período de carencia","Pago de prima en vigor","Todas las condiciones cumplidas"] },
       { key: "beneficiaryConfirmed", label: "Beneficiarios confirmados en escritura", type: "select", options: ["Sí","No — pendiente confirmación"] },
     ]},
+    { section: "PHENOMENON III — Clasificación Fractal", fields: [
+      { key: "coverageSubType", label: "Tipo de Cobertura P1 (PHENOMENON III)", type: "select", options: PHENOMENON_III_COVERAGE_TYPES },
+    ]},
   ],
 
   EXCLUSIONES_VIDA: [
@@ -923,6 +954,9 @@ export const SUB_FIELDS = {
       { key: "claimBasis", label: "Base de Reclamación", type: "select", options: ["Claims made (reclamación durante vigencia)","Loss occurrence (daño durante vigencia)","Combinado"] },
       { key: "coverageStatus", label: "Estado de la Cobertura RC", type: "select", options: ["ACTIVA","BLOQUEADA por franquicia no pagada","SINIESTRO_PENDIENTE","EN_REVISIÓN"] },
     ]},
+    { section: "PHENOMENON III — Clasificación Fractal", fields: [
+      { key: "coverageSubType", label: "Tipo de Cobertura P1 (PHENOMENON III)", type: "select", options: PHENOMENON_III_COVERAGE_TYPES },
+    ]},
   ],
 
   LIMITES_RC: [
@@ -940,6 +974,9 @@ export const SUB_FIELDS = {
       { key: "deductibleType", label: "Tipo de Franquicia", type: "select", options: ["Absoluta (siempre a cargo del asegurado)","Relativa (si supera umbral, aseguradora paga todo)","Temporal (por período de espera)"] },
       { key: "deductibleApplied", label: "Franquicia Aplicada al Último Siniestro", type: "select", options: ["No aplica (sin siniestros)","Aplicada — pagada por asegurado","Pendiente de aplicar"] },
     ]},
+    { section: "PHENOMENON III — Reclamación Posterior (P3)", fields: [
+      { key: "reclamacionType", label: "Vía de Reclamación Posterior (P3)", type: "select", options: PHENOMENON_III_RECLAMACION_TYPES },
+    ]},
   ],
 
   COBERTURA_DANOS: [
@@ -952,6 +989,9 @@ export const SUB_FIELDS = {
       { key: "infravaluation", label: "Infraseguro (si valor real > valor asegurado)", type: "select", options: ["Sin infraseguro declarado","Infraseguro detectado — regla proporcional aplicable (art. 30 LCS)","Cobertura a primer riesgo (sin regla proporcional)"] },
       { key: "valueBasis", label: "Base de Valoración", type: "select", options: ["Valor en nuevo","Valor real (con depreciación)","Valor acordado","Valor de reposición"] },
     ]},
+    { section: "PHENOMENON III — Clasificación Fractal", fields: [
+      { key: "coverageSubType", label: "Tipo de Cobertura P1 (PHENOMENON III)", type: "select", options: PHENOMENON_III_COVERAGE_TYPES },
+    ]},
   ],
 
   PERITACION: [
@@ -963,6 +1003,9 @@ export const SUB_FIELDS = {
       { key: "estimatedDamage", label: "Daño Estimado (€)", type: "number", placeholder: "0" },
       { key: "agreedIndemnity", label: "Indemnización Acordada (€)", type: "number", placeholder: "0" },
       { key: "peritacionDeadline", label: "Plazo Máximo de Peritación (art. 38 LCS)", type: "date" },
+    ]},
+    { section: "PHENOMENON III — Ferencia Actualizada (P2)", fields: [
+      { key: "ferenciaType", label: "Tipo de Ferencia Actualizada (P2)", type: "select", options: PHENOMENON_III_FERENCIA_TYPES },
     ]},
   ],
 
@@ -985,6 +1028,9 @@ export const SUB_FIELDS = {
     { section: "Condición IF: Validación Financiera", fields: [
       { key: "blockingReason", label: "Motivo de Bloqueo IF_exclusion", type: "textarea", placeholder: "La cobertura de crédito queda BLOQUEADA hasta que VALIDACION_FINANCIERA confirme rating mínimo A o B del deudor principal." },
       { key: "unblockCondition", label: "Condición de Desbloqueo", type: "select", options: ["Validación financiera con rating A o B","Aval bancario alternativo aportado","Autorización manual del suscriptor"] },
+    ]},
+    { section: "PHENOMENON III — Clasificación Fractal", fields: [
+      { key: "coverageSubType", label: "Tipo de Cobertura P1 (PHENOMENON III)", type: "select", options: PHENOMENON_III_COVERAGE_TYPES },
     ]},
   ],
 

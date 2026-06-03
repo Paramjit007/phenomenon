@@ -1,5 +1,6 @@
+import re
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class EssFields(BaseModel):
@@ -45,3 +46,17 @@ class PhenomenonRecord(BaseModel):
     negaciones: list[str] = Field(default_factory=list)  # ["NOT_SOLVENTIO_1158", ...]
     cst_trigger_id: Optional[str] = None            # ID of the F1 that this F2 was opened from
     culpable_trigger_id: Optional[str] = None       # ID of the F2 that this F3 was opened from
+
+    # PHENOMENON III — fractalization fields (all Optional — existing records unaffected)
+    # Source: PHENOMENON_III_Seguro_y_EDCO_EDCIB_fractalizado.docx
+    coverage_type: Optional[str] = None    # CoverageType value — set on F1 sub-phenomena
+    ferencia_type: Optional[str] = None    # FerenciaType value — set on F2 sub-phenomena
+    reclamacion_type: Optional[str] = None # ReclamacionType value — set on F3 sub-phenomena
+    fractal_index: Optional[str] = None    # e.g. "1.2" = sub-phenomenon 2 of phase 1
+
+    @field_validator("fractal_index")
+    @classmethod
+    def _fractal_index_format(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not re.fullmatch(r"\d+\.\d+", v):
+            raise ValueError(f"fractal_index must be '<phase>.<index>' (e.g. '1.2'); got {v!r}")
+        return v

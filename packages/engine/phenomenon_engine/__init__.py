@@ -55,6 +55,12 @@ from .bloque_ii  import VectorProperties, IARelationEngine
 from .bloque_iii import IST, FrequencyModulation, SuspensionEngine, PlicationEngine
 from .enums      import PlicationType
 
+# ── PHENOMENON III — Insurance F1/F2/F3 enums ────────────────────────────────
+from .enums import (
+    InsurancePhase, SECType, IFTriggerType, InsuranceNegacion,
+    CoverageType, FerenciaType, ReclamacionType,
+)
+
 __all__ = [
     # ── Contracts domain ──────────────────────────────────────────────────────
     "CascadeEngine", "CascadeResult", "CASCADE_MAP",
@@ -82,4 +88,7 @@ __all__ = [
     "PhenomenonGeometry", "GeometryEngine",
     "StructuralUnit", "CompoundStructure", "LanguageEngine",
     "BaseCaseFlow", "BASE_CASES", "get_base_case", "list_base_cases", "base_case_to_phenomenon",
+    # ── PHENOMENON III — Insurance enums ─────────────────────────────────────
+    "InsurancePhase", "SECType", "IFTriggerType", "InsuranceNegacion",
+    "CoverageType", "FerenciaType", "ReclamacionType",
 ]
