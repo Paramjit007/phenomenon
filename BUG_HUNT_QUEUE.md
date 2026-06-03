@@ -35,6 +35,7 @@
 - [ ] **i18n** — Spanish-only strings are hardcoded everywhere; any future English version is currently impossible without find-and-replace. (Category C indirectly)
 - [ ] **Toast/notification queue** — what happens if 5 cascade events fire simultaneously? Does ImpactNotification queue them or drop them? (Category F)
 - [ ] **Long contract names** — do they overflow / truncate cleanly in the graph, the verify panel, and the right-panel header? (Category F, G)
+- [x] **Frontend test infrastructure absent (Arch-6, Code-gen-3)** — **Resolved 2026-05-31:** Vitest + `@testing-library/react` installed; `vite.config.js` test block added (jsdom); `src/test-setup.js` created; 9 component tests written in `SegurosComparativeView.test.jsx` covering tab navigation and `PhenomenonIIIFlowGraph` phase toggle. All 9 passing.
 
 ## P4 — Engine / theory soundness
 

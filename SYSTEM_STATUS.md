@@ -198,7 +198,7 @@ All in `phenomenon/apps/contracts/frontend/src/components/`.
 | `ContractPreviewTab.jsx` | "◉ Documento" tab. Printable legal contract. Print CSS included. | |
 | `ClauseLibrary.jsx` | Side panel in ContractDetailPanel. 40+ real Spanish clauses, drag-drop. | |
 | `PortfolioDashboard.jsx` | Shown when no contract selected in "Campos" tab. | |
-| `SegurosComparativeView.jsx` | "🛡️ Seguros" tab. **Staged reveal** (5 stages, localStorage-persisted): Vida→RC→Daños→Crédito→Comparativa. StageStepper, PolicyColumn with IA badges + cross-policy link badges, ComparisonTable at stage 4, TeachingCards. Siniestro + cross-policy cascade buttons. | `contracts`, `onSelectContract`, `onLoadContracts`, `addLog` |
+| `SegurosComparativeView.jsx` | "🛡️ Seguros" tab. **Two-tab architecture** (`phenomTab`: "cartera" \| "phenom3"): (1) Cartera tab — 4-column policy builder (Vida/RC/Daños/Crédito), siniestro wizard, cross-policy cascade, ComparisonTable; (2) PHENOMENON III tab — `PhenomenonIIIPanel` with full matrix (P1/P2/P3 planes × 5 sub-types each), fractal tree, parametric variables table, source quotes. Pills in `PhenomenonIIIPhaseBar` navigate to the PHENOMENON III tab. `PhenomenonIIIPhaseBar` shows F1→F2→F3 structure + fractalization row inside each policy card. | `contracts`, `onSelectContract`, `onLoadContracts`, `addLog` |
 
 ---
 
@@ -248,6 +248,18 @@ All in `phenomenon/packages/engine/phenomenon_engine/`.
 - `event_engine.py` — Event bus (ON_CREATE/ON_UPDATE/ON_INTERRUPT/ON_DISTRIBUTE/ON_TERMINATE)
 - `base_cases.py` — Apropiación/Tentio/Usucapión/Delito (4 full `BaseCaseFlow` entries with IA tables and legal refs; PARTIAL per theory_registry — deeper Enus-layer integration pending Layer-0 docs)
 
+**PHENOMENON III insurance enums** (in `enums.py`, added 2026-05-31):
+- `InsurancePhase` — F1 / F2 / F3
+- `SECType` — DE / DS / OBC (coverage modulation layers on F1)
+- `IFTriggerType` — siniestro_cst / culpable_id / manual
+- `InsuranceNegacion` — NOT_SOLVENTIO_1158 / NOT_DEBT_PAYMENT / NOT_AUTO_SUBROGATION
+- `CoverageType` — P1.1–P1.5 (fractalization sub-types for F1)
+- `FerenciaType` — P2.1–P2.5 (fractalization sub-types for F2 actualized losses)
+- `ReclamacionType` — P3.1–P3.5 (fractalization sub-types for F3 recovery)
+
+**PHENOMENON III model fields** (on `PhenomenonRecord`, added 2026-05-31):
+`phenomenological_phase`, `ferencia_sensual`, `sec_types`, `legal_basis`, `negaciones`, `cst_trigger_id`, `culpable_trigger_id`, `coverage_type`, `ferencia_type`, `reclamacion_type`, `fractal_index` (all Optional, all default None)
+
 ---
 
 ## 8. Constants (`constants.js`) — Key Structures
@@ -263,6 +275,13 @@ This single file defines everything the frontend knows about the domain.
 
 ### Sub-contract types in `SUB_META`
 NDA, SLA, PAYMENT, IP, DPA, FINANCIACION, HIPOTECA_GARANTIA, CESION_CREDITO, SEGURO_CREDITO, AVAL_BANCARIO, CONTRATO_OBRA, CONDICION_SOLAR, PAGO_APLAZADO, CARGAS_URBANISTICAS
+
+### PHENOMENON III exported constants (added 2026-05-31)
+- `PHENOMENON_III_COVERAGE_TYPES` — 5-entry array (P1.1 bien principal → P1.5 financiera/paramétrica); used as `options` in `coverageSubType` field on COBERTURA_VIDA, COBERTURA_RC, COBERTURA_DANOS, COBERTURA_CREDITO
+- `PHENOMENON_III_FERENCIA_TYPES` — 5-entry array (P2.1 siniestro material → P2.5 reclamaciones cruzadas); used as `options` in `ferenciaType` field on PERITACION
+- `PHENOMENON_III_RECLAMACION_TYPES` — 5-entry array (P3.1 causante directo → P3.5 entre aseguradoras); used as `options` in `reclamacionType` field on FRANQUICIA_RC
+- New `SUB_FIELDS` sections: `"PHENOMENON III — Clasificación Fractal"` on all 4 COBERTURA types; `"PHENOMENON III — Ferencia Actualizada (P2)"` on PERITACION; `"PHENOMENON III — Reclamación Posterior (P3)"` on FRANQUICIA_RC
+- These constants mirror the engine enums `CoverageType`, `FerenciaType`, `ReclamacionType` in `packages/engine/phenomenon_engine/enums.py`
 
 ### Cross-cascade maps (mirrors of backend Python dicts)
 - `SUB_CASCADE_MAP` — which sub-contract term fields cascade to which sibling types
@@ -386,6 +405,10 @@ Compatibility: ad-actio + co-implication ✓, non + de-actio ✓. non + ad-actio
 - [x] Add contract mid-lifecycle
 - [x] Opus levels: PARTIAL → COMPLETE → OPONIBLE (via registry registration)
 
+### PHENOMENON III FlowGraph (2026-05-31)
+- [x] `PhenomenonIIIFlowGraph` — live interactive F1/F2/F3 phase graph in the PHENOMENON III panel; clickable nodes show live values (premium, damage, indemnización) and P1.x/P2.x/P3.x active/inactive status
+- [x] Frontend test infrastructure: Vitest + @testing-library/react configured; 7 component tests in `SegurosComparativeView.test.jsx`
+
 ### Graph (ContractGraph)
 - [x] Draggable nodes, radial auto-layout
 - [x] Master→sub IF edges (animated dashed lines with color per type)
@@ -423,7 +446,15 @@ Compatibility: ad-actio + co-implication ✓, non + de-actio ✓. non + ad-actio
 - [x] BLOCKED status: IF_exclusion (non operator) prevents COBERTURA_CREDITO from activating until VALIDACION_FINANCIERA passes
 - [x] New statuses: BLOCKED, SINIESTRO_PENDIENTE, INDEMNIZACION_PAGADA, RECHAZO (in statusColor, statusLabel, theoreticalState)
 - [x] Backend seeder: POST /demo/seguros/seed → 16 contracts (4 masters × 4 subs); unified tomador "Comerciales del Levante S.L." across all 4 policies
-- [x] POST /demo/seguros/siniestro → phase transition (ACTIVE → SINIESTRO_PENDIENTE → resolution)
+- [x] POST /demo/seguros/siniestro → phase transition (ACTIVE → SINIESTRO_PENDIENTE → resolution) [legacy — kept for compat]
+- [x] POST /demo/seguros/initiate-siniestro → Step 1: compute hypothesis (ID Justificación), set phase=SINIESTRO
+- [x] POST /demo/seguros/confirm-siniestro → Step 2a: SINIESTRO_PENDIENTE → INDEMNIZACION_PAGADA, phase=INDEMNIZACION
+- [x] POST /demo/seguros/reject-siniestro → Step 2b: SINIESTRO_PENDIENTE → RECHAZO, records reason+legal_basis, phase=RECHAZO
+- [x] Noria balance check in homologate (§ 4c advisory): count(IA)==count(active CA²) for SEGURO_* masters
+- [x] CA-type map + phase derivation in SegurosComparativeView (CA-CD vs CA-CST badges per Flujograma §6)
+- [x] SiniestroWizard 3-step modal: cause input → hypothesis review → confirm/reject with legal basis
+- [x] Sub-contract phase badges (SA1/COBERTURA_ACTIVA/SINIESTRO/HIPÓTESIS/INDEMNIZACIÓN/RECHAZADO)
+- [x] "Resolver siniestro pendiente" button opens wizard at Step 2 with pre-loaded hypothesis from ag.terms
 - [x] POST /demo/seguros/unblock-coverage → resolves IF_exclusion, activates blocked coverage
 - [x] POST /demo/seguros/cross-policy-cascade → cross-policy IF cascade: partyA change on one master marks 3 sibling masters NEEDS_REVIEW; sub field changes propagate via CROSS_POLICY_CASCADE_MAP
 - [x] SegurosComparativeView.jsx: **staged reveal** (5 stages, localStorage), StageStepper, PolicyColumn, ComparisonTable, TeachingCards, cross-policy cascade button
@@ -450,7 +481,7 @@ Compatibility: ad-actio + co-implication ✓, non + de-actio ✓. non + ad-actio
 ### Engine Features
 - [x] **Blocking IF** — `IF_exclusion` type implemented via BLOCKED status + non operator in seeder (demo-level, not engine-level full automation)
 - [ ] **Full IF_exclusion engine automation** — currently BLOCKED status set by seeder; should auto-propagate from cascade rules
-- [ ] **Phase transitions in UI** — PhaseEngine (F1→F2→F3) exists in backend but not wired to frontend
+- [x] **Phase transitions in UI** — phenomenological_phase field set by initiate/confirm/reject-siniestro endpoints; visible as badges in SegurosComparativeView sub-contract rows (SA1/COBERTURA_ACTIVA/SINIESTRO/INDEMNIZACION/RECHAZO)
 - [ ] **Edge condition persistence** — conditions set in EdgePanel are in-memory only (not saved to backend)
 - [ ] **Theoretical Bloque VIII exhibition** — Apropiación/Tentio/Usucapión/Delito have full structural content in base_cases.py; not yet exhibited in the UI and not exhibited in demos until deeper Enus-layer integration arrives
 - [ ] **Bloque IX** — computable specification document not provided yet
@@ -481,6 +512,10 @@ Compatibility: ad-actio + co-implication ✓, non + de-actio ✓. non + ad-actio
 7. **Volume mounts** — frontend `src/` is volume-mounted (HMR works). Backend `apps/contracts/backend/` AND `packages/engine/` are both volume-mounted. Uvicorn watches both directories (`--reload-dir` on both). Python changes hot-reload in ~1s.
 
 8. **SUB_CASCADE_FIELDS vs SUB_CASCADE_MAP** — Both exist. `SUB_CASCADE_FIELDS` is a flat array (used to check IF a field triggers cascade). `SUB_CASCADE_MAP` is a nested dict (used to find WHICH siblings are targeted). Both mirror their Python counterparts in the backend.
+
+10. **Frontend test infrastructure absent** — `apps/contracts/frontend/package.json` has zero test dependencies (no Vitest, no Jest, no Playwright, no React Testing Library). No `.test.*` or `.spec.*` files exist in `src/`. Before any new frontend behavioural test can be written, Vitest + `@testing-library/react` must be installed and `vite.config.js` updated with a `test` block. First test to write when infrastructure is set up: `SegurosComparativeView` tab-switching behaviour (cartera ↔ phenom3 tabs, `onOpenPanel` prop wiring).
+
+9. ~~**PhenomenonIIIPhaseBar invisible** — dark `#0d1117` theme, 7–8px text, unreadable against page background.~~ **FIXED 2026-05-31** — redesigned to light cream (`C.goldBg`), navy banner, 13px phase labels, readable on all backgrounds. `SEC_TYPES` unused import also removed.
 
 ---
 
